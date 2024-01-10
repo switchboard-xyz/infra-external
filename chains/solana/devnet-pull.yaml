@@ -1,0 +1,29 @@
+chain: "solana"
+cluster: "devnet"
+heartbeatInterval: "30"
+infisicalSecretKey: "SOLANA_KEY" # must set up the infisical key/slug in order for these secrets to get provisioned
+infisicalSecretSlug: "dev"
+namespace: "switchboard-oracle-devnet"
+networkId: "devnet"
+image: "docker.io/switchboardlabs/pull-oracle:dev-RC_03_25_24_02_49b"
+jupiterSwapApiKey: "3a3b41bc06d49f9c89a8550ff84072be"
+# You can get the keys below by running scripts/bootstrap.ts
+components:
+    push:
+      queue: "uPeRMdfPmrPqgRWSrjAnAkH78RqAhe5kXoW6vBYRqFX"
+      key: "8AGNUUHphu8YevPoTGTbcbsJLKBe2F6byukfoPUWSHWm" # FILL_IN_HERE
+    gateway:
+      tag: 1
+    guardian:
+      queue: "71wi6H1ByDG9qnRd5Ef8PSKoKH8rJ7pve7NDvB7Y4tqi"
+      key: "Ewq5ec637q9pvzZH5xBHtqxqUPSjo1j4sB1nXeeGNRHo" # FILL_IN_HERE
+    oracle:
+      queue: "5Qv744yu7DmEbU669GmYRqL9kpQsyYsaVKdR8YiBMTaP"
+      key: "BfvoZHYSxgJe4P7jbt9HTqJHip7Lf3xRB1QNszEPrhCx" # FILL_IN_HERE
+
+host: "${SB_DNS}"
+rpcUrl: "https://switchbo-switchbo-6225.devnet.rpcpool.com/f6fb9f02-0777-498b-b8f5-67cbb1fc0d14" # FILL_IN_HERE
+solanaMainnetRpc: "https://switchboard.rpcpool.com/ec20ad2831092cfcef66d677539a" # FILL_IN_HERE
+wssUrl: "wss://switchbo-switchbo-6225.devnet.rpcpool.com/f6fb9f02-0777-498b-b8f5-67cbb1fc0d14" # FILL_IN_HERE
+infisicalSecret: "cc" # FILL_IN_HERE
+pagerdutyEventKey: "" # FILL_IN_HERE (optional)

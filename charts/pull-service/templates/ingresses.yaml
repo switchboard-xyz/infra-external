@@ -1,0 +1,43 @@
+{{- $values := .Values -}}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: switchboard-ingress
+  namespace: {{ $.Values.namespace }}
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt"
+    cert-manager.io/issue-temporary-certificate: "true"
+    acme.cert-manager.io/http01-edit-in-place: "true"
+    nginx.ingress.kubernetes.io/use-regex: "true"
+spec:
+  ingressClassName: nginx
+  tls:
+  - hosts:
+    - {{ $.Values.host }}
+    secretName: switchboard-oracle-cert-manager-tls
+  rules:
+  - host: {{ $.Values.host }}
+    http:
+      paths:
+      - path: /oracle(/|$)(.*)
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: oracle-service
+            port:
+              number: 8081
+      - path: /gateway(/|$)(.*)
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: gateway-service
+            port:
+              number: 8082
+      - path: /guardian(/|$)(.*)
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: guardian-service
+            port:
+              number: 8083
+

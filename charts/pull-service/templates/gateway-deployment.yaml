@@ -1,0 +1,231 @@
+{{- $values := .Values -}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ $values.cluster }}-pull-gateway
+  namespace: {{ $.Values.namespace }}
+  labels:
+    chain: {{ $.Values.chain }}
+    app: gateway-oracle
+    should_scrape: scrape
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: gateway-oracle
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  template:
+    metadata:
+      labels:
+        chain: {{ $.Values.chain }}
+        app: gateway-oracle
+        should_scrape: scrape
+    spec:
+      dnsPolicy: ClusterFirst
+      containers:
+      - image: {{ $.Values.image }}
+        env:
+        -
+          name: CHAIN
+          value: {{ $.Values.chain | quote }}
+        -
+          name: CLUSTER
+          value: {{ $.Values.cluster }}
+        -
+          name: NETWORK_ID
+          value: {{ $.Values.networkId }}
+        -
+          name: ENABLE_PUSH_MODEL
+          value: "false"
+        -
+          name: HEARTBEAT_INTERVAL
+          value: {{ $.Values.heartbeatInterval | default "30" | quote }}
+        -
+          name: GUARDIAN_QUEUE
+          value: {{ $.Values.components.guardian.queue | quote}}
+        -
+          name: GUARDIAN_ORACLE
+          value: {{ $.Values.components.guardian.key | quote}}
+        -
+          name: PULL_QUEUE
+          value: {{ $.Values.components.oracle.queue | quote}}
+        -
+          name: PULL_ORACLE
+          value: {{ $.Values.components.oracle.key | quote}}
+        -
+          name: PUSH_QUEUE
+          value: {{ $.Values.components.push.queue | quote}}
+        -
+          name: PUSH_ORACLE
+          value: {{ $.Values.components.push.key | quote}}
+        -
+          name: KEYPAIR_PATH
+          value: "/data/protected_files/keypair.bin"
+        -
+          name: ORACLE_PORT
+          value: "8081"
+        -
+          name: GATEWAY_PORT
+          value: "8082"
+        -
+          name: GUARDIAN_PORT
+          value: "8083"
+        -
+          name: ENABLE_GATEWAY
+          value: "1"
+        -
+          name: ENABLE_ORACLE
+          value: "0"
+        -
+          name: ENABLE_GUARDIAN
+          value: "0"
+        -
+          name: GUARDIAN_INGRESS
+          value: "https://{{ $.Values.host }}"
+        -
+          name: ORACLE_INGRESS
+          value: "https://{{ $.Values.host }}"
+        -
+          name: GATEWAY_INGRESS
+          value: "https://{{ $.Values.host }}"
+        -
+          name: RPC_URL
+          value: {{ $values.rpcUrl }}
+        -
+          name: WSS_URL
+          value: {{ $values.wssUrl }}
+        -
+          name: WSS_RPC_URL
+          value: {{ $values.wssUrl }}
+        -
+          name: BACKUP_RPC_URL_1
+          value: {{ $.Values.backupRpc1  }}
+        -
+          name: BACKUP_RPC_URL_2
+          value: {{ $.Values.backupRpc2  }}
+        -
+          name: TELEMETRY_FEED_RESULT_PUSH_INTERVAL_MS
+          value: {{ $.Values.telemetryFeedResultPushIntervalMs | default "5000" | quote }}
+        -
+          name: TELEMETRY_FEED_RESULT_PUSH_URL
+          value: {{ $.Values.telemetryFeedResultPushUrl }}
+        -
+          name: TASK_RUNNER_SOLANA_RPC
+          value: {{ $.Values.solanaMainnetRpc }}
+        -
+          name: GCP_CONFIG_BUCKET
+          value: {{ $.Values.gcpConfigBucket }}
+        -
+          name: JUPITER_SWAP_API_KEY
+          value: {{ $.Values.jupiterSwapApiKey | default "" }}
+        -
+          name: IPFS_URL
+          value: {{ $.Values.ipfsApiUrl | quote }}
+        -
+          name: IPFS_SECRET
+          value: {{ $.Values.ipfsSecret | quote }}
+        # SOLANA
+        -
+          name: SWITCHBOARD_ATTESTATION_PROGRAM_ID
+          value: {{ $values.attestationProgramId | quote }}
+        -
+          name: ORACLE_AUTHORITY
+          value: {{ $values.components.authority }}
+
+        # METRICS
+        -
+          name: METRICS_EXPORTER
+          value: {{ $values.metricsExporter }}
+        # LOGGING
+        - name: RUST_LOG
+          value: "info"
+        - name: RUST_BACKTRACE
+          value: "1"
+        # ALERTING
+        -
+          name: VERBOSE
+          value: {{ $.Values.verbose | default "0" | quote }}
+        -
+          name: DEBUG
+          value: {{ $.Values.debug | default "false" | quote }}
+        -
+          name: PAGERDUTY_EVENT_KEY
+          value: {{ $.Values.pagerdutyEventKey }}
+        -
+          name: PAYER_SECRET
+          {{ if $values.infisicalSecretKey }}
+          valueFrom:
+            secretKeyRef:
+              name: infisical-secret
+              key: {{  $values.infisicalSecretKey | quote }}
+          {{ else }}
+          value: {{ $values.payerSecret }}
+          {{ end }}
+
+
+
+      # IMAGE / RESOURCES
+        imagePullPolicy: Always #Always #IfNotPresent
+        name: {{ $values.chain }}-gateway
+        {{ if eq $values.command "shell" }}
+        command: ["/bin/sh"]
+        args: ["-c", "while true; do echo hello; sleep 10;done"]
+        {{ end }}
+
+        ports:
+        - name: web
+          containerPort: {{ $values.components.gateway.port }}
+          protocol: TCP
+        - name: metrics
+          containerPort: {{ $values.metricsPort }}
+          protocol: TCP
+        # - name: liveness-port
+          # containerPort: {{ $.Values.metricsPort }}
+          # protocol: TCP
+
+
+
+        resources:
+          limits:
+            cpu: 1500m
+            memory: 4000Mi
+            sgx.intel.com/epc: 25Mi
+            sgx.intel.com/enclave: 1
+            sgx.intel.com/provision: 1
+          requests:
+            cpu: 1500m
+            memory: 3900Mi
+
+            sgx.intel.com/epc: 25Mi
+            sgx.intel.com/enclave: 1
+            sgx.intel.com/provision: 1
+
+        {{ if not $values.command  }}
+        livenessProbe:
+          httpGet:
+            path: /metrics
+            port: {{ $.Values.metricsPort }}
+          initialDelaySeconds: 60
+          failureThreshold: 10
+          periodSeconds: 10
+          timeoutSeconds: 10
+        {{ end }}
+
+        volumeMounts:
+        - mountPath: /dev/sgx/enclave
+          name: dev-sgx-enclave
+        - mountPath: /dev/sgx/provision
+          name: dev-sgx-provision
+
+      volumes:
+      - name: shared-data
+        emptyDir: {}
+      - name: dev-sgx-enclave
+        hostPath:
+          path: /dev/sgx/enclave
+      - name: dev-sgx-provision
+        hostPath:
+          path: /dev/sgx/provision
