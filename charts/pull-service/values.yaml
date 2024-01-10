@@ -1,0 +1,98 @@
+# ####################################################
+# USE THIS FILE FOR ANY DEFAULT VALUES FOR ALL ORACLES
+# ####################################################
+serviceAccountName: ""
+namespace: "default"
+azureSecretName: ""
+azureVaultUrl: ""
+infisicalSecretKey: ""
+infisicalSecretSlug: "dev"
+pvcName: "function-manager-pvc"
+debug: ""
+verbose: ""
+chain: ""
+googlePayerSecretPath: ""
+solanaMainnetRpc: ""
+cluster: ""
+networkId: ""
+heartbeatInterval: "15"
+gcpConfigBucket: ""
+googleApplicationCredentials: ""
+rpcUrl: ""
+evmChainId: ""
+payerSecret: ""
+payerSecretName: ""
+pushModel: "true"
+image: ""
+feedRelayerEnabled: ""
+computeUnitPrice: ""
+computeUnitLimit: ""
+saveResultComputeUnits: 300000
+azureSecretPath: ""
+serviceAccountJson: "bnVsbA==" #base64 encoded json
+metricsExporter: "prometheus"
+metricsPort: 9090
+dockerKey: ""
+dockerUser: ""
+ipfsApiUrl: "ipfs.infura.io"
+ipfsKey: ""
+ipfsSecret: ""
+ipfsUrl: "https://ipfs.infura.io:5001"
+attestationProgramId: ""
+host: "x.y.z"
+image: ""
+
+components:
+    key: ""
+    queue: ""
+    type: "oracle"
+    oracle:
+      queue: ""
+      key: ""
+      host: ""
+      port: 8081
+    gateway:
+      host: ""
+      port: 8082
+    guardian:
+      queue: ""
+      key: ""
+      host: ""
+      port: 8083
+    push:
+      queue: ""
+      key: ""
+      host: ""
+      port: 8089
+
+appType: "oracle"
+azureClientID: ""
+azureTenantID: ""
+sgx:
+  type: ""
+  memoryMiB: 0
+  cpu: 0
+txTelemetry:
+  pgHost: ""
+  pgUser: ""
+  pgDatabase: ""
+  pgPassword: ""
+ingress:
+  enabled: false
+oracleKeys:
+  - name: idx-1
+    data: ""
+    queue: ""
+    queueAddress: ""
+    payerSecret: ""
+    oracleQueueKey: ""
+    oracleAuthority: ""
+    solanaOracleQueueKey: ""
+    sasQueue: ""
+    dockerUser: ""
+    dockerKey: ""
+    ipfsUrl: "https://ipfs.infura.io:5001"
+    ipfsKey: "XXX"
+    ipfsSecret: "XXX"
+    attestationQueue: ""
+
