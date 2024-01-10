@@ -1,0 +1,46 @@
+appType: "dind"
+chain: "evm"
+contractAddress: 0xA3c9F9F6E40282e1366bdC01C1D30F7F7F58888e
+evmChainId: 421613
+namespace: "evm-testnet"
+fundingAmount: "5773869100000000"
+fundingThreshold: "177386910000000"
+googleApplicationCredentials: "/home/credentials/gcp-sa.json"
+heartbeatInterval: "30"
+infisicalSecretKey: "SOLANA_KEY"
+infisicalSecretSlug: "dev"
+pvcName: "function-manager-pvc"
+# image: "docker.io/switchboardlabs/function-manager:dev-RC_11_16_23_03_37b"
+image: "docker.io/switchboardlabs/function-manager:dev-RC_12_10_23_07_14"
+infuraIpfsCredentials: "redacted"
+ipfsApiUrl: "ipfs.infura.io"
+lastEventStalenessThreshold: "120"
+lastResponseStalenessThreshold: "180"
+metricsExporter: "prometheus"
+networkId: "testnet"
+pagerdutyEventKey: "redacted"
+rpcUrl: "https://goerli-rollup.arbitrum.io/rpc"
+saveResultComputeUnits: "200000"
+updateSearchInterval: "15" # 15 seconds between searches
+updateSearchRefreshInterval: "120" # 120 seconds to refetch all aggregators
+dockerKey: "redacted"
+dockerUser: "redacted"
+mode: "FUNCTION_LISTENER"
+ipfsKey: "redacted"
+ipfsSecret: "redacted"
+ipfsUrl: "https://ipfs.infura.io:5001"
+payerSecret: ""
+quoteAddress: "0x5ba57f2486b07CF063FD55150fFCB9757d0246bB"
+queueAddress: "0x54f8A91bE5baAD3E2368b00A11bF4012EA6b031F"
+qvnUrl: "http://qvn-service.evm-testnet.svc.cluster.local:3000"
+sgx:
+  type: "azure"
+  memoryMiB: 32Mi #sgx enclave memory
+  cpu: 1500m
+oracleKeys:
+  - name: idx-1
+    payerSecret: ""
+    queue: "default"
+    quoteAddress: "0x5ba57f2486b07CF063FD55150fFCB9757d0246bB"
+    queueAddress: "0x54f8A91bE5baAD3E2368b00A11bF4012EA6b031F"
+serviceAccountJson: "aGkK" #placeholder to satisfy gcp sdk dependency

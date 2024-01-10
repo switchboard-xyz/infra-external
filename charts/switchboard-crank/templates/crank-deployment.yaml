@@ -1,0 +1,214 @@
+{{- $values := .Values -}}
+{{- range $index, $key := .Values.crankKeys }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    chain: {{ $values.chain }}
+    app: crank
+    should_scrape: scrape
+    queue: {{ $key.queue }}
+  name: {{ $values.chain }}-{{ $key.queue }}-crank-{{ $key.name }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: crank
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  template:
+    metadata:
+      labels:
+        chain: {{ $values.chain }}
+        app: crank
+        queue: {{ $key.queue }}
+        should_scrape: scrape
+    spec:
+      serviceAccountName: crank-service-account
+#      affinity:
+#        podAntiAffinity:
+#          requiredDuringSchedulingIgnoredDuringExecution:
+#          - labelSelector:
+#              matchExpressions:
+#              - key: app
+#                operator: In
+#                values:
+#                - crank
+#            topologyKey: kubernetes.io/hostname
+      containers:
+      - env:
+        - 
+          name: CHAIN
+          value: {{ $values.chain }}
+        - 
+          name: CRANK_KEY
+          value: {{ $key.data }}
+        - 
+          name: NETWORK_ID
+          value: {{ $values.networkId }}
+        - 
+          name: PROGRAM_ID
+          value: {{ $values.pid }}
+        - 
+          name: RPC_URL
+          value: {{ $values.rpcUrl }}
+        -
+          name: BACKUP_RPC_URL_1
+          value: {{ if $key.backupRpc1 }}{{ $key.backupRpc1 }}{{ else }}{{ $values.backupRpc1  }}{{ end }}
+        -
+          name: BACKUP_RPC_URL_2
+          value: {{ if $key.backupRpc2 }}{{ $key.backupRpc2 }}{{ else }}{{ $values.backupRpc2  }}{{ end }}
+        - 
+          name: CRANK_INTERVAL
+          value: {{ if $key.crankInterval }}{{ $key.crankInterval | quote }}{{ else }}{{ $values.crankInterval | default "1000" | quote }}{{ end }}
+
+        - name: NUMBER_OF_CRANK_ROWS
+          value: {{ if $key.numCrankRows }}{{ $key.numCrankRows | quote }}{{ else }}{{ $values.numCrankRows | default "30" | quote }}{{ end }}
+        - 
+          name: DISABLE_SMART_CRANK
+          value: {{ if $key.disableSmartCrank }}{{ $key.disableSmartCrank | quote }}{{ else }}{{ $values.disableSmartCrank }}{{ end }}
+        # TASK RUNNER CONFIG (Aptos + NEAR Smart crank)
+        - 
+          name: TASK_RUNNER_SOLANA_RPC
+          value: {{ $values.solanaMainnetRpc }}
+        - 
+          name: GCP_CONFIG_BUCKET
+          value: {{ $values.gcpConfigBucket }}
+        # APTOS
+        # NEAR
+        - 
+          name: NEAR_NAMED_ACCOUNT
+          value: {{ $values.namedAccount }}
+        - 
+          name: NEAR_NO_LOGS
+          value: "1"
+        -  # Disable using the built-in near event listener for mainnet and use AWS
+          name: NEAR_LAKE_LISTENER
+          value: {{ if $key.nearLakeListener }}{{ $key.nearLakeListener | quote }}{{ else }}{{ $values.nearLakeListener | quote }}{{ end }}
+        # SOLANA 
+        -
+          name: SOLANA_DISABLE_REST_CONNECTION
+          value: {{ if $key.disableRestConnection }}{{ $key.disableRestConnection | quote }}{{ else }}{{ $values.disableRestConnection | quote  }}{{ end }}
+        -
+          name: SOLANA_CRANK_POP_COMPUTE_UNITS
+          value: {{ if $key.crankPopComputeUnits }}{{ $key.crankPopComputeUnits | quote }}{{ else }}{{ $values.crankPopComputeUnits | quote  }}{{ end }}  
+        - 
+          name: SOLANA_COMPUTE_UNIT_PRICE
+          value: {{ $values.computeUnitPrice | default "1" | quote }}
+        - 
+          name: NONCE_QUEUE_SIZE
+          value: {{ if $key.nonceQueueSize }}{{ $key.nonceQueueSize | quote }}{{ else }}{{ $values.nonceQueueSize | default "1000" | quote }}{{ end }}
+        - 
+          name: NONCE_QUEUE_TIMEOUT
+          value: {{ if $key.nonceQueueTimeout }}{{ $key.nonceQueueTimeout | quote }}{{ else }}{{ $values.nonceQueueTimeout | default "30" | quote }}{{ end }}
+        - 
+          name: ENABLE_SOLANA_CRANK_NONCE_QUEUE
+          value: {{ if $key.enableSolanaNonceQueue }}{{ $key.enableSolanaNonceQueue | quote }}{{ else }}{{ $values.enableSolanaNonceQueue | quote }}{{ end }}
+        - 
+          name: SOLANA_BLOCKHASH_REFRESH_RATE
+          value: {{ if $key.blockhashRefreshRate }}{{ $key.blockhashRefreshRate | quote }}{{ else }}{{ $values.blockhashRefreshRate | quote  }}{{ end }}
+        - 
+          name: CRANK_DELAY
+          value: {{ if $key.crankDelay }}{{ $key.crankDelay | quote }}{{ else }}{{ $values.crankDelay | default "1" | quote  }}{{ end }}
+        # -
+        #   name: SOLANA_CRANK_LOAD_CONNECTION
+        #   value: {{ if $key.crankLoadConnection }}{{ $key.crankLoadConnection | quote }}{{ else }}{{ $values.crankLoadConnection | default "1" | quote  }}{{ end }}
+        -
+          name: SOLANA_CRANK_POP_COMMITMENT
+          value: {{ if $key.crankPopCommitment }}{{ $key.crankPopCommitment }}{{ else }}{{ $values.crankPopCommitment }}{{ end }}
+        # GOOGLE Credentials
+        - 
+          name: GOOGLE_PAYER_SECRET_PATH
+          value: {{ if $key.googlePayerSecretPath }}{{ $key.googlePayerSecretPath }}{{ else }}{{ $values.googlePayerSecretPath }}{{ end }}
+        # PERFORMANCE
+        - 
+          name: EVENT_LOOP_STALL_THRESHOLD
+          value: {{ if $key.eventLoopStallThreshold }}{{ $key.eventLoopStallThreshold | quote }}{{ else }}{{ $values.eventLoopStallThreshold | quote }}{{ end }}
+        - 
+          name: LAST_EVENT_STALENESS_THRESHOLD
+          value: {{ if $key.lastEventStalenessThreshold }}{{ $key.lastEventStalenessThreshold | quote }}{{ else }}{{ $values.lastEventStalenessThreshold | quote }}{{ end }}
+        - 
+          name: LAST_RESPONSE_STALENESS_THRESHOLD
+          value: {{ if $key.lastResponseStalenessThreshold }}{{ $key.lastResponseStalenessThreshold | quote }}{{ else }}{{ $values.lastResponseStalenessThreshold | quote }}{{ end }}
+
+        # METRICS
+        - 
+          name: METRICS_EXPORTER
+          value: {{ $values.metricsExporter }}
+        # ALERTING
+        - 
+          name: VERBOSE
+          value: {{ if $key.verbose }}{{ $key.verbose | quote }}{{ else }}{{ $values.verbose | default "0" | quote }}{{ end }}
+        - 
+          name: DEBUG
+          value: {{ if $key.debug }}{{ $key.debug | quote }}{{ else }} {{ $values.debug | default "0" | quote }}{{ end }}
+        - 
+          name: PAGERDUTY_EVENT_KEY
+          value: {{ $values.pagerdutyEventKey }}
+        - 
+          name: CRANK_STALENESS_THRESHOLD
+          value: {{ if $key.crankStalenessThreshold }}{{ $key.crankStalenessThreshold | quote }}{{ else }} {{ $values.crankStalenessThreshold | quote }}{{ end }}
+        - 
+          name: GOOGLE_APPLICATION_CREDENTIALS
+          value: {{ $values.googleApplicationCredentials }}
+
+      # IMAGE / RESOURCES
+        image: {{ if $key.image }}{{ $key.image }}{{ else }}{{ $values.image }}{{ end }}
+        imagePullPolicy: Always
+        name: {{ $values.chain }}-crank
+{{ if $values.enableSourceMaps }}
+        command: ["/bin/bash","-c"]
+        args: ["node", "--unhandled-rejections=warn", "--enable-source-maps", "./dist/index.js"]
+{{ end }}
+        ports:
+        - name: web
+          containerPort: 9090
+          protocol: TCP
+        - name: liveness-port
+          containerPort: 8080
+          protocol: TCP
+
+        # https://github.com/kubernetes/kubernetes/issues/89898#issuecomment-876539217
+        # Wait for the container to startup and signal they are ready to receive traffic from k8s
+        startupProbe:
+          httpGet:
+            path: /healthz
+            port: liveness-port
+          initialDelaySeconds: 5
+          failureThreshold: 30
+          periodSeconds: 5
+          timeoutSeconds: 10
+        # Check whether the pod is ready to receive traffic. If this fails it will create a new pod
+        livenessProbe:
+          exec:
+            command:
+              - sh
+              - -c
+              - "curl --fail http://localhost:8080/healthz || exit 1"
+          initialDelaySeconds: 10
+          periodSeconds: 30
+          timeoutSeconds: 10
+          failureThreshold: 1
+
+        resources:
+          limits:
+            cpu: 1200m
+            memory: 2Gi
+          requests:
+            cpu: 1200m
+            memory: 2Gi
+      {{ if $.Values.googleApplicationCredentials }}
+        volumeMounts:
+        - mountPath: /home/credentials/
+          name: google-cloud-key
+      volumes:
+      - name: google-cloud-key
+        secret:
+          secretName: {{ $.Values.appType}}-service-account
+      {{ end }}
+
+---
+{{ end }}
+

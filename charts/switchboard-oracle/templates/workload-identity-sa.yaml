@@ -1,0 +1,12 @@
+{{ if .Values.serviceAccountName }}
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  labels:
+    azure.workload.identity/use: "true"
+  annotations:
+    iam.gke.io/gcp-service-account: {{ .Values.serviceAccountName }} #ie the email address that's generated for each SA'
+    azure.workload.identity/client-id: {{ .Values.azureClientID }}
+  name: oracle-service-account
+  namespace: {{ $.Values.namespace }}
+{{ end }}

@@ -1,0 +1,16 @@
+#commented out because migrating to out of band provisioning of PVC
+
+{{ if eq $.Values.appType "dind" }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: function-manager-pvc
+  namespace: {{ $.Values.namespace }}
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 60Gi
+#  storageClassName: default
+{{ end }}

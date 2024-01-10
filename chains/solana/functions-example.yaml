@@ -1,0 +1,34 @@
+chain: "solana"
+networkId: "devnet"
+appType: "dind"
+namespace: "solana-devnet"
+infisicalSecretKey: "SOLANA_KEY"
+infisicalSecretSlug: "dev"
+pvcName: "function-manager-pvc"
+image: "docker.io/switchboardlabs/function-manager:dev-RC_12_19_23_03_21"
+qvnImage: "docker.io/switchboardlabs/qvn:dev-RC_12_19_23_03_21a"
+numWorkers: 14
+containerTimeout: 15
+heartbeatInterval: "15"
+metricsExporter: "prometheus"
+pagerdutyEventKey: "redacted"
+rpcUrl: redacted"
+googleApplicationCredentials: "/home/credentials/gcp-sa.json"
+ipfsUrl: "https://ipfs.infura.io:5001"
+ipfsKey: "redacted"
+ipfsSecret: "redacted"
+dockerUser: "redacted"
+dockerKey: "redacted"
+cluster: "devnet"
+quoteAddress: "FT41PAvhJj7YqQwuALeSr2PDh7kEub2wb9Ve64jPjDXk"
+qvnUrl: "http://qvn-service.solana-devnet.svc.cluster.local:3000"
+# command: shell
+sgx:
+  type: "azure"
+  memoryMiB: 32Mi
+  cpu: 1500m
+oracleKeys:
+  - name: idx-1
+    queue: "default"
+    quoteAddress: "FT41PAvhJj7YqQwuALeSr2PDh7kEub2wb9Ve64jPjDXk"
+    payerSecret: ""

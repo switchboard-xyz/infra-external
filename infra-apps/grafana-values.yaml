@@ -1,0 +1,150 @@
+persistence:
+  enabled: true
+  storageClassName: standard-rwo
+adminUser: admin
+adminPassword: SbCongraph50!
+resources:
+  requests:
+    memory: "1024Mi"
+    cpu: "500m"
+  limits:
+    memory: "1024Mi"
+    cpu: "500m"
+service:
+  type: ClusterIP
+ingress:
+  enabled: true
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    cert-manager.io/cluster-issuer: "letsencrypt"
+  hosts: ["grafana.switchboard.xyz"]
+  tls:
+  - hosts:
+      - "grafana.switchboard.xyz"
+    secretName: grafana-cert-manager-tls      
+namespaceOverride: grafana
+sidecar:
+  dashboards:
+    enabled: true
+    labelValue: "1" 
+datasources:
+  datasources.yaml:
+    apiVersion: 1
+    datasources:
+      - name: solana-devnet
+        type: prometheus
+        url: "http://34.78.9.183:8428" 
+        access: proxy
+        editable: true
+        isDefault: false
+        basicAuth: false
+      - name: solana-mainnet
+        type: prometheus
+        url: "http://34.105.182.119:8428" 
+        access: proxy
+        editable: true
+        isDefault: true
+        basicAuth: false
+      - name: logs-mainnet
+        type: loki
+        access: proxy
+        url: http://20.166.129.244
+      - name: logs-testnet
+        type: loki
+        access: proxy
+        url: http://20.108.203.158:80
+      - name: aptos-testnet
+        type: prometheus
+        url: "http://34.79.19.44:8428" 
+        access: proxy
+        editable: true
+        isDefault: false
+        basicAuth: false
+      - name: aptos-mainnet
+        type: prometheus
+        url: "http://34.78.39.101:8428" 
+        access: proxy
+        editable: true
+        isDefault: false
+        basicAuth: false
+      - name: core-testnet
+        type: prometheus
+        url: "http://34.76.131.63:8428" 
+        access: proxy
+        editable: true
+        isDefault: false
+        basicAuth: false      
+      - name: core-mainnet
+        type: prometheus
+        url: "http://34.76.43.187:8428" 
+        access: proxy
+        editable: true
+        isDefault: false
+        basicAuth: false     
+      - name: starknet-testnet
+        type: prometheus
+        url: "http://35.187.64.44:8428" 
+        access: proxy
+        editable: true
+        isDefault: false
+        basicAuth: false   
+      - name: sui-testnet
+        type: prometheus
+        url: "http://35.195.123.12:8428" 
+        access: proxy
+        editable: true
+        isDefault: false
+        basicAuth: false   
+      - name: sui-mainnet
+        type: prometheus
+        url: "http://34.77.125.27:8428" 
+        access: proxy
+        editable: true
+        isDefault: false
+        basicAuth: false 
+      - name: v3-functions-devnet
+        type: prometheus
+        url: "http://20.77.150.13:8428" 
+        access: proxy
+        editable: true
+        isDefault: false
+        basicAuth: false 
+      - name: v3-functions-mainnet
+        type: prometheus
+        url: "http://51.138.229.27:8428" 
+        access: proxy
+        editable: true
+        isDefault: false
+        basicAuth: false                                         
+grafana.ini:
+  auth.anonymous:
+    enabled: true
+  auth.google:
+    enabled: true
+    client_id: "853061770162-9pqf6a9nl0pu5i151vhthus5edp5gjcm.apps.googleusercontent.com"
+    client_secret: "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"
+    scopes: "https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email"
+    auth_url: https://accounts.google.com/o/oauth2/auth
+    token_url: https://accounts.google.com/o/oauth2/token
+    allowed_domains: "grafana.switchboard.xyz gmail.com switchboard.xyz"
+    allow_sign_up: true
+  server:
+#    protocol: "https"
+#    http_port: 80
+    root_url: "https://grafana.switchboard.xyz/"
+    serve_from_sub_path: true
+env:
+  GF_ROOT_URL: "https://grafana.switchboard.xyz/"
+notifiers:
+    name: PagerDuty
+    type: pagerduty
+    uid: pagerduty1
+    org_id: 1
+    is_default: true
+    send_reminder: true
+    frequency: 5m
+    disable_resolve_message: false
+    settings:
+      autoResolve: true
+    secure_settings:
+      integrationKey: 'faafe60385384309c077ed61303e50d0'
