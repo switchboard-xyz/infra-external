@@ -79,9 +79,3 @@ helm install secrets-operator infisical-helm-charts/secrets-operator --version=0
 ```
 https://hub.docker.com/r/infisical/kubernetes-operator/tags
 https://cloudsmith.io/~infisical/repos/helm-charts/packages/detail/helm/secrets-operator/#versions
-
-### e.g.
-```
-pod_log permissioned-oracle-idx-1
-pod_log permissioned-oracle-idx-1 --previous
-```
