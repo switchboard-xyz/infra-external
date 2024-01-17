@@ -22,7 +22,12 @@ Then move `k3sup` to your `/usr/local/bin/`:
 ```bash
 sudo install k3sup /usr/local/bin/
 ```
-Refer to the documentation at https://github.com/alexellis/k3sup for more details on how to set up your cluster.
+Finally, set up a machine that you have ssh access to and change to that context in kubectl
+```
+k3sup install --ip $MY_MACHINE_IP --user root --context k3s-devnet
+kubectl config use-context k3s-devnet
+```
+For more advanced configuration, please refer to the documentation at https://github.com/alexellis/k3sup for more details on how to set up your cluster.
 
 
 ## Step 2: Install the Kubernetes SGX Plugin
@@ -35,7 +40,7 @@ kubectl apply -f 'https://raw.githubusercontent.com/intel/intel-device-plugins-f
 ```
 ## Step 3: Install supporting applications
 While an ingress controller (traefik) is automatically installed as part of setting up a k3s cluster, you may also want to set up prometheus or vmetrics to scrape metrics from the oracles, secrets management like infisical, or a log aggregator like loki
-
+```
 helm repo add vm https://victoriametrics.github.io/helm-charts/
 helm upgrade -i vmsingle vm/victoria-metrics-single -f vmetrics-values.yaml
 
@@ -53,7 +58,7 @@ helm install \
   
 helm repo add infisical-helm-charts 'https://dl.cloudsmith.io/public/infisical/helm-charts/helm/charts/' 
 helm install secrets-operator infisical-helm-charts/secrets-operator
-
+```
 
 ## Step 4: Install Switchboard Oracle
 Follow the instructions in the Switchboard Oracle repository for how to install it to your cluster.
