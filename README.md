@@ -1,13 +1,7 @@
 # install or upgrade switchboard oracle
-
-deploying solana devnet oracle:
-```console
-helm upgrade -i switchboard-oracle ./charts/switchboard-oracle -f ./chains/solana/devnet-oracle-values.yaml 
-```
-# install or upgrade switchboard oracle
 deploying near crank:
 ```console
-helm upgrade -i switchboard-crank ./charts/switchboard-crank -f ./chains/solana/devnet-crank-values.yaml
+helm upgrade -i switchboard-oracle ./charts/pull-service -f $HELM_VALUES_YAML
 ```
 
 # Some useful commands

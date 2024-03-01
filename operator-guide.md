@@ -138,6 +138,6 @@ Follow the instructions in the Switchboard Oracle
 repository for how to install it to your cluster.
 
 ```bash
-helm upgrade -i switchboard-oracle ./charts/switchboard-oracle -f $HELM_VALUES_YAML
+helm upgrade -i switchboard-oracle ./charts/pull-service -f $HELM_VALUES_YAML
 ```
 
