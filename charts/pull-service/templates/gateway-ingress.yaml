@@ -1,0 +1,28 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: gateway-ingress
+  namespace: {{ $.Values.namespace }}
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt"
+    cert-manager.io/issue-temporary-certificate: "true"
+    acme.cert-manager.io/http01-edit-in-place: "true"
+
+spec:
+  ingressClassName: nginx
+  tls:
+  - hosts:
+    - {{ $.Values.gateway.host }}
+    secretName: gateway-cert-manager-tls
+  rules:
+  - host: {{ $.Values.gateway.host }}
+    http:
+      paths:
+      - path: /
+        backend:
+          service:
+            name: gateway-service
+            port:
+              number: {{ $.Values.gateway.port }}
+        pathType: ImplementationSpecific
+

@@ -1,0 +1,250 @@
+{{- $values := .Values -}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ $values.cluster }}-pull-oracle
+  namespace: {{ $values.namespace }}
+  labels:
+    chain: {{ $values.chain }}
+    app: pull-oracle
+    should_scrape: scrape
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: oracle
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  template:
+    metadata:
+      labels:
+        chain: {{ $.Values.chain }}
+        app: oracle
+
+        should_scrape: scrape
+    spec:
+      serviceAccountName: {{ $.Values.serviceAccount }}
+      dnsPolicy: ClusterFirst
+      containers:
+      - image: {{ $values.oracle.image }}
+        env:
+        -
+          name: CHAIN
+          value: {{ $values.chain | quote }}
+        -
+          name: CLUSTER
+          value: {{ $values.cluster }}
+        -
+          name: NETWORK_ID
+          value: {{ $values.networkId }}
+        -
+          name: ENABLE_PUSH_MODEL
+          value: {{ $values.pushModel | quote }}
+        -
+          name: HEARTBEAT_INTERVAL
+          value: {{ $values.heartbeatInterval | default "30" | quote }}
+        -
+          name: KEYPAIR_PATH
+          value: "/data/protected_files/keypair.bin"
+        -
+          name: ORACLE_PORT
+          value: {{ $.Values.oracle.port | quote}}
+        -
+          name: GATEWAY_PORT
+          value: {{ $.Values.gateway.port | quote }}
+        -
+          name: ENABLE_GATEWAY
+          value: "0"
+        -
+          name: ENABLE_ORACLE
+          value: "1"
+        -
+          name: GATEWAY_ENABLE
+          value: "0"
+        -
+          name: ORACLE_ENABLE
+          value: "1"
+        -
+          name: ORACLE_INGRESS
+          value: "https://{{ $.Values.oracle.host }}"
+        -
+          name: GATEWAY_INGRESS
+          value: "https://{{ $.Values.gateway.host }}"
+        -
+          name: RPC_URL
+          value: {{ $values.rpcUrl }}
+        -
+          name: WSS_URL
+          value: {{ $values.wssUrl }}
+        -
+          name: WSS_RPC_URL
+          value: {{ $values.wssUrl }}
+        -
+          name: BACKUP_RPC_URL_1
+          value: {{ $values.backupRpc1  }}
+        -
+          name: BACKUP_RPC_URL_2
+          value: {{ $values.backupRpc2  }}
+        -
+          name: TELEMETRY_FEED_RESULT_PUSH_INTERVAL_MS
+          value: {{ $values.telemetryFeedResultPushIntervalMs | default "5000" | quote }}
+        -
+          name: TELEMETRY_FEED_RESULT_PUSH_URL
+          value: {{ $values.telemetryFeedResultPushUrl }}
+        -
+          name: TASK_RUNNER_SOLANA_RPC
+          value: {{ $values.solanaMainnetRpc }}
+        -
+          name: JUPITER_SWAP_API_KEY
+          value: {{ $values.jupiterSwapApiKey | default "3a3b41bc06d49f9c89a8550ff84072be" }}
+        -
+          name: IPFS_URL
+          value: {{ $values.ipfsApiUrl | quote }}
+        -
+          name: IPFS_SECRET
+          value: {{ $values.ipfsSecret | quote }}
+        -
+          name: IPFS_KEY
+          value: {{ $values.ipfsKey | quote }}
+        # SOLANA
+        -
+          name: ORACLE_KEY
+          value: {{ $values.oracle.key | quote}}
+        -
+          name: QUEUE
+          value: {{ $values.queueAddress | quote  }}
+        -
+          name: ATTESTATION_QUEUE
+          value: {{ $values.attestationQueue | quote }}
+        -
+          name: SWITCHBOARD_ATTESTATION_PROGRAM_ID
+          value: {{ $values.attestationProgramId | quote }}
+        -
+          name: VERIFIER
+          value: {{ $values.quoteAddress | quote }}
+        -
+          name: ORACLE_AUTHORITY
+          value: {{ $values.oracle.authority }}
+
+        # METRICS
+        -
+          name: METRICS_EXPORTER
+          value: {{ $values.metricsExporter }}
+        # LOGGING
+        - name: RUST_LOG
+          value: "info"
+        - name: RUST_BACKTRACE
+          value: "1"
+        # ALERTING
+        -
+          name: VERBOSE
+          value: {{ $values.verbose | default "0" | quote }}
+        -
+          name: DEBUG
+          value: {{ $values.debug | default "false" | quote }}
+        -
+          name: PAGERDUTY_EVENT_KEY
+          value: {{ $values.pagerdutyEventKey }}
+        -
+          name: PAYER_SECRET
+          {{ if $values.infisicalSecretKey }}
+          valueFrom:
+            secretKeyRef:
+              name: infisical-secret
+              key: {{  $values.infisicalSecretKey | quote }}
+          {{ else }}
+          value: {{ $values.payerSecret }}
+          {{ end }}
+
+      # IMAGE / RESOURCES
+        imagePullPolicy: Always #Always #IfNotPresent
+        name: {{ $values.chain }}-oracle
+
+        {{ if eq $values.command "shell" }}
+        command: ["/bin/sh"]
+        args: ["-c", "while true; do echo hello; sleep 10;done"]
+        {{ end }}
+
+
+
+        ports:
+        - name: web
+          containerPort: {{ $.Values.oracle.port }}
+          protocol: TCP
+        - name: metrics
+          containerPort: {{ $values.metricsPort }}
+          protocol: TCP
+        - name: liveness-port
+          containerPort: {{ $values.metricsPort }}
+          protocol: TCP
+
+        # {{ if ne $values.command "shell" }}
+        # # https://github.com/kubernetes/kubernetes/issues/89898#issuecomment-876539217
+        # # Wait for the container to startup and signal they are ready to receive traffic from k8s
+        # startupProbe:
+          # httpGet:
+            # path: /healthz
+            # port: liveness-port
+          # initialDelaySeconds: 5
+          # failureThreshold: 30
+          # periodSeconds: 5
+          # timeoutSeconds: 10
+        # # Check whether the pod is ready to receive traffic. If this fails it will create a new pod
+        # livenessProbe:
+          # exec:
+            # command:
+              # - sh
+              # - -c
+              # - "curl --fail http://localhost:8080/healthz || exit 1 "
+          # initialDelaySeconds: 10
+          # periodSeconds: 30
+          # failureThreshold: 3
+          # timeoutSeconds: 5
+        # {{ end }}
+
+
+        # SGX ORACLE
+        resources:
+          limits:
+            cpu: 2500m
+            memory: 4000Mi
+            sgx.intel.com/epc: 100Mi
+            sgx.intel.com/enclave: 1
+            sgx.intel.com/provision: 1
+          requests:
+            cpu: 2500m
+            memory: 3900Mi
+            sgx.intel.com/epc: 100Mi
+            sgx.intel.com/enclave: 1
+            sgx.intel.com/provision: 1
+        {{ if not $values.command  }}
+        livenessProbe:
+          httpGet:
+            path: /metrics
+            port: {{ $values.metricsPort }}
+          initialDelaySeconds: 60
+          failureThreshold: 10
+          periodSeconds: 10
+          timeoutSeconds: 10
+          {{ end }}
+
+
+
+        volumeMounts:
+        - mountPath: /dev/sgx/enclave
+          name: dev-sgx-enclave
+        - mountPath: /dev/sgx/provision
+          name: dev-sgx-provision
+
+      volumes:
+      - name: shared-data
+        emptyDir: {}
+      - name: dev-sgx-enclave
+        hostPath:
+          path: /dev/sgx/enclave
+      - name: dev-sgx-provision
+        hostPath:
+          path: /dev/sgx/provision
+
