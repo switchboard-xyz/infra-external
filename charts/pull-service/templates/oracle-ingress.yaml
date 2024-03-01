@@ -1,0 +1,28 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: oracle-ingress
+  namespace: {{ $.Values.namespace }}
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt"
+    cert-manager.io/issue-temporary-certificate: "true"
+    acme.cert-manager.io/http01-edit-in-place: "true"
+
+spec:
+  ingressClassName: nginx
+  tls:
+  - hosts:
+    - {{ $.Values.oracle.host }}
+    secretName: oracle-cert-manager-tls
+  rules:
+  - host: {{ $.Values.oracle.host }}
+    http:
+      paths:
+      - path: /
+        backend:
+          service:
+            name: oracle-service
+            port:
+              number: {{ $.Values.oracle.port }}
+        pathType: ImplementationSpecific
+

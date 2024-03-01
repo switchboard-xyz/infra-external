@@ -24,7 +24,7 @@ sudo install k3sup /usr/local/bin/
 ```
 Finally, set up a machine that you have ssh access to and change to that context in kubectl
 ```
-k3sup install --ip $MY_MACHINE_IP --user root --context k3s-devnet
+k3sup install --ip $SERVER_IP --user root --context k3s-devnet
 kubectl config use-context k3s-devnet
 ```
 For more advanced configuration, please refer to the documentation at https://github.com/alexellis/k3sup for more details on how to set up your cluster.

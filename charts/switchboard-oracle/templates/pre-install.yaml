@@ -1,0 +1,102 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: create-pvc
+  namespace: {{ $.Values.namespace }}
+  annotations:
+    "helm.sh/hook": pre-install,pre-upgrade
+    "helm.sh/hook-weight": "5"
+spec:
+  template:
+    spec:
+      serviceAccountName:
+      containers:
+      - name: create-pvc
+        env:
+        - name: PVC_NAME
+          value: {{ $.Values.pvcName | quote }}  # replace with your PVC name
+        - name: NAMESPACE
+          value: {{ $.Values.namespace | quote }}  # replace with your namespace
+        image: alpine/k8s:1.29.0
+        command: ["/bin/sh", "-c"]
+        args:
+        - |
+          OLD_PVC_NAME=$(kubectl -n $NAMESPACE get po -l app=oracle --field-selector=status.phase=Running -o jsonpath='{.items[*].spec.volumes[*].persistentVolumeClaim.claimName}')
+          if [[ -z "$OLD_PVC_NAME" ]]
+          then
+            echo "OLD_PVC_NAME is empty"
+            cat <<EOF | yq eval 'del(.spec.dataSource)' - | kubectl apply -f -
+          else
+            echo "OLD_PVC_NAME is NOT empty and contains: $OLD_PVC_NAME"
+            cat <<EOF | yq eval ".spec.dataSource.name = \"$OLD_PVC_NAME\"" - | kubectl apply -f -
+          fi
+          apiVersion: v1
+          kind: PersistentVolumeClaim
+          metadata:
+            name: $PVC_NAME
+            namespace: $NAMESPACE
+          spec:
+            accessModes:
+              - ReadWriteOnce
+            resources:
+              requests:
+                storage: 60Gi
+            dataSource:
+              name: tmp-pvc
+              kind: PersistentVolumeClaim
+              apiGroup: ""
+          EOF
+
+      
+      restartPolicy: Never
+  backoffLimit: 2
+
+#OLD_PVC_NAME=$(kubectl -n $2 get po -l app=oracle --field-selector=status.phase=Running -o jsonpath='{.items[*].spec.volumes[*].persistentVolumeClaim.claimName}' )  
+
+#if [[ -z "$OLD_PVC_NAME" ]]
+#then
+#  echo "OLD_PVC_NAME is empty"
+#  yq eval 'del(.spec.dataSource)' -i ./scripts/tmp-pvc.yaml
+#
+#else
+#  echo "OLD_PVC_NAME is NOT empty and contains: $OLD_PVC_NAME"
+#  yq eval ".spec.dataSource.name = \"$OLD_PVC_NAME\"" -i ./scripts/tmp-pvc.yaml
+#fi
+#
+---
+
+
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  namespace: default
+  name: pvc-creator-role
+rules:
+- apiGroups: [""]
+  resources: ["persistentvolumeclaims", "pods"]
+  verbs: ["get", "watch", "list", "create", "delete"]
+
+
+---
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: pvc-creator-rolebinding
+  namespace: {{ $.Values.namespace }}
+subjects:
+- kind: ServiceAccount
+  name: pvc-creator-service-account
+  namespace: {{ $.Values.namespace }}
+roleRef:
+  kind: Role
+  name: pvc-creator-role
+  apiGroup: rbac.authorization.k8s.io
+
+---
+
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: pvc-creator-service-account
+  namespace: {{ $.Values.namespace }}
+
