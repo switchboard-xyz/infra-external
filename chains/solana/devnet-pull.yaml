@@ -6,29 +6,29 @@ infisicalSecretSlug: "dev"
 jupiterSwapApiKey: "3a3b41bc06d49f9c89a8550ff84072be"
 namespace: "devnet-pull"
 networkId: "devnet"
-pagerdutyEventKey: "redacted"
-rpcUrl: "redacted"
-solanaMainnetRpc: "redacted"
-wssUrl: "redacted"
+pagerdutyEventKey: "FILL_IN_HERE>"
+rpcUrl: "<FILL_IN_HERE>"
+solanaMainnetRpc: "<FILL_IN_HERE>"
+wssUrl: "<FILL_IN_HERE>"
 gateway:
-    host: "pull-gateway.switchboard.xyz"
+    host: "<FILL_IN_HERE>"
     image: "docker.io/switchboardlabs/pull-oracle:dev-RC_03_11_24_00_40"
 #you can get the keys below by running scripts/bootstrap.ts
 oracle:
     image: "docker.io/switchboardlabs/pull-oracle:dev-RC_03_11_24_00_40"
-    authority: "2KgowxogBrGqRcgXQEmqFvC3PGtCu66qERNJevYW8Ajh"
+    authority: "<FILL_IN_HERE>"
     guardian:
       queue: "RH4MXRCHriboKoPynKsGacC61D9QHa1hVXLFXMX9QNc"
-      key: "redacted"
-      host: "guardian-oracle.switchboard.xyz"
+      host: "<FILL_IN_HERE>"
+      key: "<FILL_IN_HERE>"
     push:
       queue: "uPeRMdfPmrPqgRWSrjAnAkH78RqAhe5kXoW6vBYRqFX"
-      key: "redacted"
-      host: "push-oracle.switchboard.xyz"
+      host: "<FILL_IN_HERE>"
+      key: "<FILL_IN_HERE>"
     pull:
       queue: "v1k9qvCuvYgDkAcTExnrkt2BPNENfVVpowp5d7PYKAa"
-      key: "redacted"
-      host: "pull-oracle.switchboard.xyz"
+      host: "<FILL_IN_HERE>"
+      key: "<FILL_IN_HERE>"
 
 # command: shell
 
