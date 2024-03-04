@@ -1,40 +1,50 @@
+attestationProgramId: "FnaRmqv87EE7M7DJNpaWRHC9rPA2WrDJpnvvbGp4irPA"
+attestationQueue: "9qcc43cB7G2Fr11mJscJbystDmdFnWpcg3PKyjuadUK6"
 chain: "solana"
 cluster: "devnet"
-networkId: "devnet"
 heartbeatInterval: "30"
 infisicalSecretKey: "SOLANA_KEY"
 infisicalSecretSlug: "dev"
-namespace: "devnet-pull"
-solanaMainnetRpc: "https://switchbo-switchbo-6225.devnet.rpcpool.com/f6fb9f02-0777-498b-b8f5-67cbb1fc0d14"
-jupiterSwapApiKey: "3a3b41bc06d49f9c89a8550ff84072be"
-pagerdutyEventKey: "redacted"
-rpcUrl: "https://switchbo-switchbo-6225.devnet.rpcpool.com/f6fb9f02-0777-498b-b8f5-67cbb1fc0d14"
-wssUrl: "wss://switchbo-switchbo-6225.devnet.rpcpool.com/f6fb9f02-0777-498b-b8f5-67cbb1fc0d14"
 ipfsApiUrl: https://ipfs.infura.io:5001
-ipfsSecret: "cbfd29f500aee37e0b4139dabdbe396a"
 ipfsKey: "2OuGHppwQzKcS9HErVCZ12ngIIr"
-attestationProgramId: "FnaRmqv87EE7M7DJNpaWRHC9rPA2WrDJpnvvbGp4irPA"
-pushModel: true
+ipfsSecret: "cbfd29f500aee37e0b4139dabdbe396a"
+jupiterSwapApiKey: "3a3b41bc06d49f9c89a8550ff84072be"
 metricsPort: 9090
+namespace: "devnet-pull"
+networkId: "devnet"
+pagerdutyEventKey: "redacted"
+pushModel: true
+queueAddress: "uPeRMdfPmrPqgRWSrjAnAkH78RqAhe5kXoW6vBYRqFX"
+quoteAddress: "7dbpZwLsdu1kFcJ8F96dj1c5jKostG63KLcg1gYnXnqQ"
+rpcUrl: "https://switchbo-switchbo-6225.devnet.rpcpool.com/f6fb9f02-0777-498b-b8f5-67cbb1fc0d14"
+solanaMainnetRpc: "https://switchbo-switchbo-6225.devnet.rpcpool.com/f6fb9f02-0777-498b-b8f5-67cbb1fc0d14"
+wssUrl: "wss://switchbo-switchbo-6225.devnet.rpcpool.com/f6fb9f02-0777-498b-b8f5-67cbb1fc0d14"
 gateway:
     host: "pull-gateway.switchboard.xyz"
-    image: "docker.io/switchboardlabs/pull-oracle:v8"
+    image: "docker.io/switchboardlabs/pull-oracle:v10"
     port: 8082
+    enableGateway: 1
+    enableOracle: 0
 oracle:
-    host: "pull-oracle.switchboard.xyz"
-    image: "docker.io/switchboardlabs/pull-oracle:v8"
-    authority: "redacted"
-    key: "redacted"
-    port: 8081
-guardian:
-    host: "guardian-oracle.switchboard.xyz"
-    image: "docker.io/switchboardlabs/pull-oracle:v8"
-    authority: "redacted"
-    key: "redacted"
-    port: 8081
-queueAddress: "redacted"
-attestationQueue: "9qcc43cB7G2Fr11mJscJbystDmdFnWpcg3PKyjuadUK6"
-quoteAddress: "7dbpZwLsdu1kFcJ8F96dj1c5jKostG63KLcg1gYnXnqQ"
+    image: "docker.io/switchboardlabs/pull-oracle:v10"
+    authority: "2KgowxogBrGqRcgXQEmqFvC3PGtCu66qERNJevYW8Ajh"
+    enableGateway: 0
+    enableOracle: 1
+    guardian:
+      queue: "RH4MXRCHriboKoPynKsGacC61D9QHa1hVXLFXMX9QNc"
+      key: "8ktDbWs5dBipxmnZsHKhmSN5sqswunUNKzeR8KZ3XgNy"
+      host: "guardian-oracle.switchboard.xyz"
+      port: 8081
+    push:
+      queue: "uPeRMdfPmrPqgRWSrjAnAkH78RqAhe5kXoW6vBYRqFX"
+      key: "8AGNUUHphu8YevPoTGTbcbsJLKBe2F6byukfoPUWSHWm"
+      host: "push-oracle.switchboard.xyz"
+      port: 8081
+    pull:
+      queue: "v1k9qvCuvYgDkAcTExnrkt2BPNENfVVpowp5d7PYKAa"
+      key: "CFf1HHQrJ1Eji4SScfxCLrao89Eg6FTrkyPBLBERLFjS"
+      host: "pull-oracle.switchboard.xyz"
+      port: 8081
 
 # command: shell
 sgx:

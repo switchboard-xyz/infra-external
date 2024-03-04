@@ -39,7 +39,7 @@ spec:
           value: {{ $values.networkId }}
         -
           name: ENABLE_PUSH_MODEL
-          value: {{ $values.pushModel | quote }}
+          value: "false"
         -
           name: HEARTBEAT_INTERVAL
           value: {{ $values.heartbeatInterval | default "30" | quote }}
@@ -51,15 +51,21 @@ spec:
           value: "/data/protected_files/keypair.bin"
         -
           name: ORACLE_PORT
-          value: {{ $.Values.oracle.port | quote}}
+          value: "8081"
         -
           name: GATEWAY_PORT
-          value: {{ $.Values.gateway.port | quote }}
+          value: "8082"
+        -
+          name: GUARDIAN_PORT
+          value: "8083"
         -
           name: ENABLE_GATEWAY
           value: "1"
         -
           name: ENABLE_ORACLE
+          value: "0"
+        -
+          name: ENABLE_GUARDIAN
           value: "0"
         -
           name: ORACLE_INGRESS

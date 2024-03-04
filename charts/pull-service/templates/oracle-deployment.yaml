@@ -42,7 +42,7 @@ spec:
           value: {{ $values.networkId }}
         -
           name: ENABLE_PUSH_MODEL
-          value: {{ $values.pushModel | quote }}
+          value: {{ if eq $component "push" }}"true"{{ else }}"false"{{ end }}
         -
           name: HEARTBEAT_INTERVAL
           value: {{ $values.heartbeatInterval | default "30" | quote }}
@@ -51,18 +51,18 @@ spec:
           value: "/data/protected_files/keypair.bin"
         -
           name: ORACLE_PORT
-          value: {{ $config.port | quote}}
+          value: "8081"
         -
           name: GATEWAY_PORT
-          value: {{ $.Values.gateway.port | quote }}
+          value: "8082"
+        -
+          name: GUARDIAN_PORT
+          value: "8083"
         -
           name: ENABLE_GATEWAY
           value: "0"
         -
-          name: ENABLE_PUSH_ORACLE
-          value: {{ if eq $component "push" }}"1"{{ else }}"0"{{ end }}
-        -
-          name: ENABLE_PULL_ORACLE
+          name: ENABLE_ORACLE
           value: {{ if eq $component "pull" }}"1"{{ else }}"0"{{ end }}
         -
           name: ENABLE_GUARDIAN
