@@ -16,9 +16,9 @@ solanaMainnetRpc: "https://switchbo-switchbo-6225.devnet.rpcpool.com/f6fb9f02-07
 wssUrl: "wss://switchbo-switchbo-6225.devnet.rpcpool.com/f6fb9f02-0777-498b-b8f5-67cbb1fc0d14"
 gateway:
     host: "pull-gateway-az.switchboard.xyz"
-    image: "docker.io/switchboardlabs/pull-oracle:v14"
+    image: "docker.io/switchboardlabs/pull-oracle:v18"
 oracle:
-    image: "docker.io/switchboardlabs/pull-oracle:v14"
+    image: "docker.io/switchboardlabs/pull-oracle:v18"
     authority: "2KgowxogBrGqRcgXQEmqFvC3PGtCu66qERNJevYW8Ajh"
     guardian:
       queue: "RH4MXRCHriboKoPynKsGacC61D9QHa1hVXLFXMX9QNc"
