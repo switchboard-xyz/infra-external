@@ -30,10 +30,3 @@ oracle:
       host: "<FILL_IN_HERE>"
       key: "<FILL_IN_HERE>"
 
-# command: shell
-
-# sgx:
-#   type: "azure"
-#   memoryMiB: 32Mi
-#   cpu: 1500m
-
