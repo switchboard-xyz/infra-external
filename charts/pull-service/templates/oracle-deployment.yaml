@@ -60,7 +60,7 @@ spec:
           value: "0"
         -
           name: ENABLE_PUSH_ORACLE
-          value: {{ if $component "push" }}"1"{{ else }}"0"{{ end }}
+          value: {{ if eq $component "push" }}"1"{{ else }}"0"{{ end }}
         -
           name: ENABLE_PULL_ORACLE
           value: {{ if eq $component "pull" }}"1"{{ else }}"0"{{ end }}
