@@ -56,12 +56,6 @@ spec:
           name: GATEWAY_PORT
           value: {{ $.Values.gateway.port | quote }}
         -
-          name: GATEWAY_ENABLE
-          value: "1"
-        -
-          name: ORACLE_ENABLE
-          value: "0"
-        -
           name: ENABLE_GATEWAY
           value: "1"
         -
