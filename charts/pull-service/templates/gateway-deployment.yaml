@@ -68,11 +68,14 @@ spec:
           name: ENABLE_GUARDIAN
           value: "0"
         -
+          name: GUARDIAN_INGRESS
+          value: "https://{{ $.Values.oracle.guardian.host }}"
+        -
           name: ORACLE_INGRESS
-          value: {{ $.Values.oracle.host }}
+          value: "https://{{ $.Values.oracle.pull.host }}"
         -
           name: GATEWAY_INGRESS
-          value: {{ $.Values.gateway.host }}
+          value: "https://{{ $.Values.gateway.host }}"
         -
           name: RPC_URL
           value: {{ $values.rpcUrl }}

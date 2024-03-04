@@ -63,7 +63,7 @@ spec:
           value: "0"
         -
           name: ENABLE_ORACLE
-          value: {{ if eq $component "pull" }}"1"{{ else }}"0"{{ end }}
+          value: {{ if or (eq $component "pull") (eq $component "push") }}"1"{{ else }}"0"{{ end }}
         -
           name: ENABLE_GUARDIAN
           value: {{ if eq $component "guardian" }}"1"{{ else }}"0"{{ end }}
@@ -92,8 +92,11 @@ spec:
           name: PUSH_QUEUE
           value: "{{ $.Values.oracle.push.queue }}"
         -
+          name: GUARDIAN_INGRESS
+          value: "https://{{ $.Values.oracle.guardian.host }}"
+        -
           name: ORACLE_INGRESS
-          value: "https://{{ $.Values.oracle.host }}"
+          value: "https://{{ $.Values.oracle.pull.host }}"
         -
           name: GATEWAY_INGRESS
           value: "https://{{ $.Values.gateway.host }}"
@@ -135,17 +138,8 @@ spec:
           value: {{ $values.ipfsKey | quote }}
         # SOLANA
         -
-          name: QUEUE
-          value: {{ $values.queueAddress | quote  }}
-        -
-          name: ATTESTATION_QUEUE
-          value: {{ $values.attestationQueue | quote }}
-        -
           name: SWITCHBOARD_ATTESTATION_PROGRAM_ID
           value: {{ $values.attestationProgramId | quote }}
-        -
-          name: VERIFIER
-          value: {{ $values.quoteAddress | quote }}
         -
           name: ORACLE_AUTHORITY
           value: {{ $values.oracle.authority }}
