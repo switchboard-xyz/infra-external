@@ -63,7 +63,7 @@ spec:
           value: "0"
         -
           name: ENABLE_ORACLE
-          value: {{ if eq $component "pull" }}"1"{{ else }}"0"{{ end }}
+          value: {{ if or (eq $component "pull") (eq $component "push") }}"1"{{ else }}"0"{{ end }}
         -
           name: ENABLE_GUARDIAN
           value: {{ if eq $component "guardian" }}"1"{{ else }}"0"{{ end }}
