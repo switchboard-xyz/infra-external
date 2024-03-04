@@ -7,6 +7,6 @@ elif [ "$1" == "equinix-devnet" ]; then
     cp ~/.kube/config-equinix ~/.kube/config
     helm upgrade -i pull-oracle-devnet ./charts/pull-service/ -f ./chains/solana/devnet-pull-equinix.yaml
 else
-    echo "Invalid argument. Please use either 'mainnet' or 'devnet'."
+    echo "Invalid argument. Please use either 'equinix-devnet' or 'devnet'."
 fi
 
