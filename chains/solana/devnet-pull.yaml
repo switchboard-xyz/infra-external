@@ -15,23 +15,23 @@ rpcUrl: "https://switchbo-switchbo-6225.devnet.rpcpool.com/f6fb9f02-0777-498b-b8
 solanaMainnetRpc: "https://switchbo-switchbo-6225.devnet.rpcpool.com/f6fb9f02-0777-498b-b8f5-67cbb1fc0d14"
 wssUrl: "wss://switchbo-switchbo-6225.devnet.rpcpool.com/f6fb9f02-0777-498b-b8f5-67cbb1fc0d14"
 gateway:
-    host: "pull-gateway.switchboard.xyz"
-    image: "docker.io/switchboardlabs/pull-oracle:v11"
+    host: "pull-gateway-az.switchboard.xyz"
+    image: "docker.io/switchboardlabs/pull-oracle:v14"
 oracle:
-    image: "docker.io/switchboardlabs/pull-oracle:v11"
+    image: "docker.io/switchboardlabs/pull-oracle:v14"
     authority: "2KgowxogBrGqRcgXQEmqFvC3PGtCu66qERNJevYW8Ajh"
     guardian:
       queue: "RH4MXRCHriboKoPynKsGacC61D9QHa1hVXLFXMX9QNc"
       key: "8ktDbWs5dBipxmnZsHKhmSN5sqswunUNKzeR8KZ3XgNy"
-      host: "guardian-oracle.switchboard.xyz"
+      host: "guardian-oracle-az.switchboard.xyz"
     push:
       queue: "uPeRMdfPmrPqgRWSrjAnAkH78RqAhe5kXoW6vBYRqFX"
       key: "8AGNUUHphu8YevPoTGTbcbsJLKBe2F6byukfoPUWSHWm"
-      host: "push-oracle.switchboard.xyz"
+      host: "push-oracle-az.switchboard.xyz"
     pull:
       queue: "v1k9qvCuvYgDkAcTExnrkt2BPNENfVVpowp5d7PYKAa"
       key: "CFf1HHQrJ1Eji4SScfxCLrao89Eg6FTrkyPBLBERLFjS"
-      host: "pull-oracle.switchboard.xyz"
+      host: "pull-oracle-az.switchboard.xyz"
 
 # command: shell
 sgx:
