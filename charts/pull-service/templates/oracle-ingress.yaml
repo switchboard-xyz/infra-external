@@ -1,7 +1,9 @@
+{{- range $component, $config := .Values.oracle }}
+{{- if or (eq $component "guardian") (eq $component "push") (eq $component "pull") }}
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: oracle-ingress
+  name: {{ $component }}-oracle-ingress
   namespace: {{ $.Values.namespace }}
   annotations:
     cert-manager.io/cluster-issuer: "letsencrypt"
@@ -12,17 +14,19 @@ spec:
   ingressClassName: nginx
   tls:
   - hosts:
-    - {{ $.Values.oracle.host }}
+    - {{ $config.host }}
     secretName: oracle-cert-manager-tls
   rules:
-  - host: {{ $.Values.oracle.host }}
+  - host: {{ $config.host }}
     http:
       paths:
       - path: /
         backend:
           service:
-            name: oracle-service
+            name: {{ $component }}-oracle-service
             port:
-              number: {{ $.Values.oracle.port }}
+              number: {{ $config.port }}
         pathType: ImplementationSpecific
-
+---
+{{- end }}          
+{{- end }}          
