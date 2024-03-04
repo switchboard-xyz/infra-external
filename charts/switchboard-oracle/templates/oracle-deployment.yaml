@@ -351,7 +351,7 @@ spec:
             cpu: 2500m
             memory: 4000Mi
             {{ if eq $values.sgx.type "azure" }}
-            sgx.intel.com/epc: 100Mi
+            sgx.intel.com/epc: 25Mi
             sgx.intel.com/enclave: 1
             sgx.intel.com/provision: 1
             {{ end }}
@@ -359,7 +359,7 @@ spec:
             cpu: 2500m
             memory: 3900Mi
             {{ if eq $values.sgx.type "azure" }}
-            sgx.intel.com/epc: 100Mi
+            sgx.intel.com/epc: 25Mi
             sgx.intel.com/enclave: 1
             sgx.intel.com/provision: 1
             {{ end }}

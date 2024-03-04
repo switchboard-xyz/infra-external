@@ -195,9 +195,9 @@ spec:
         - name: metrics
           containerPort: {{ $values.metricsPort }}
           protocol: TCP
-        - name: liveness-port
-          containerPort: {{ $values.metricsPort }}
-          protocol: TCP
+        # - name: liveness-port
+          # containerPort: {{ $values.metricsPort }}
+          # protocol: TCP
 
         # {{ if ne $values.command "shell" }}
         # # https://github.com/kubernetes/kubernetes/issues/89898#issuecomment-876539217
@@ -228,14 +228,14 @@ spec:
         resources:
           limits:
             cpu: 2500m
-            memory: 4000Mi
-            sgx.intel.com/epc: 100Mi
+            memory: 3000Mi
+            sgx.intel.com/epc: 25Mi
             sgx.intel.com/enclave: 1
             sgx.intel.com/provision: 1
           requests:
             cpu: 2500m
-            memory: 3900Mi
-            sgx.intel.com/epc: 100Mi
+            memory: 3000Mi
+            sgx.intel.com/epc: 25Mi
             sgx.intel.com/enclave: 1
             sgx.intel.com/provision: 1
         {{ if not $values.command  }}
