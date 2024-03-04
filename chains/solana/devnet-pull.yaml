@@ -5,32 +5,33 @@ heartbeatInterval: "30"
 infisicalSecretKey: "SOLANA_KEY"
 infisicalSecretSlug: "dev"
 namespace: "devnet-pull"
-solanaMainnetRpc: "redacted"
-jupiterSwapApiKey: "redacted"
+solanaMainnetRpc: "https://switchbo-switchbo-6225.devnet.rpcpool.com/f6fb9f02-0777-498b-b8f5-67cbb1fc0d14"
+jupiterSwapApiKey: "3a3b41bc06d49f9c89a8550ff84072be"
 pagerdutyEventKey: "redacted"
-quoteAddress: "redacted"
-rpcUrl: "redacted"
-wssUrl: "redacted"
+rpcUrl: "https://switchbo-switchbo-6225.devnet.rpcpool.com/f6fb9f02-0777-498b-b8f5-67cbb1fc0d14"
+wssUrl: "wss://switchbo-switchbo-6225.devnet.rpcpool.com/f6fb9f02-0777-498b-b8f5-67cbb1fc0d14"
 ipfsApiUrl: https://ipfs.infura.io:5001
-ipfsSecret: "redacted"
-ipfsKey: "redacted"
-attestationProgramId: "CR1hCrkKveeWrYYs5kk7rasRM2AH1vZy8s8fn42NBwkq"
+ipfsSecret: "cbfd29f500aee37e0b4139dabdbe396a"
+ipfsKey: "2OuGHppwQzKcS9HErVCZ12ngIIr"
+attestationProgramId: "FnaRmqv87EE7M7DJNpaWRHC9rPA2WrDJpnvvbGp4irPA"
 pushModel: true
 metricsPort: 9090
 gateway:
     host: "pull-gateway.switchboard.xyz"
     image: "docker.io/switchboardlabs/pull-oracle:v8"
     port: 8082
-    enableGateway: 1
-    enableOracle: 0
 oracle:
     host: "pull-oracle.switchboard.xyz"
     image: "docker.io/switchboardlabs/pull-oracle:v8"
     authority: "redacted"
     key: "redacted"
     port: 8081
-    enableGateway: 0
-    enableOracle: 1
+guardian:
+    host: "guardian-oracle.switchboard.xyz"
+    image: "docker.io/switchboardlabs/pull-oracle:v8"
+    authority: "redacted"
+    key: "redacted"
+    port: 8081
 queueAddress: "redacted"
 attestationQueue: "9qcc43cB7G2Fr11mJscJbystDmdFnWpcg3PKyjuadUK6"
 quoteAddress: "7dbpZwLsdu1kFcJ8F96dj1c5jKostG63KLcg1gYnXnqQ"
