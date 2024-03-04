@@ -1,3 +1,5 @@
+attestationProgramId: "FnaRmqv87EE7M7DJNpaWRHC9rPA2WrDJpnvvbGp4irPA"
+attestationQueue: "9qcc43cB7G2Fr11mJscJbystDmdFnWpcg3PKyjuadUK6"
 chain: "solana"
 cluster: "devnet"
 heartbeatInterval: "30"
