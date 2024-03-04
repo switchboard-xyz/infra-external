@@ -1,0 +1,41 @@
+attestationProgramId: "FnaRmqv87EE7M7DJNpaWRHC9rPA2WrDJpnvvbGp4irPA"
+chain: "solana"
+cluster: "devnet"
+heartbeatInterval: "30"
+infisicalSecretKey: "SOLANA_KEY"
+infisicalSecretSlug: "dev"
+ipfsApiUrl: https://ipfs.infura.io:5001
+ipfsKey: "2OuGHppwQzKcS9HErVCZ12ngIIr"
+ipfsSecret: "cbfd29f500aee37e0b4139dabdbe396a"
+jupiterSwapApiKey: "3a3b41bc06d49f9c89a8550ff84072be"
+namespace: "devnet-pull"
+networkId: "devnet"
+pagerdutyEventKey: "redacted"
+rpcUrl: "https://switchbo-switchbo-6225.devnet.rpcpool.com/f6fb9f02-0777-498b-b8f5-67cbb1fc0d14"
+solanaMainnetRpc: "https://switchbo-switchbo-6225.devnet.rpcpool.com/f6fb9f02-0777-498b-b8f5-67cbb1fc0d14"
+wssUrl: "wss://switchbo-switchbo-6225.devnet.rpcpool.com/f6fb9f02-0777-498b-b8f5-67cbb1fc0d14"
+gateway:
+    host: "pull-gateway.switchboard.xyz"
+    image: "docker.io/switchboardlabs/pull-oracle:v18"
+oracle:
+    image: "docker.io/switchboardlabs/pull-oracle:v18"
+    authority: "2KgowxogBrGqRcgXQEmqFvC3PGtCu66qERNJevYW8Ajh"
+    guardian:
+      queue: "RH4MXRCHriboKoPynKsGacC61D9QHa1hVXLFXMX9QNc"
+      key: "8ktDbWs5dBipxmnZsHKhmSN5sqswunUNKzeR8KZ3XgNy"
+      host: "guardian-oracle.switchboard.xyz"
+    push:
+      queue: "uPeRMdfPmrPqgRWSrjAnAkH78RqAhe5kXoW6vBYRqFX"
+      key: "8AGNUUHphu8YevPoTGTbcbsJLKBe2F6byukfoPUWSHWm"
+      host: "push-oracle.switchboard.xyz"
+    pull:
+      queue: "v1k9qvCuvYgDkAcTExnrkt2BPNENfVVpowp5d7PYKAa"
+      key: "CFf1HHQrJ1Eji4SScfxCLrao89Eg6FTrkyPBLBERLFjS"
+      host: "pull-oracle.switchboard.xyz"
+
+# command: shell
+sgx:
+  type: "azure"
+  memoryMiB: 32Mi
+  cpu: 1500m
+
