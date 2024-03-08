@@ -39,7 +39,7 @@ spec:
           value: {{ $values.networkId }}
         -
           name: ENABLE_PUSH_MODEL
-          value: {{ $values.pushModel | quote }}
+          value: "false"
         -
           name: HEARTBEAT_INTERVAL
           value: {{ $values.heartbeatInterval | default "30" | quote }}
@@ -51,10 +51,13 @@ spec:
           value: "/data/protected_files/keypair.bin"
         -
           name: ORACLE_PORT
-          value: {{ $.Values.oracle.port | quote}}
+          value: "8081"
         -
           name: GATEWAY_PORT
-          value: {{ $.Values.gateway.port | quote }}
+          value: "8082"
+        -
+          name: GUARDIAN_PORT
+          value: "8083"
         -
           name: ENABLE_GATEWAY
           value: "1"
@@ -62,11 +65,17 @@ spec:
           name: ENABLE_ORACLE
           value: "0"
         -
+          name: ENABLE_GUARDIAN
+          value: "0"
+        -
+          name: GUARDIAN_INGRESS
+          value: "https://{{ $.Values.oracle.guardian.host }}"
+        -
           name: ORACLE_INGRESS
-          value: {{ $.Values.oracle.host }}
+          value: "https://{{ $.Values.oracle.pull.host }}"
         -
           name: GATEWAY_INGRESS
-          value: {{ $.Values.gateway.host }}
+          value: "https://{{ $.Values.gateway.host }}"
         -
           name: RPC_URL
           value: {{ $values.rpcUrl }}
@@ -177,14 +186,14 @@ spec:
           limits:
             cpu: 2500m
             memory: 4000Mi
-            sgx.intel.com/epc: 100Mi
+            sgx.intel.com/epc: 25Mi
             sgx.intel.com/enclave: 1
             sgx.intel.com/provision: 1
           requests:
             cpu: 2500m
             memory: 3900Mi
 
-            sgx.intel.com/epc: 100Mi
+            sgx.intel.com/epc: 25Mi
             sgx.intel.com/enclave: 1
             sgx.intel.com/provision: 1
 

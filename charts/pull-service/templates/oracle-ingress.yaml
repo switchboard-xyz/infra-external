@@ -15,7 +15,7 @@ spec:
   tls:
   - hosts:
     - {{ $config.host }}
-    secretName: oracle-cert-manager-tls
+    secretName: {{ $component }}-oracle-cert-manager-tls
   rules:
   - host: {{ $config.host }}
     http:
@@ -28,5 +28,5 @@ spec:
               number: {{ $config.port }}
         pathType: ImplementationSpecific
 ---
-{{- end }}          
-{{- end }}          
+{{- end }}
+{{- end }}

@@ -42,7 +42,7 @@ spec:
           value: {{ $values.networkId }}
         -
           name: ENABLE_PUSH_MODEL
-          value: {{ $values.pushModel | quote }}
+          value: {{ if eq $component "push" }}"true"{{ else }}"false"{{ end }}
         -
           name: HEARTBEAT_INTERVAL
           value: {{ $values.heartbeatInterval | default "30" | quote }}
@@ -51,20 +51,23 @@ spec:
           value: "/data/protected_files/keypair.bin"
         -
           name: ORACLE_PORT
-          value: {{ $config.port | quote}}
+          value: "8081"
         -
           name: GATEWAY_PORT
-          value: {{ $.Values.gateway.port | quote }}
+          value: "8082"
+        -
+          name: GUARDIAN_PORT
+          value: "8083"
         -
           name: ENABLE_GATEWAY
           value: "0"
-        - 
+        -
           name: ENABLE_PUSH_ORACLE
           value: {{ if eq $component "push" }}"1"{{ else }}"0"{{ end }}
-        - 
+        -
           name: ENABLE_PULL_ORACLE
-          value: {{ if eq $component "pull" }}"1"{{ else }}"0"{{ end }}          
-        - 
+          value: {{ if eq $component "pull" }}"1"{{ else }}"0"{{ end }}
+        -
           name: ENABLE_GUARDIAN
           value: {{ if eq $component "guardian" }}"1"{{ else }}"0"{{ end }}
         -
@@ -72,7 +75,7 @@ spec:
           value: "300000"
         -
           name: SOLANA_COMPUTE_UNIT_PRICE
-          value: "1"          
+          value: "1"
         -
           name: PULL_ORACLE
           value: "{{ $.Values.oracle.pull.key }}"
@@ -84,16 +87,19 @@ spec:
           value: "{{ $.Values.oracle.guardian.key }}"
         -
           name: GUARDIAN_QUEUE
-          value: "{{ $.Values.oracle.guardian.queue }}"                                                  
+          value: "{{ $.Values.oracle.guardian.queue }}"
         -
           name: PUSH_ORACLE
           value: "{{ $.Values.oracle.push.key }}"
         -
           name: PUSH_QUEUE
-          value: "{{ $.Values.oracle.push.queue }}" 
+          value: "{{ $.Values.oracle.push.queue }}"
+        -
+          name: GUARDIAN_INGRESS
+          value: "https://{{ $.Values.oracle.guardian.host }}"
         -
           name: ORACLE_INGRESS
-          value: "https://{{ $.Values.oracle.host }}"
+          value: "https://{{ $.Values.oracle.pull.host }}"
         -
           name: GATEWAY_INGRESS
           value: "https://{{ $.Values.gateway.host }}"
@@ -135,17 +141,8 @@ spec:
           value: {{ $values.ipfsKey | quote }}
         # SOLANA
         -
-          name: QUEUE
-          value: {{ $values.queueAddress | quote  }}
-        -
-          name: ATTESTATION_QUEUE
-          value: {{ $values.attestationQueue | quote }}
-        -
           name: SWITCHBOARD_ATTESTATION_PROGRAM_ID
           value: {{ $values.attestationProgramId | quote }}
-        -
-          name: VERIFIER
-          value: {{ $values.quoteAddress | quote }}
         -
           name: ORACLE_AUTHORITY
           value: {{ $values.oracle.authority }}
@@ -198,9 +195,9 @@ spec:
         - name: metrics
           containerPort: {{ $values.metricsPort }}
           protocol: TCP
-        - name: liveness-port
-          containerPort: {{ $values.metricsPort }}
-          protocol: TCP
+        # - name: liveness-port
+          # containerPort: {{ $values.metricsPort }}
+          # protocol: TCP
 
         # {{ if ne $values.command "shell" }}
         # # https://github.com/kubernetes/kubernetes/issues/89898#issuecomment-876539217
@@ -231,14 +228,14 @@ spec:
         resources:
           limits:
             cpu: 2500m
-            memory: 4000Mi
-            sgx.intel.com/epc: 100Mi
+            memory: 3000Mi
+            sgx.intel.com/epc: 25Mi
             sgx.intel.com/enclave: 1
             sgx.intel.com/provision: 1
           requests:
             cpu: 2500m
-            memory: 3900Mi
-            sgx.intel.com/epc: 100Mi
+            memory: 3000Mi
+            sgx.intel.com/epc: 25Mi
             sgx.intel.com/enclave: 1
             sgx.intel.com/provision: 1
         {{ if not $values.command  }}
@@ -269,7 +266,7 @@ spec:
       - name: dev-sgx-provision
         hostPath:
           path: /dev/sgx/provision
-          
+
 ---
-{{- end }}          
-{{- end }}          
+{{- end }}
+{{- end }}
