@@ -11,6 +11,7 @@ enabled, and then install the Kubernetes SGX plugin.
 * Helm cli installed
 * kubectl cli installed
 * A copy of the switchboard infra-external repo installed on user machine
+* (optional) a bootstrapped queue (see scripts/bootstrap.ts for example code)
 
 If you are using a debian based distro, you can install the 
 SGX packages like this:
@@ -111,6 +112,8 @@ helm repo add infisical-helm-charts 'https://dl.cloudsmith.io/public/infisical/h
 helm install secrets-operator infisical-helm-charts/secrets-operator
 ```
 
+in order to use the infisical secrets operator, you must first create an infisical account and follow [the setup guide](https://infisical.com/docs/integrations/platforms/kubernetes) and upload secrets with a name/slug that aligns with the infisicalSecretKey and infisicalSecretSlug in your values yaml.
+
 ### Step 3: Install the Kubernetes SGX Plugin
 
 Before installing the SGX plugin, check the latest 
@@ -139,5 +142,20 @@ repository for how to install it to your cluster.
 
 ```bash
 helm upgrade -i switchboard-oracle ./charts/pull-service -f $HELM_VALUES_YAML
+```
+
+you can verify the installation success by checking the helm deployment status and some of the resources that got deployed
+
+```bash
+helm list
+kubectl -n $NAMESPACE get po
+kubectl -n $NAMESPACE get svc
+kubectl -n $NAMESPACE get get ing
+kubectl -n $NAMESPACE get secret
+```
+
+you can clean up the oracle install with 
+```bash
+helm uninstall switchboard-oracle
 ```
 
