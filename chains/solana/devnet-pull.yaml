@@ -1,4 +1,3 @@
-attestationProgramId: "FnaRmqv87EE7M7DJNpaWRHC9rPA2WrDJpnvvbGp4irPA"
 chain: "solana"
 cluster: "devnet"
 heartbeatInterval: "30"
