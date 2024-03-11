@@ -23,10 +23,12 @@ import * as fs from "fs";
 const assert = require("assert");
 
 const walletFile = "your wallet file json here";
+// example "/Users/mgild/switchboard_environments_v2/devnet/upgrade_authority/test.json"
 const payerFile = "your payer file json here"
 let PID = new PublicKey("sbattyXrzedoNATfc4L31wC9Mhxsi1BmFhTiN8gDshx");
 // PID = new PublicKey("CR1hCrkKveeWrYYs5kk7rasRM2AH1vZy8s8fn42NBwkq");
 const RPC_URL = "https://api.devnet.solana.com";
+
 
 
 async function fetchLatestSlotHash(
@@ -93,13 +95,21 @@ export function logEnvVariables(
 }
 
 (async () => {
+    const ORACLE_IP = "127.0.0.1";
+
+    let PID = new PublicKey("sbattyXrzedoNATfc4L31wC9Mhxsi1BmFhTiN8gDshx");
+    PID = sb.SB_ON_DEMAND_PID;
     const connection = new Connection(
         RPC_URL,
         "confirmed"
     );
 
-    const wallet = await initWalletFromFile(walletFile);
-    const devnetPayer = await initKeypairFromFile(payerFile);
+    const wallet = await initWalletFromFile(
+        walletFile
+    );
+    const devnetPayer = await initKeypairFromFile(
+        payerFile
+    );
     const provider = new anchor.AnchorProvider(connection, wallet, {});
     const idl = await anchor.Program.fetchIdl(PID, provider);
     const program = new anchor.Program(idl!, PID, provider);

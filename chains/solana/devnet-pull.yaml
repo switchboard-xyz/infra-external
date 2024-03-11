@@ -1,13 +1,9 @@
-attestationProgramId: "FnaRmqv87EE7M7DJNpaWRHC9rPA2WrDJpnvvbGp4irPA"
 chain: "solana"
 cluster: "devnet"
 heartbeatInterval: "30"
-infisicalSecretKey: "SOLANA_KEY"
+infisicalSecretKey: "SOLANA_KEY" #must set up the infisical key/slug in order for these secrets to get provisioned
 infisicalSecretSlug: "dev"
-ipfsApiUrl: https://ipfs.infura.io:5001
-ipfsKey: "redacted"
-ipfsSecret: "redacted"
-jupiterSwapApiKey: "redacted"
+jupiterSwapApiKey: "3a3b41bc06d49f9c89a8550ff84072be"
 namespace: "devnet-pull"
 networkId: "devnet"
 pagerdutyEventKey: "redacted"
@@ -16,9 +12,10 @@ solanaMainnetRpc: "redacted"
 wssUrl: "redacted"
 gateway:
     host: "pull-gateway.switchboard.xyz"
-    image: "docker.io/switchboardlabs/pull-oracle:v18"
+    image: "docker.io/switchboardlabs/pull-oracle:dev-RC_03_11_24_00_40"
+#you can get the keys below by running scripts/bootstrap.ts
 oracle:
-    image: "docker.io/switchboardlabs/pull-oracle:v18"
+    image: "docker.io/switchboardlabs/pull-oracle:dev-RC_03_11_24_00_40"
     authority: "2KgowxogBrGqRcgXQEmqFvC3PGtCu66qERNJevYW8Ajh"
     guardian:
       queue: "RH4MXRCHriboKoPynKsGacC61D9QHa1hVXLFXMX9QNc"
@@ -34,8 +31,9 @@ oracle:
       host: "pull-oracle.switchboard.xyz"
 
 # command: shell
-sgx:
-  type: "azure"
-  memoryMiB: 32Mi
-  cpu: 1500m
+
+# sgx:
+#   type: "azure"
+#   memoryMiB: 32Mi
+#   cpu: 1500m
 
