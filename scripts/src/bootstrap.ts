@@ -22,9 +22,9 @@ import * as crypto from "crypto";
 import * as fs from "fs";
 const assert = require("assert");
 
-const walletFile = "your wallet file json here";
+const walletFile = "/home/scottk/workspace/creds/devnet-wallet";
 // example "/Users/mgild/switchboard_environments_v2/devnet/upgrade_authority/test.json"
-const payerFile = "your payer file json here"
+const payerFile = "/home/scottk/workspace/creds/devnet-wallet"
 let PID = new PublicKey("sbattyXrzedoNATfc4L31wC9Mhxsi1BmFhTiN8gDshx");
 // PID = new PublicKey("CR1hCrkKveeWrYYs5kk7rasRM2AH1vZy8s8fn42NBwkq");
 const RPC_URL = "https://api.devnet.solana.com";
