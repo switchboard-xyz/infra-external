@@ -135,9 +135,6 @@ spec:
           value: {{ $values.ipfsKey | quote }}
         # SOLANA
         -
-          name: SWITCHBOARD_ATTESTATION_PROGRAM_ID
-          value: {{ $values.attestationProgramId | quote }}
-        -
           name: ORACLE_AUTHORITY
           value: {{ $values.oracle.authority }}
 
