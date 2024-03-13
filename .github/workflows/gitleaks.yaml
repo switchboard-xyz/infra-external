@@ -1,0 +1,18 @@
+name: Check for potential GitLeaks
+
+on:
+  pull_request:
+  push:
+  workflow_dispatch:
+
+jobs:
+  scan:
+    name: GitLeaks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }}
