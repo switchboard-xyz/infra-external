@@ -2,154 +2,173 @@ import * as anchor from "@coral-xyz/anchor";
 import * as spl from "@solana/spl-token";
 import type { AccountInfo, AccountMeta } from "@solana/web3.js";
 import {
-    AddressLookupTableProgram,
-    Connection,
-    Keypair,
-    MessageV0,
-    PublicKey,
-    sendAndConfirmTransaction,
-    SystemProgram,
-    Transaction,
-    TransactionInstruction,
-    TransactionMessage,
-    VersionedTransaction,
+  AddressLookupTableProgram,
+  Connection,
+  Keypair,
+  MessageV0,
+  PublicKey,
+  sendAndConfirmTransaction,
+  SystemProgram,
+  Transaction,
+  TransactionInstruction,
+  TransactionMessage,
+  VersionedTransaction,
+  AddressLookupTableAccount,
 } from "@solana/web3.js";
+var resolve = require("resolve-dir");
 import { Big, BigUtils, bs58 } from "@switchboard-xyz/common";
 import { OracleJob } from "@switchboard-xyz/common";
-import * as sb from "@switchboard-xyz/solana.js";
+import * as sb from "@switchboard-xyz/on-demand";
 import { toBufferLE } from "bigint-buffer";
 import * as crypto from "crypto";
 import * as fs from "fs";
 const assert = require("assert");
+const yargs = require("yargs/yargs");
+import {
+  InstructionUtils,
+  PullFeed,
+  Queue,
+  RecentSlotHashes,
+} from "@switchboard-xyz/on-demand";
 
-const walletFile = "/home/scottk/workspace/creds/devnet-wallet";
-// example "/Users/mgild/switchboard_environments_v2/devnet/upgrade_authority/test.json"
-const payerFile = "/home/scottk/workspace/creds/devnet-wallet"
-let PID = new PublicKey("sbattyXrzedoNATfc4L31wC9Mhxsi1BmFhTiN8gDshx");
-// PID = new PublicKey("CR1hCrkKveeWrYYs5kk7rasRM2AH1vZy8s8fn42NBwkq");
-const RPC_URL = "https://api.devnet.solana.com";
+// ts-node bootstrap.ts --queueKey=7n7CSKBhqxM9m9YyLPn7cF6vXvxtZAWMBW42ior8qode --guardianQueue=F4pXZNjaaNmGwXzBhoxs5yaH6f6RKKkj5qgCZKPF9rjg --payerPath=/home/scottk/workspace/creds/devops-keypair.json
 
+let argv = yargs(process.argv).options({
+  queueKey: {
+    type: "string",
+    describe: "Queue to put pull oracle on",
+    demand: false,
+    default: "",
+  },
+  guardianQueue: {
+    type: "string",
+    describe: "Queue to put guardian oracle on",
+    demand: false,
+    default: "",
+  },
+  initQueues: {
+    type: "boolean",
+    describe: "Initialize new queues",
+    demand: false,
+    default: false,
+  },
+  payerPath: {
+    type: "string",
+    describe: "Path to payer keypair",
+    demand: true,
+  },
+}).argv;
 
-
-async function fetchLatestSlotHash(
-    connection: Connection
-): Promise<[bigint, string]> {
-    const slotHashesSysvarKey = new PublicKey(
-        "SysvarS1otHashes111111111111111111111111111"
-    );
-    const accountInfo = await connection.getAccountInfo(slotHashesSysvarKey, {
-        commitment: "confirmed",
-        dataSlice: { length: 40, offset: 8 },
-    });
-    let buffer = accountInfo!.data;
-    const slotNumber = buffer.readBigUInt64LE();
-    buffer = buffer.slice(8);
-    return [slotNumber, bs58.encode(buffer)];
-}
-
-async function initWalletFromFile(filePath: string): Promise<anchor.Wallet> {
-    // Read the file
-    const secretKeyString: string = fs.readFileSync(filePath, {
-        encoding: "utf8",
-    });
-    const secretKey: Uint8Array = Uint8Array.from(JSON.parse(secretKeyString));
-
-    // Create a keypair from the secret key
-    const keypair: Keypair = Keypair.fromSecretKey(secretKey);
-
-    // Create a wallet
-    const wallet: anchor.Wallet = new anchor.Wallet(keypair);
-
-    return wallet;
-}
-
-async function initKeypairFromFile(filePath: string): Promise<Keypair> {
-    // Read the file
-    const secretKeyString: string = fs.readFileSync(filePath, {
-        encoding: "utf8",
-    });
-    const secretKey: Uint8Array = Uint8Array.from(JSON.parse(secretKeyString));
-
-    // Create a keypair from the secret key
-    const keypair: Keypair = Keypair.fromSecretKey(secretKey);
-
-    return keypair;
-}
-
-async function keypairFromJson(secretKeyString: string): Promise<Keypair> {
-    const secretKey: Uint8Array = Uint8Array.from(JSON.parse(secretKeyString));
-
-    // Create a keypair from the secret key
-    return Keypair.fromSecretKey(secretKey);
-}
-
-export function logEnvVariables(
-    env: Array<[string, string | anchor.web3.PublicKey]>,
-    pre = "Make sure to add the following to your .env file:"
+async function sendIx(
+  program: anchor.Program,
+  ix: TransactionInstruction,
+  signers: Array<Keypair>
 ) {
-    console.log(
-        `\n${pre}\n\t${env
-            .map(([key, value]) => `${key.toUpperCase()}=${value}`)
-            .join("\n\t")}\n`
-    );
+  const tx = await InstructionUtils.asV0Tx(program, [ix], []);
+  for (const signer of signers) {
+    tx.sign([signer]);
+  }
+  const sig = await program.provider.connection.sendTransaction(tx);
+  console.log(`signature: ${sig}`);
+}
+
+function keypairFromJson(secretKeyString: string): Keypair {
+  const secretKey: Uint8Array = Uint8Array.from(JSON.parse(secretKeyString));
+  return Keypair.fromSecretKey(secretKey);
+}
+
+function initKeypairFromFile(filePath: string): Keypair {
+  const secretKeyString = fs.readFileSync(filePath, { encoding: "utf8" });
+  return keypairFromJson(secretKeyString);
 }
 
 (async () => {
-    const ORACLE_IP = "127.0.0.1";
-
-    let PID = new PublicKey("sbattyXrzedoNATfc4L31wC9Mhxsi1BmFhTiN8gDshx");
-    PID = sb.SB_ON_DEMAND_PID;
-    const connection = new Connection(
-        RPC_URL,
-        "confirmed"
+  let PID;
+  PID = sb.SB_ON_DEMAND_PID;
+  const connection = new Connection(
+    "https://api.devnet.solana.com",
+    "confirmed"
+  );
+  const devnetPayer = initKeypairFromFile(
+    resolve(argv.payerPath || "./payer.json")
+  );
+  const wallet = new anchor.Wallet(devnetPayer);
+  const provider = new anchor.AnchorProvider(connection, wallet, {});
+  const idl = await anchor.Program.fetchIdl(PID, provider);
+  const program = new anchor.Program(idl!, PID, provider);
+  let queueKey = argv.queueKey;
+  let guardianQueueKey = argv.guardianQueue;
+  console.log(`Queue: ${queueKey}`);
+  console.log(`GuardianQueue: ${guardianQueueKey}`);
+  if (argv.initQueues) {
+    try {
+      const [state, stateInitSig] = await sb.State.create(program);
+      console.log(`State: ${state.pubkey.toBase58()} Sig: ${stateInitSig}`);
+    } catch (e) {}
+    const state = new sb.State(program);
+    const [queue, queueCreateSig] = await sb.Queue.create(program, {});
+    console.log(`Queue: ${queue.pubkey.toBase58()} Sig: ${queueCreateSig}`);
+    queueKey = queue.pubkey.toBase58();
+    const [guardianQueue, guardianQueueCreateSig] = await sb.Queue.create(
+      program,
+      {}
     );
-
-    const wallet = await initWalletFromFile(
-        walletFile
+    guardianQueueKey = guardianQueue.pubkey.toBase58();
+    console.log(
+      `GuardianQueue: ${queue.pubkey.toBase58()} Sig: ${guardianQueueCreateSig}`
     );
-    const devnetPayer = await initKeypairFromFile(
-        payerFile
-    );
-    const provider = new anchor.AnchorProvider(connection, wallet, {});
-    const idl = await anchor.Program.fetchIdl(PID, provider);
-    const program = new anchor.Program(idl!, PID, provider);
-    const switchboardProgram = sb.SwitchboardProgram.from(
-        connection,
-        devnetPayer,
-        sb.SB_V2_PID,
-        PID
-    );
-
-    const [slotNumber, slotHash] = await fetchLatestSlotHash(connection);
-    const bootstrappedQueue = (await sb.AttestationQueueAccount.bootstrapNewQueue(
-        switchboardProgram
-    )) as any;
-    console.log(bootstrappedQueue);
-
-    const attestationQueueAccount = bootstrappedQueue.attestationQueue.account;
-    const verifierOracleAccount = bootstrappedQueue.verifier.account;
-    const quoteKeypair2 = Keypair.generate();
-
-    const [verifier2, signature] = await attestationQueueAccount.createVerifier({
-        createPermissions: true,
-        keypair: quoteKeypair2,
-        enable: true,
-        queueAuthorityPubkey: devnetPayer.publicKey,
+    const setConfigIx = await state.setConfigsIx({
+      queue: guardianQueue.pubkey,
+      newAuthority: devnetPayer.publicKey,
+      minQuoteVerifyVotes: new anchor.BN(1),
+    });
+    const setConfigTx = await InstructionUtils.asV0Tx(program, [setConfigIx]);
+    setConfigTx.sign([devnetPayer]);
+    const setConfigSig = await connection.sendTransaction(setConfigTx);
+    console.log(`Set Config Sig: ${setConfigSig}`);
+  }
+  const queue = new sb.Queue(program, new PublicKey(queueKey));
+  const guardianQueue = new sb.Queue(program, new PublicKey(guardianQueueKey));
+  const stateAccount = new sb.State(program);
+  const state = new sb.State(program);
+  const [oracle1, oracleCreateSig1] = await sb.Oracle.create(program, {
+    queue: queue.pubkey,
+  });
+  const [guardianOracle1, goracleCreateSig1] = await sb.Oracle.create(program, {
+    queue: guardianQueue.pubkey,
+  });
+  if (argv.initQueues) {
+    await sendIx(
+      program,
+      await sb.Permission.setIx(program, {
         authority: devnetPayer.publicKey,
-        queueAccount: attestationQueueAccount.publicKey,
-        registryKey: new Uint8Array(64).fill(0),
-    });
-    console.log(verifier2.publicKey);
+        grantee: oracle1.pubkey,
+        granter: queue.pubkey,
+        enable: true,
+        permission: sb.SwitchboardPermission.PermitOracleHeartbeat,
+      }),
+      [devnetPayer]
+    );
+    await sendIx(
+      program,
+      await sb.Permission.setIx(program, {
+        authority: devnetPayer.publicKey,
+        granter: guardianQueue.pubkey,
+        grantee: guardianOracle1.pubkey,
+        enable: true,
+        permission: sb.SwitchboardPermission.PermitOracleHeartbeat,
+      }),
+      [devnetPayer]
+    );
+  }
 
-    logEnvVariables([
-        ["SWITCHBOARD_ATTESTATION_QUEUE_KEY", attestationQueueAccount.publicKey],
-        ["SWITCHBOARD_VERIFIER_ORACLE_KEY", verifierOracleAccount.publicKey],
-        ["SWITCHBOARD_VERIFIER_ORACLE_KEY2", verifier2.publicKey.toString()],
-    ]);
-
-    const y = bootstrappedQueue.signatures.map((s: any, i: any): any => {
-        return { name: `bootstrap_queue #${i + 1}`, tx: s };
-    });
-    console.log(y);
-    return;
+  console.log(`
+  export QUEUE=${queue.pubkey.toBase58()}
+  export GUARDIAN_QUEUE=${guardianQueue.pubkey.toBase58()}
+  export STATE=${state.pubkey.toBase58()}
+  export PID=${PID.toBase58()}
+  export ORACLE1=${oracle1.pubkey.toBase58()}
+  export GUARDIAN_ORACLE1=${guardianOracle1.pubkey.toBase58()}
+  `);
+  return;
 })();

@@ -79,13 +79,7 @@ also want to set up prometheus or vmetrics to scrape
 metrics from the oracles, secrets management like 
 infisical, or a log aggregator like loki.
 
-Exposing metrics and logs are strongly encouraged for all oracle operators. To do so, first you must register a domain/subdomain to use for your metrics and logs endpoints respectively. If you are using k3s, then you can find the external ip address by running this command:
-
-```bash
-kubectl -n kube-system get svc traefik
-```
-
-If you are using a different kubernetes distribution and/or ingress controller, you can find that wit this command:
+Exposing metrics and logs are strongly encouraged for all oracle operators. To do so, first you must register a domain/subdomain to use for your metrics and logs endpoints respectively. You can find the external ip address by running this command once your ingress controller is installed:
 
 ```bash
 kubectl get svc --all-namespaces
@@ -107,12 +101,22 @@ helm install \
   --version v1.12.3 \
   --set installCRDs=true \
   --set global.leaderElection.namespace=cert-manager
+helm install ingress-nginx ingress-nginx/ingress-nginx \
+  --namespace ingress-nginx \
+  --create-namespace \
+  --timeout 600s \
+  --debug \
   
 helm repo add infisical-helm-charts 'https://dl.cloudsmith.io/public/infisical/helm-charts/helm/charts/' 
 helm install secrets-operator infisical-helm-charts/secrets-operator
 ```
 
 in order to use the infisical secrets operator, you must first create an infisical account and follow [the setup guide](https://infisical.com/docs/integrations/platforms/kubernetes) and upload secrets with a name/slug that aligns with the infisicalSecretKey and infisicalSecretSlug in your values yaml.
+
+If you are a switchboard partner, you are expected to export your metric data to a centralized instance to better monitor network health.
+```bash
+helm upgrade -i vmagent vm/victoria-metrics-agent -f vmagent.yaml
+```
 
 ### Step 3: Install the Kubernetes SGX Plugin
 

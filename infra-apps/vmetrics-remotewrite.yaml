@@ -1,7 +1,0 @@
-vmagent:
-  spec:
-    remoteWrite:
-      - url: "http://remote-write.switchboard.xyz/insert/0/prometheus"
-        bearerTokenSecret: 
-    externalLabels:
-      operator: switchboard-ops-team
