@@ -1,6 +1,0 @@
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  annotations:
-    iam.gke.io/gcp-service-account: {{ .Values.serviceAccountName }} #ie the email address that's generated for each SA'
-  name: crank-service-account

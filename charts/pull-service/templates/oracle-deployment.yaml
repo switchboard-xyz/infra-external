@@ -107,12 +107,6 @@ spec:
           name: RPC_URL
           value: {{ $values.rpcUrl }}
         -
-          name: WSS_URL
-          value: {{ $values.wssUrl }}
-        -
-          name: WSS_RPC_URL
-          value: {{ $values.wssUrl }}
-        -
           name: BACKUP_RPC_URL_1
           value: {{ $values.backupRpc1  }}
         -
