@@ -4,7 +4,7 @@ heartbeatInterval: "30"
 infisicalSecretKey: "SOLANA_KEY" #must set up the infisical key/slug in order for these secrets to get provisioned
 infisicalSecretSlug: "dev"
 jupiterSwapApiKey: "3a3b41bc06d49f9c89a8550ff84072be"
-namespace: "devnet-pull"
+namespace: "switchboard-oracle-devnet"
 networkId: "devnet"
 pagerdutyEventKey: "FILL_IN_HERE>"
 rpcUrl: "<FILL_IN_HERE>"
