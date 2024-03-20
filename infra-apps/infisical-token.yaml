@@ -1,6 +1,6 @@
 apiVersion: v1
 data:
-  infisicalToken: redacted
+  infisicalToken: <FILL_IN_HERE>
 kind: Secret
 metadata:
   name: service-token

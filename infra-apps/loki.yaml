@@ -19,14 +19,14 @@ gateway:
     tls:
       - secretName: loki-gateway-tls  # replace with your secret name
         hosts:
-          - loki-gateway.domain.com
+          - <FILL_IN_HERE>
 
 
 #  table_manager:
 #    retention_deletes_enabled: false
 #    retention_period: 0s
 
-# helm upgrade --install loki grafana/loki -f loki.yaml 
+# helm upgrade --install loki grafana/loki -f loki.yaml
 
 
 
