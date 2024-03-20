@@ -182,15 +182,9 @@ spec:
         - name: web
           containerPort: {{ $config.port }}
           protocol: TCP
-<<<<<<< HEAD
-        # - name: metrics
-          # containerPort: {{ $values.metricsPort }}
-          # protocol: TCP
-=======
         - name: metrics
           containerPort: {{ $values.metricsPort }}
           protocol: TCP
->>>>>>> f3f7327 (rebase)
         # - name: liveness-port
           # containerPort: {{ $values.metricsPort }}
           # protocol: TCP
