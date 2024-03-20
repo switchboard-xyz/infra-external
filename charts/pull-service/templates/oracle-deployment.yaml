@@ -178,14 +178,13 @@ spec:
         {{ end }}
 
 
-
         ports:
         - name: web
           containerPort: {{ $config.port }}
           protocol: TCP
-        - name: metrics
-          containerPort: {{ $values.metricsPort }}
-          protocol: TCP
+        # - name: metrics
+          # containerPort: {{ $values.metricsPort }}
+          # protocol: TCP
         # - name: liveness-port
           # containerPort: {{ $values.metricsPort }}
           # protocol: TCP
