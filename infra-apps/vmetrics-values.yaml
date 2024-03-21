@@ -1,3 +1,5 @@
+ingress:
+  ingressClassName: nginx
 server:
   enabled: true
   statefulSet:

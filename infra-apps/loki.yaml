@@ -1,3 +1,5 @@
+ingress:
+  ingressClassName: nginx
 loki:
 #  extraArgs:
 #    - "-log.level=debug"
