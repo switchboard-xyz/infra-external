@@ -1,5 +1,5 @@
 {{- range $component, $config := .Values.oracle }}
-{{- if or (eq $component "guardian") (eq $component "push") (eq $component "pull") }}
+{{- if or (eq $component "guardian") (eq $component "oracle") }}
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
@@ -9,6 +9,8 @@ metadata:
     cert-manager.io/cluster-issuer: "letsencrypt"
     cert-manager.io/issue-temporary-certificate: "true"
     acme.cert-manager.io/http01-edit-in-place: "true"
+    nginx.ingress.kubernetes.io/use-regex: "true"
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
 
 spec:
   ingressClassName: nginx
@@ -20,7 +22,8 @@ spec:
   - host: {{ $config.host }}
     http:
       paths:
-      - path: /
+      - path: /{{ $component }}(/|$)(.*)
+        pathType: ImplementationSpecific
         backend:
           service:
             name: {{ $component }}-oracle-service
@@ -30,3 +33,4 @@ spec:
 ---
 {{- end }}
 {{- end }}
+

@@ -45,7 +45,7 @@ gateway:
     image: "docker.io/switchboardlabs/pull-oracle:latest"
     port: 8082
 
-oracle:
+components:
     image: "docker.io/switchboardlabs/gateway:latest"
     key: ""
     queue: ""
@@ -58,9 +58,7 @@ oracle:
     push:
       queue: ""
       key: ""
-      host: ""
-      port: 8090
-    pull:
+    oracle:
       queue: ""
       key: ""
       host: ""
