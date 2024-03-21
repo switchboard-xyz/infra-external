@@ -17,7 +17,7 @@ gateway:
     hosts:
       - loki-gateway.domain.com
     tls:
-      - secretName: loki-gateway-tls  # replace with your secret name
+      - secretName: loki-gateway-tls  
         hosts:
           - <FILL_IN_HERE>
 
