@@ -1,10 +1,9 @@
-ingress:
-  ingressClassName: nginx
 server:
   enabled: true
   statefulSet:
     enabled: false
   ingress:
+    ingressClassName: nginx
     enabled: true
     annotations:
       cert-manager.io/cluster-issuer: "letsencrypt"

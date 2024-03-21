@@ -1,5 +1,3 @@
-ingress:
-  ingressClassName: nginx
 loki:
 #  extraArgs:
 #    - "-log.level=debug"
@@ -12,6 +10,7 @@ singleBinary:
   replicas: 1
 gateway:
   ingress:
+    ingressClassName: nginx
     enabled: true
     annotations:
       cert-manager.io/cluster-issuer: "letsencrypt"
