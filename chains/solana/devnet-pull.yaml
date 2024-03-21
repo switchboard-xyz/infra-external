@@ -14,7 +14,7 @@ gateway:
     host: "${SB_DNS}"
     image: "docker.io/switchboardlabs/pull-oracle:dev-RC_03_11_24_00_40"
 # You can get the keys below by running scripts/bootstrap.ts
-oracle:
+components:
     image: "docker.io/switchboardlabs/pull-oracle:dev-RC_03_11_24_00_40"
     authority: "<FILL_IN_HERE>"
     guardian:
@@ -23,7 +23,6 @@ oracle:
       key: "<FILL_IN_HERE>"
     push:
       queue: "uPeRMdfPmrPqgRWSrjAnAkH78RqAhe5kXoW6vBYRqFX"
-      host: "${SB_DNS}"
       key: "<FILL_IN_HERE>"
     pull:
       queue: "5Qv744yu7DmEbU669GmYRqL9kpQsyYsaVKdR8YiBMTaP"
