@@ -13,9 +13,9 @@ helm upgrade -i ingress-nginx ingress-nginx/ingress-nginx \
   # --debug
 
 helm repo add vm https://victoriametrics.github.io/helm-charts/ || true
-helm upgrade -i vmsingle vm/victoria-metrics-single -f infra-apps/vmetrics-values.yaml
-  # --set "server.ingress.hosts[0]=${SB_DNS}" \
-  # --set "server.ingress.tls[0].hosts[0]=${SB_DNS}"
+envsubst < infra-apps/vmetrics-values.yaml > /tmp/vmetrics-values.yaml
+helm upgrade -i vmsingle vm/victoria-metrics-single -f /tmp/vmetrics-values.yaml
+rm /tmp/vmetrics-values.yaml
 
 # This app is MANDATORY for all official switchboard oracle operators
 # configure your operator label value in the relabel_configs.replacement field
@@ -39,9 +39,9 @@ helm upgrade -i secrets-operator infisical-helm-charts/secrets-operator
 
 # Remember to configure the ingress fields
 helm repo add grafana https://grafana.github.io/helm-charts || true
-helm upgrade --install loki grafana/loki -f infra-apps/loki.yaml
-  # --set "gateway.ingress.hosts[0]=${SB_DNS}" \
-  # --set "gateway.ingress.tls[0].hosts[0]=${SB_DNS}"
+envsubst < infra-apps/loki.yaml > /tmp/loki.yaml
+helm upgrade --install loki grafana/loki -f /tmp/loki.yaml
+rm /tmp/loki.yaml
 # Note: this yaml points to a loki deployment in default namespace.
 # If you are in a difference namespace, then change the value "loki.default.svc.cluster.local" in that yaml accordingly
 kubectl apply -f infra-apps/promtail.yaml

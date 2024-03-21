@@ -9,12 +9,12 @@ server:
       cert-manager.io/cluster-issuer: "letsencrypt"
     path: /
     hosts:
-      - name: "base"
+      - name: "vmmetrics.base.host"
         path: /
     tls:
       - secretName: victoria-metrics-tls
         hosts:
-          - "set.via.env"
+          - "${SB_DNS}"
   scrape:
     enabled: true
     configMap: ""

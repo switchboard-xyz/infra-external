@@ -11,7 +11,7 @@ rpcUrl: "<FILL_IN_HERE>"
 solanaMainnetRpc: "<FILL_IN_HERE>"
 wssUrl: "<FILL_IN_HERE>"
 gateway:
-    host: "set.by.env"
+    host: "${SB_DNS}"
     image: "docker.io/switchboardlabs/pull-oracle:dev-RC_03_11_24_00_40"
 # You can get the keys below by running scripts/bootstrap.ts
 oracle:
@@ -19,14 +19,14 @@ oracle:
     authority: "<FILL_IN_HERE>"
     guardian:
       queue: "RH4MXRCHriboKoPynKsGacC61D9QHa1hVXLFXMX9QNc"
-      host: "set.by.env"
+      host: "${SB_DNS}"
       key: "<FILL_IN_HERE>"
     push:
       queue: "uPeRMdfPmrPqgRWSrjAnAkH78RqAhe5kXoW6vBYRqFX"
-      host: "set.by.env"
+      host: "${SB_DNS}"
       key: "<FILL_IN_HERE>"
     pull:
       queue: "v1k9qvCuvYgDkAcTExnrkt2BPNENfVVpowp5d7PYKAa"
-      host: "set.by.env"
+      host: "${SB_DNS}"
       key: "<FILL_IN_HERE>"
 
