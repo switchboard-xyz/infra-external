@@ -14,11 +14,11 @@ gateway:
     enabled: true
     annotations:
       cert-manager.io/cluster-issuer: "letsencrypt"
-    path: /
+    path: /loki
     hosts:
-      - host: "loki.base.host"
+      - host: "${SB_DNS}"
         paths:
-          - path: /
+          - path: /loki
             pathType: Prefix
     tls:
       - secretName: loki-gateway-tls

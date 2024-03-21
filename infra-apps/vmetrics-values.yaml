@@ -7,10 +7,10 @@ server:
     enabled: true
     annotations:
       cert-manager.io/cluster-issuer: "letsencrypt"
-    path: /
+    path: /metrics
     hosts:
-      - name: "vmmetrics.base.host"
-        path: /
+      - name: "${SB_DNS}"
+        path: /metrics
     tls:
       - secretName: victoria-metrics-tls
         hosts:
