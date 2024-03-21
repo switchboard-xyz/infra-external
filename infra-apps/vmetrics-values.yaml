@@ -8,11 +8,11 @@ server:
       cert-manager.io/cluster-issuer: "letsencrypt"
     path: /
     hosts:
-      - ${SB_DNS}
+      - "_SET_VIA_ENV_"
     tls:
       - secretName: victoria-metrics-tls
         hosts:
-          - ${SB_DNS}
+          - "_SET_VIA_ENV_"
   scrape:
     enabled: true
     configMap: ""

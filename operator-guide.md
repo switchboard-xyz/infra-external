@@ -145,7 +145,8 @@ Follow the instructions in the Switchboard Oracle
 repository for how to install it to your cluster.
 
 ```bash
-helm upgrade -i switchboard-oracle ./charts/pull-service -f $HELM_VALUES_YAML
+export SB_DNS=YOUR_DOMAIN_HERE
+bash scripts/anneal.sh
 ```
 
 you can verify the installation success by checking the helm deployment status and some of the resources that got deployed
