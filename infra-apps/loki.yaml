@@ -15,13 +15,14 @@ gateway:
       cert-manager.io/cluster-issuer: "letsencrypt"
     path: /
     hosts:
-      - host: "_SET_VIA_ENV_"
+      - host: "base"
         paths:
-          - path: /        
+          - path: /
+            pathType: Prefix
     tls:
       - secretName: loki-gateway-tls
         hosts:
-          - "_SET_VIA_ENV_"
+          - "set.via.env"
 
 
 #  table_manager:
