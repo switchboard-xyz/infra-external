@@ -1,7 +1,7 @@
 chain: "solana"
 cluster: "devnet"
 heartbeatInterval: "30"
-infisicalSecretKey: "SOLANA_KEY" #must set up the infisical key/slug in order for these secrets to get provisioned
+infisicalSecretKey: "SOLANA_KEY" # must set up the infisical key/slug in order for these secrets to get provisioned
 infisicalSecretSlug: "dev"
 jupiterSwapApiKey: "3a3b41bc06d49f9c89a8550ff84072be"
 namespace: "switchboard-oracle-devnet"
@@ -11,7 +11,7 @@ rpcUrl: "<FILL_IN_HERE>"
 solanaMainnetRpc: "<FILL_IN_HERE>"
 wssUrl: "<FILL_IN_HERE>"
 gateway:
-    host: "_SET_VIA_ENV_"
+    host: "*leave blank*"
     image: "docker.io/switchboardlabs/pull-oracle:dev-RC_03_11_24_00_40"
 # You can get the keys below by running scripts/bootstrap.ts
 oracle:
@@ -19,14 +19,14 @@ oracle:
     authority: "<FILL_IN_HERE>"
     guardian:
       queue: "RH4MXRCHriboKoPynKsGacC61D9QHa1hVXLFXMX9QNc"
-      host: "_SET_VIA_ENV_"
+      host: "*leave blank*"
       key: "<FILL_IN_HERE>"
     push:
       queue: "uPeRMdfPmrPqgRWSrjAnAkH78RqAhe5kXoW6vBYRqFX"
-      host: "_SET_VIA_ENV_"
+      host: "*leave blank*"
       key: "<FILL_IN_HERE>"
     pull:
       queue: "v1k9qvCuvYgDkAcTExnrkt2BPNENfVVpowp5d7PYKAa"
-      host: "_SET_VIA_ENV_"
+      host: "*leave blank*"
       key: "<FILL_IN_HERE>"
 
