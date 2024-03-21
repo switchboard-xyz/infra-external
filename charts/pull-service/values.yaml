@@ -53,18 +53,18 @@ oracle:
     guardian:
       queue: ""
       key: ""
-      host: "" 
-      port: 8081      
+      host: ""
+      port: 8083
     push:
       queue: ""
       key: ""
-      host: "" 
-      port: 8081      
+      host: ""
+      port: 8090
     pull:
       queue: ""
       key: ""
-      host: "" 
-      port: 8081      
+      host: ""
+      port: 8081
 
 appType: "oracle"
 azureClientID: "224379e2-32f9-4a7b-8d98-23551e97dd3f"

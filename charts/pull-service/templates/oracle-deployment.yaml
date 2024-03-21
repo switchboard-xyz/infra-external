@@ -185,34 +185,6 @@ spec:
         - name: metrics
           containerPort: {{ $values.metricsPort }}
           protocol: TCP
-        # - name: liveness-port
-          # containerPort: {{ $values.metricsPort }}
-          # protocol: TCP
-
-        # {{ if ne $values.command "shell" }}
-        # # https://github.com/kubernetes/kubernetes/issues/89898#issuecomment-876539217
-        # # Wait for the container to startup and signal they are ready to receive traffic from k8s
-        # startupProbe:
-          # httpGet:
-            # path: /healthz
-            # port: liveness-port
-          # initialDelaySeconds: 5
-          # failureThreshold: 30
-          # periodSeconds: 5
-          # timeoutSeconds: 10
-        # # Check whether the pod is ready to receive traffic. If this fails it will create a new pod
-        # livenessProbe:
-          # exec:
-            # command:
-              # - sh
-              # - -c
-              # - "curl --fail http://localhost:8080/healthz || exit 1 "
-          # initialDelaySeconds: 10
-          # periodSeconds: 30
-          # failureThreshold: 3
-          # timeoutSeconds: 5
-        # {{ end }}
-
 
         # SGX ORACLE
         resources:

@@ -176,9 +176,9 @@ spec:
         - name: metrics
           containerPort: {{ $.Values.metricsPort }}
           protocol: TCP
-        - name: liveness-port
-          containerPort: {{ $.Values.metricsPort }}
-          protocol: TCP
+        # - name: liveness-port
+          # containerPort: {{ $.Values.metricsPort }}
+          # protocol: TCP
 
 
 
