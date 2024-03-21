@@ -1,9 +1,9 @@
-{{- range $component, $config := .Values.oracle }}
-{{- if or (eq $component "guardian") (eq $component "push") (eq $component "pull") }}
+{{- range $component, $config := .Values.components }}
+{{- if or (eq $component "guardian") (eq $component "push") (eq $component "oracle") }}
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ $component }}-oracle-service
+  name: {{ $component }}-service
   namespace: {{ $.Values.namespace }}
 spec:
   selector:
@@ -12,6 +12,7 @@ spec:
     - protocol: TCP
       port: {{ $config.port }}
       targetPort: {{ $config.port }}
+      name: {{ $component }}-svc
 ---
-{{- end }}          
-{{- end }}                
+{{- end }}
+{{- end }}

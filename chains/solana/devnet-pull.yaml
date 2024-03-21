@@ -24,8 +24,7 @@ components:
     push:
       queue: "uPeRMdfPmrPqgRWSrjAnAkH78RqAhe5kXoW6vBYRqFX"
       key: "<FILL_IN_HERE>"
-    pull:
+    oracle:
       queue: "5Qv744yu7DmEbU669GmYRqL9kpQsyYsaVKdR8YiBMTaP"
       host: "${SB_DNS}"
       key: "<FILL_IN_HERE>"
-

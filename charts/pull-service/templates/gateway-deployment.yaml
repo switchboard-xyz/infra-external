@@ -45,7 +45,7 @@ spec:
           value: {{ $values.heartbeatInterval | default "30" | quote }}
         -
           name: ORACLE_KEY
-          value: {{ $values.oracle.key | quote}}
+          value: {{ $values.components.key | quote}}
         -
           name: KEYPAIR_PATH
           value: "/data/protected_files/keypair.bin"
@@ -69,10 +69,10 @@ spec:
           value: "0"
         -
           name: GUARDIAN_INGRESS
-          value: "https://{{ $.Values.oracle.guardian.host }}"
+          value: "https://{{ $.Values.components.guardian.host }}"
         -
           name: ORACLE_INGRESS
-          value: "https://{{ $.Values.oracle.pull.host }}"
+          value: "https://{{ $.Values.components.oracle.host }}"
         -
           name: GATEWAY_INGRESS
           value: "https://{{ $.Values.gateway.host }}"
@@ -127,7 +127,7 @@ spec:
           value: {{ $values.quoteAddress | quote }}
         -
           name: ORACLE_AUTHORITY
-          value: {{ $values.oracle.authority }}
+          value: {{ $values.components.authority }}
 
         # METRICS
         -
