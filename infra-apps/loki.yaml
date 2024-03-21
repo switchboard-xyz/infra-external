@@ -12,7 +12,7 @@ gateway:
   ingress:
     enabled: true
     annotations:
-      cert-manager.io/cluster-issuer: "issuer-name"  # replace with your issuer name
+      cert-manager.io/cluster-issuer: "letsencrypt"
     path: /
     hosts:
       - loki-gateway.domain.com
