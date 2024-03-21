@@ -5,20 +5,20 @@ server:
   ingress:
     enabled: true
     annotations:
-      cert-manager.io/cluster-issuer: "issuer-name"  # replace with your issuer name
+      cert-manager.io/cluster-issuer: "letsencrypt"
     path: /
     hosts:
-      - victoria-metrics.domain.com
+      - ${SB_DNS}
     tls:
-      - secretName: victoria-metrics-tls  # replace with your secret name
+      - secretName: victoria-metrics-tls
         hosts:
-          - victoria-metrics.domain.com
+          - ${SB_DNS}
   scrape:
     enabled: true
     configMap: ""
     config:
       global:
-        scrape_interval: 60s 
+        scrape_interval: 60s
       scrape_configs:
         - job_name: "switchboard-pods"
           kubernetes_sd_configs:
