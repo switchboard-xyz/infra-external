@@ -1,3 +1,4 @@
+{{- $values := .Values -}}
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
@@ -12,10 +13,10 @@ spec:
   ingressClassName: nginx
   tls:
   - hosts:
-    - {{ $.Values.gateway.host }}
+    - {{ $values.host }}
     secretName: gateway-cert-manager-tls
   rules:
-  - host: {{ $.Values.gateway.host }}
+  - host: {{ $values.host }}
     http:
       paths:
       - path: /

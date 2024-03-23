@@ -1,30 +1,26 @@
+host: "${SB_DNS}"
 chain: "solana"
 cluster: "devnet"
 heartbeatInterval: "30"
 infisicalSecretKey: "SOLANA_KEY" # must set up the infisical key/slug in order for these secrets to get provisioned
 infisicalSecretSlug: "dev"
-jupiterSwapApiKey: "3a3b41bc06d49f9c89a8550ff84072be"
 namespace: "switchboard-oracle-devnet"
 networkId: "devnet"
-pagerdutyEventKey: "<FILL_IN_HERE>"
-rpcUrl: "<FILL_IN_HERE>"
-solanaMainnetRpc: "<FILL_IN_HERE>"
-wssUrl: "<FILL_IN_HERE>"
-gateway:
-    host: "${SB_DNS}"
-    image: "docker.io/switchboardlabs/pull-oracle:dev-RC_03_11_24_00_40"
+image: "docker.io/switchboardlabs/pull-oracle:dev-RC_03_21_24_19_07d"
+
+pagerdutyEventKey: ""
+jupiterSwapApiKey: "3a3b41bc06d49f9c89a8550ff84072be"
+rpcUrl: "https://switchbo-switchbo-6225.devnet.rpcpool.com/f6fb9f02-0777-498b-b8f5-67cbb1fc0d14"
+solanaMainnetRpc: "https://switchboard.rpcpool.com/ec20ad2831092cfcef66d677539a"
+wssUrl: "wss://switchbo-switchbo-6225.devnet.rpcpool.com/f6fb9f02-0777-498b-b8f5-67cbb1fc0d14"
 # You can get the keys below by running scripts/bootstrap.ts
 components:
-    image: "docker.io/switchboardlabs/pull-oracle:dev-RC_03_11_24_00_40"
-    authority: "<FILL_IN_HERE>"
     guardian:
       queue: "71wi6H1ByDG9qnRd5Ef8PSKoKH8rJ7pve7NDvB7Y4tqi"
-      host: "${SB_DNS}"
-      key: "<FILL_IN_HERE>"
+      key: "Ewq5ec637q9pvzZH5xBHtqxqUPSjo1j4sB1nXeeGNRHo"
     push:
       queue: "uPeRMdfPmrPqgRWSrjAnAkH78RqAhe5kXoW6vBYRqFX"
-      key: "<FILL_IN_HERE>"
+      key: "8AGNUUHphu8YevPoTGTbcbsJLKBe2F6byukfoPUWSHWm"
     oracle:
       queue: "5Qv744yu7DmEbU669GmYRqL9kpQsyYsaVKdR8YiBMTaP"
-      host: "${SB_DNS}"
-      key: "<FILL_IN_HERE>"
+      key: "BfvoZHYSxgJe4P7jbt9HTqJHip7Lf3xRB1QNszEPrhCx"

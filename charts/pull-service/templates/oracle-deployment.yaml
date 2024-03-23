@@ -29,7 +29,7 @@ spec:
       serviceAccountName: {{ $.Values.serviceAccount }}
       dnsPolicy: ClusterFirst
       containers:
-      - image: {{ $values.components.image }}
+      - image: {{ $values.image }}
         env:
         -
           name: CHAIN
@@ -96,13 +96,13 @@ spec:
           value: "{{ $.Values.components.push.queue }}"
         -
           name: GUARDIAN_INGRESS
-          value: "https://{{ $.Values.components.guardian.host }}"
+          value: "https://{{ $.Values.host }}"
         -
           name: ORACLE_INGRESS
-          value: "https://{{ $.Values.components.oracle.host }}"
+          value: "https://{{ $.Values.host }}"
         -
           name: GATEWAY_INGRESS
-          value: "https://{{ $.Values.gateway.host }}"
+          value: "https://{{ $.Values.host }}"
         -
           name: RPC_URL
           value: {{ $values.rpcUrl }}
@@ -189,13 +189,13 @@ spec:
         # SGX ORACLE
         resources:
           limits:
-            cpu: 2500m
+            cpu: 1500m
             memory: 3000Mi
             sgx.intel.com/epc: 25Mi
             sgx.intel.com/enclave: 1
             sgx.intel.com/provision: 1
           requests:
-            cpu: 2500m
+            cpu: 1500m
             memory: 3000Mi
             sgx.intel.com/epc: 25Mi
             sgx.intel.com/enclave: 1
