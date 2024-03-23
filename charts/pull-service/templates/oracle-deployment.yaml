@@ -1,6 +1,6 @@
 {{- $values := .Values -}}
-{{- range $component, $config := .Values.oracle }}
-{{- if or (eq $component "guardian") (eq $component "push") (eq $component "pull") }}
+{{- range $component, $config := .Values.components }}
+{{- if or (eq $component "guardian") (eq $component "push") (eq $component "oracle") }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -29,7 +29,7 @@ spec:
       serviceAccountName: {{ $.Values.serviceAccount }}
       dnsPolicy: ClusterFirst
       containers:
-      - image: {{ $values.oracle.image }}
+      - image: {{ $values.components.image }}
         env:
         -
           name: CHAIN
@@ -78,28 +78,28 @@ spec:
           value: "1"
         -
           name: PULL_ORACLE
-          value: "{{ $.Values.oracle.pull.key }}"
+          value: "{{ $.Values.components.oracle.key }}"
         -
           name: PULL_QUEUE
-          value: "{{ $.Values.oracle.pull.queue }}"
+          value: "{{ $.Values.components.oracle.queue }}"
         -
           name: GUARDIAN_ORACLE
-          value: "{{ $.Values.oracle.guardian.key }}"
+          value: "{{ $.Values.components.guardian.key }}"
         -
           name: GUARDIAN_QUEUE
-          value: "{{ $.Values.oracle.guardian.queue }}"
+          value: "{{ $.Values.components.guardian.queue }}"
         -
           name: PUSH_ORACLE
-          value: "{{ $.Values.oracle.push.key }}"
+          value: "{{ $.Values.components.push.key }}"
         -
           name: PUSH_QUEUE
-          value: "{{ $.Values.oracle.push.queue }}"
+          value: "{{ $.Values.components.push.queue }}"
         -
           name: GUARDIAN_INGRESS
-          value: "https://{{ $.Values.oracle.guardian.host }}"
+          value: "https://{{ $.Values.components.guardian.host }}"
         -
           name: ORACLE_INGRESS
-          value: "https://{{ $.Values.oracle.pull.host }}"
+          value: "https://{{ $.Values.components.oracle.host }}"
         -
           name: GATEWAY_INGRESS
           value: "https://{{ $.Values.gateway.host }}"
@@ -136,7 +136,7 @@ spec:
         # SOLANA
         -
           name: ORACLE_AUTHORITY
-          value: {{ $values.oracle.authority }}
+          value: {{ $values.components.authority }}
 
         # METRICS
         -

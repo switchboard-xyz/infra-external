@@ -42,11 +42,11 @@ ipfsUrl: "https://ipfs.infura.io:5001"
 attestationProgramId: ""
 gateway:
     host: "pull-gateway.switchboard.xyz"
-    image: "docker.io/switchboardlabs/pull-oracle:latest"
+    image: "docker.io/switchboardlabs/gateway:latest"
     port: 8082
 
 components:
-    image: "docker.io/switchboardlabs/gateway:latest"
+    image: "docker.io/switchboardlabs/pull-oracle:latest"
     key: ""
     queue: ""
     type: "oracle"
@@ -58,6 +58,8 @@ components:
     push:
       queue: ""
       key: ""
+      host: ""
+      port: 8089
     oracle:
       queue: ""
       key: ""
