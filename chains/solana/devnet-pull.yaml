@@ -6,7 +6,7 @@ infisicalSecretKey: "SOLANA_KEY" # must set up the infisical key/slug in order f
 infisicalSecretSlug: "dev"
 namespace: "switchboard-oracle-devnet"
 networkId: "devnet"
-image: "docker.io/switchboardlabs/pull-oracle:dev-RC_03_21_24_19_07d"
+image: "docker.io/switchboardlabs/pull-oracle:dev-RC_03_23_24_11_44a"
 
 pagerdutyEventKey: ""
 jupiterSwapApiKey: "3a3b41bc06d49f9c89a8550ff84072be"
