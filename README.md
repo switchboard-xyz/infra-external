@@ -1,3 +1,5 @@
 # Switchboard-On-Demand
 
-For full documentation on setup, please visit: https://switchboard-labs.gitbook.io/switchboard-on-demand/
+This repository is complementary to and used through our official docs.
+
+Our full documentation is now readable on [Switchboard GitBook](https://switchboard-labs.gitbook.io/switchboard-on-demand/)
