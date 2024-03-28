@@ -1,4 +1,9 @@
-# Switchboard-On-Demand
+
+<p align="center">
+  <img src="logo.png" alt="Switchboard Solana Oracle .. according to ChatGPT"/>
+</p>
+
+# Switchboard On-Demand
 
 This repository is complementary to and used through our official docs.
 
