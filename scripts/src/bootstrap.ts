@@ -104,7 +104,7 @@ function initKeypairFromFile(filePath: string): Keypair {
     try {
       const [state, stateInitSig] = await sb.State.create(program);
       console.log(`State: ${state.pubkey.toBase58()} Sig: ${stateInitSig}`);
-    } catch (e) {}
+    } catch (e) { }
     const state = new sb.State(program);
     const [queue, queueCreateSig] = await sb.Queue.create(program, {});
     console.log(`Queue: ${queue.pubkey.toBase58()} Sig: ${queueCreateSig}`);
@@ -118,7 +118,7 @@ function initKeypairFromFile(filePath: string): Keypair {
       `GuardianQueue: ${queue.pubkey.toBase58()} Sig: ${guardianQueueCreateSig}`
     );
     const setConfigIx = await state.setConfigsIx({
-      queue: guardianQueue.pubkey,
+      guardianQueue: guardianQueue.pubkey,
       newAuthority: devnetPayer.publicKey,
       minQuoteVerifyVotes: new anchor.BN(1),
     });
