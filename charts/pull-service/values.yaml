@@ -6,7 +6,9 @@ namespace: "default"
 azureSecretName: ""
 azureVaultUrl: ""
 infisicalSecretKey: ""
+infisicalSecretPath: "/"
 infisicalSecretSlug: "dev"
+infisicalTokenNamespace: "infisical"
 pvcName: "function-manager-pvc"
 debug: ""
 verbose: ""
@@ -59,11 +61,6 @@ components:
       key: ""
       host: ""
       port: 8083
-    push:
-      queue: ""
-      key: ""
-      host: ""
-      port: 8089
 
 appType: "oracle"
 azureClientID: ""

@@ -55,12 +55,14 @@ spec:
         -
           name: PULL_ORACLE
           value: {{ $.Values.components.oracle.key | quote}}
+        {{ if hasKey $.Values.components "push" }}
         -
           name: PUSH_QUEUE
           value: {{ $.Values.components.push.queue | quote}}
         -
           name: PUSH_ORACLE
           value: {{ $.Values.components.push.key | quote}}
+        {{ end }}
         -
           name: KEYPAIR_PATH
           value: "/data/protected_files/keypair.bin"
