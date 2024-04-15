@@ -1,46 +1,61 @@
 # ####################################################
 # USE THIS FILE FOR ANY DEFAULT VALUES FOR ALL ORACLES
 # ####################################################
-serviceAccountName: ""
-namespace: "default"
+attestationProgramId: ""
+
 azureSecretName: ""
-azureVaultUrl: ""
-infisicalSecretKey: ""
-infisicalSecretSlug: "dev"
-pvcName: "function-manager-pvc"
-debug: ""
-verbose: ""
-chain: ""
-googlePayerSecretPath: ""
-solanaMainnetRpc: ""
-cluster: ""
-networkId: ""
-heartbeatInterval: "15"
-gcpConfigBucket: ""
-googleApplicationCredentials: ""
-rpcUrl: ""
-evmChainId: ""
-payerSecret: ""
-payerSecretName: ""
-pushModel: "true"
-image: ""
-feedRelayerEnabled: ""
-computeUnitPrice: ""
-computeUnitLimit: ""
-saveResultComputeUnits: 300000
 azureSecretPath: ""
-serviceAccountJson: "bnVsbA==" #base64 encoded json
-metricsExporter: "prometheus"
-metricsPort: 9090
+azureVaultUrl: ""
+
+chain: ""
+cluster: ""
+computeUnitLimit: ""
+computeUnitPrice: ""
+debug: ""
 dockerKey: ""
 dockerUser: ""
+evmChainId: ""
+feedRelayerEnabled: ""
+gcpConfigBucket: ""
+
+googleApplicationCredentials: ""
+googlePayerSecretPath: ""
+
+heartbeatInterval: "15"
+
+host: "x.y.z"
+image: ""
+
+infisicalSecretKey: ""
+infisicalSecretPath: "/"
+infisicalSecretSlug: "dev"
+infisicalTokenNamespace: "infisical"
+
 ipfsApiUrl: "ipfs.infura.io"
 ipfsKey: ""
 ipfsSecret: ""
 ipfsUrl: "https://ipfs.infura.io:5001"
-attestationProgramId: ""
-host: "x.y.z"
-image: ""
+
+metricsExporter: "prometheus"
+metricsPort: 9090
+
+namespace: "default"
+networkId: ""
+
+payerSecret: ""
+payerSecretName: ""
+
+pushModel: "true"
+pvcName: "function-manager-pvc"
+rpcUrl: ""
+
+saveResultComputeUnits: 300000
+
+serviceAccountJson: "bnVsbA==" #base64 encoded json
+serviceAccountName: ""
+solanaMainnetRpc: ""
+
+verbose: ""
 
 components:
     key: ""
@@ -59,26 +74,25 @@ components:
       key: ""
       host: ""
       port: 8083
-    push:
-      queue: ""
-      key: ""
-      host: ""
-      port: 8089
 
 appType: "oracle"
 azureClientID: ""
 azureTenantID: ""
+
 sgx:
   type: ""
   memoryMiB: 0
   cpu: 0
+
 txTelemetry:
   pgHost: ""
   pgUser: ""
   pgDatabase: ""
   pgPassword: ""
+
 ingress:
   enabled: false
+
 oracleKeys:
   - name: idx-1
     data: ""
@@ -95,4 +109,3 @@ oracleKeys:
     ipfsKey: "XXX"
     ipfsSecret: "XXX"
     attestationQueue: ""
-

@@ -32,6 +32,9 @@ spec:
       - image: {{ $values.image }}
         env:
         -
+          name: LIST_CONFIG_AND_EXIT
+          value: "false"
+        -
           name: CHAIN
           value: {{ $values.chain | quote }}
         -
@@ -88,12 +91,14 @@ spec:
         -
           name: GUARDIAN_QUEUE
           value: "{{ $.Values.components.guardian.queue }}"
+        {{ if eq $component "push" }}
         -
           name: PUSH_ORACLE
           value: "{{ $.Values.components.push.key }}"
         -
           name: PUSH_QUEUE
           value: "{{ $.Values.components.push.queue }}"
+        {{ end }}
         -
           name: GUARDIAN_INGRESS
           value: "https://{{ $.Values.host }}"
