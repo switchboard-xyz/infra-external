@@ -4,7 +4,7 @@ networkId: "devnet"
 
 heartbeatInterval: "30"
 
-image: "docker.io/switchboardlabs/pull-oracle:dev-RC_04_15_24_13_54b"
+image: "docker.io/switchboardlabs/pull-oracle:dev-RC_04_12_24_16_30b"
 namespace: "switchboard-oracle-devnet"
 
 jupiterSwapApiKey: "3a3b41bc06d49f9c89a8550ff84072be"

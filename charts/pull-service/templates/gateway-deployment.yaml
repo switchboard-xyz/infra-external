@@ -194,14 +194,14 @@ spec:
           limits:
             cpu: 1500m
             memory: 4000Mi
-            sgx.intel.com/epc: 25Mi
+            sgx.intel.com/epc: 16Mi
             sgx.intel.com/enclave: 1
             sgx.intel.com/provision: 1
           requests:
             cpu: 1500m
             memory: 3900Mi
 
-            sgx.intel.com/epc: 25Mi
+            sgx.intel.com/epc: 16Mi
             sgx.intel.com/enclave: 1
             sgx.intel.com/provision: 1
 
