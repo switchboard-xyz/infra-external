@@ -5,8 +5,7 @@ metadata:
   name: switchboard-ingress
   namespace: {{ $.Values.namespace }}
   annotations:
-    cert-manager.io/cluster-issuer: "letsencrypt"
-    cert-manager.io/issue-temporary-certificate: "true"
+    cert-manager.io/cluster-issuer: "letsencrypt-staging-http"
     acme.cert-manager.io/http01-edit-in-place: "true"
     nginx.ingress.kubernetes.io/use-regex: "true"
 spec:

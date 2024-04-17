@@ -199,15 +199,15 @@ spec:
         # SGX ORACLE
         resources:
           limits:
-            cpu: 1500m
+            cpu: 1000m
             memory: 3000Mi
-            sgx.intel.com/epc: 25Mi
+            sgx.intel.com/epc: 16Mi
             sgx.intel.com/enclave: 1
             sgx.intel.com/provision: 1
           requests:
-            cpu: 1500m
+            cpu: 1000m
             memory: 3000Mi
-            sgx.intel.com/epc: 25Mi
+            sgx.intel.com/epc: 16Mi
             sgx.intel.com/enclave: 1
             sgx.intel.com/provision: 1
         {{ if not $values.command  }}
