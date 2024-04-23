@@ -8,11 +8,13 @@ export host_dir="$(pwd)/../src"
 export ctr_dir="/app"
 
 ctr image pull docker.io/library/node:lts-alpine3.19
+CTR_NAME="CTR-sg-tmp-node"
+pkill -15 "${CTR_NAME}"
 ctr run -t --net-host \
 	--rm --cwd "${ctr_dir}" \
 	--mount type=bind,src=${host_dir},dst="${ctr_dir}",options=rbind:rw \
 	docker.io/library/node:lts-alpine3.19 \
-	node /bin/sh
+	"${CTR_NAME}" /bin/sh
 
 echo "!!! IMPORTANT !!!"
 echo "The output from last command represents your Oracle/Guardian public keys (and related data)."
