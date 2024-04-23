@@ -1,9 +1,0 @@
-apiVersion: v1
-stringData:
-  infisicalToken: {{ $.Values.infisicalSecret }}
-kind: Secret
-metadata:
-  name: service-token
-  namespace: default
-type: Opaque
-
