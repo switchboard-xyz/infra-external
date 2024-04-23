@@ -1,3 +1,6 @@
+#!/usr/bin/env bash
+set -u -e
+
 helm repo add jetstack https://charts.jetstack.io
 
 # if needed, update the version below to the latest one at the chart page:

@@ -1,3 +1,6 @@
+#!/usr/bin/env bash
+set -u -e
+
 # import vars
 source ./00-vars.cfg
 

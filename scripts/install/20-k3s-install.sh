@@ -1,3 +1,6 @@
+#!/usr/bin/env bash
+set -u -e
+
 # setup k3s in single node mode with embedded `etcd`
 curl -sfL https://get.k3s.io |
 	sh -s - server --disable traefik,servicelb \

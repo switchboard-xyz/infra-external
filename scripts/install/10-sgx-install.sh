@@ -1,3 +1,6 @@
+#!/usr/bin/env bash
+set -u -e
+
 echo "deb https://download.01.org/intel-sgx/sgx_repo/ubuntu $(lsb_release -cs) main" |
 	sudo tee /etc/apt/sources.list.d/intel-sgx.list >/dev/null
 
