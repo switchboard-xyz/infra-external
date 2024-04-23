@@ -1,3 +1,6 @@
+# import vars
+source ./00-vars.cfg
+
 cat >testcert.yml <<-EOF
 	---
 	apiVersion: networking.k8s.io/v1
@@ -5,15 +8,15 @@ cat >testcert.yml <<-EOF
 	metadata:
 	  name: nginx
 	  annotations:
-	    kubernetes.io/ingress.class: nginx
 	    cert-manager.io/cluster-issuer: letsencrypt-staging-http
 	spec:
+	  ingressClassName: nginx
 	  tls:
 	  - hosts:
-	    - test.oracle.switchboard.xyz
+	    - ${CLUSTER_DOMAIN}
 	    secretName: letsencrypt-staging-http
 	  rules:
-	    - host: test.CHANGE.THIS.TO.YOUR.DOMAIN # CHANGE THIS TO REFLECT YOUR DOMAIN
+	    - host: ${CLUSTER_DOMAIN}
 	      http:
 	        paths:
 	          - path: /
