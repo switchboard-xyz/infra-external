@@ -29,7 +29,7 @@ image: ""
 infisicalSecretKey: ""
 infisicalSecretPath: "/"
 infisicalSecretSlug: "dev"
-infisicalTokenNamespace: "infisical"
+infisicalTokenNamespace: "default"
 
 ipfsApiUrl: "ipfs.infura.io"
 ipfsKey: ""
