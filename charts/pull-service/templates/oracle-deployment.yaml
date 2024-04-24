@@ -189,9 +189,11 @@ spec:
         {{ end }}
 
         ports:
+        {{ if ne $component "push" }}
         - name: web
           containerPort: {{ $config.port }}
           protocol: TCP
+        {{ end }}
         - name: metrics
           containerPort: {{ $values.metricsPort }}
           protocol: TCP
