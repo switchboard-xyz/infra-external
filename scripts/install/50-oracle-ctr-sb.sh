@@ -9,7 +9,9 @@ export ctr_dir="/app"
 
 ctr image pull docker.io/library/node:lts-alpine3.19
 CTR_NAME="CTR-sg-tmp-node"
+set +e
 pkill -15 "${CTR_NAME}"
+set -e
 ctr run -t --net-host \
 	--rm --cwd "${ctr_dir}" \
 	--mount type=bind,src=${host_dir},dst="${ctr_dir}",options=rbind:rw \
