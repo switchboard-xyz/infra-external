@@ -4,7 +4,7 @@ set -u -e
 # import vars
 source ./00-vars.cfg
 
-helm_values_files="../../chains/solana/devnet-pull.yaml"
+helm_values_files="../../chains/solana/${NETWORK}-pull.yaml"
 helm_chart_dir="../../charts/pull-service/"
 
 sed -i 's?__INFISICAL_SECRETS_PATH__?'"${INFISICAL_SECRETS_PATH}"'?g' "${helm_values_files}"
@@ -16,7 +16,7 @@ sed -i 's?__ORACLE1__?'"${ORACLE1}"'?g' "${helm_values_files}"
 sed -i 's?__QUEUE__?'"${QUEUE}"'?g' "${helm_values_files}"
 
 # install the helm chart
-helm upgrade -i pull-oracle-devnet \
+helm upgrade -i pull-oracle-${NETWORK} \
 	-n "${NAMESPACE}" --create-namespace \
 	-f "${helm_values_files}" \
 	"${helm_chart_dir}"
