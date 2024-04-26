@@ -1,11 +1,11 @@
 chain: "solana"
-cluster: "devnet"
-networkId: "devnet"
+cluster: "__NETWORK__"
+networkId: "__NETWORK__"
 
 heartbeatInterval: "30"
 
 image: "docker.io/switchboardlabs/pull-oracle:dev-RC_04_24_24_08_38"
-namespace: "switchboard-oracle-devnet"
+namespace: "__NAMESPACE__"
 
 jupiterSwapApiKey: "3a3b41bc06d49f9c89a8550ff84072be"
 
@@ -29,8 +29,8 @@ components:
 host: "__CLUSTER_DOMAIN__"
 
 # YOU SHOULD CHANGE THE LINE BELOW FOR A NON RATE LIMITED ONE
-solanaMainnetRpc: "https://api.mainnet-beta.solana.com"
+solanaMainnetRpc: "__SOLANA_MAINNET_RPC__"
 
 ## Change according to your preferred Solana cluster RPC
-rpcUrl: "https://api.devnet.solana.com"
-wssUrl: "wss://apidev.net.solana.com"
+rpcUrl: "__RPC_URL__"
+wssUrl: "__WSS_RPC_URL__"

@@ -4,7 +4,7 @@ set -u -e
 # import vars
 source ./00-vars.cfg
 
-helm_values_files="../../chains/solana/${NETWORK}-pull.yaml"
+helm_values_files="../../chains/solana/values.yaml"
 helm_chart_dir="../../charts/pull-service/"
 tmp_helm_file="/tmp/helm_values.yaml"
 cp "${helm_values_files}" "${tmp_helm_file}"
