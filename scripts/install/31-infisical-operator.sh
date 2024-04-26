@@ -5,6 +5,7 @@ set -u -e
 source ./00-vars.cfg
 echo -n "Please enter your Infisical Access Token (e.g. st.ABC.XYZ): "
 read -s INFISICAL_ACCESS_TOKEN
+echo "*****"
 
 helm repo add infisical-helm-charts \
 	'https://dl.cloudsmith.io/public/infisical/helm-charts/helm/charts/'
