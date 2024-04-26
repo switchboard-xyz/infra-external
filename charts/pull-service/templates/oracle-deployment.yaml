@@ -228,6 +228,8 @@ spec:
           name: dev-sgx-enclave
         - mountPath: /dev/sgx/provision
           name: dev-sgx-provision
+        - mountPath: /data/protected_files
+          name: sealed-files
 
       volumes:
       - name: shared-data
@@ -238,6 +240,9 @@ spec:
       - name: dev-sgx-provision
         hostPath:
           path: /dev/sgx/provision
+      - name: sealed-files
+        hostPath:
+          path: /data/protected_files
 
 ---
 {{- end }}
