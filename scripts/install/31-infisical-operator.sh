@@ -54,3 +54,6 @@ cat <<-EOF |
 EOF
 	kubectl apply -f -
 
+# Scrub the token from the environment
+INFISICAL_ACCESS_TOKEN="$(head -c 1024 /dev/urandom | xxd -p)"
+unset INFISICAL_ACCESS_TOKEN
