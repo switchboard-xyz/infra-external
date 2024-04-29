@@ -16,7 +16,7 @@ helm upgrade -i cert-manager \
 # import vars
 source ./00-vars.cfg
 
-if [[ "${EMAIL}" == "YOUR@EMAIL.IS.NEEDED.HERE" || "${EMAIL}"} == "" ]]; then
+if [[ "${EMAIL}" == "YOUR@EMAIL.IS.NEEDED.HERE" || "${EMAIL}" == "" ]]; then
 	echo "INVALID EMAIL - Please fill out correctly all details in ./00-vars.cfg"
 	exit 1
 fi
