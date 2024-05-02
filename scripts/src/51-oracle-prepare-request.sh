@@ -1,20 +1,42 @@
-queueKey="${1:-5Qv744yu7DmEbU669GmYRqL9kpQsyYsaVKdR8YiBMTaP}"
-guardianQueue="${2:-71wi6H1ByDG9qnRd5Ef8PSKoKH8rJ7pve7NDvB7Y4tqi}"
+cluster="${1:-devnet}"
+queueKey="${2:-5Qv744yu7DmEbU669GmYRqL9kpQsyYsaVKdR8YiBMTaP}"
 
-echo "Creating new Oracle/Guardian acceptance request on Solana for:"
-echo "queueKey: ${queueKey}"
-echo "guardianQueue: ${guardianQueue}"
+echo "Creating new Oracle/Guardian permission request on Solana for:"
+echo "  -> Solana cluster: ${cluster}"
+echo "  -> queueKey: ${queueKey}"
 
-npm i -g ts-node >/dev/null 2>&1 &&
-	npm i >/dev/null 2>&1
+echo " "
+echo "Installing Switchboard CLI now... please wait."
+echo "This step usually takes about 2 minutes."
+npm i -g @switchboard-xyz/cli >/dev/null 2>&1
 
-ts-node ./bootstrap.ts \
-	--queueKey "$queueKey" \
-	--guardianQueue "$guardianQueue" \
-	--payerPath payer.json
+echo " "
+sb solana on-demand oracle create \
+	--queue "${queueKey}" \
+	--cluster "${cluster}" \
+	--keypair payer.json
 
+echo " "
+export register_guardian=""
+while [[ 
+	"${register_guardian}" != "y" &&
+	"${register_guardian}" != "Y" &&
+	"${register_guardian}" != "n" &&
+	"${register_guardian}" != "n" ]]; do
+	echo -n "Do you plan on running a guardian as well? (y/n) "
+	read -r register_guardian
+done
+
+if [[ "${register_guardian}" == "y" || "${register_guardian}" == "Y" ]]; then
+	echo " "
+	sb solana on-demand guardian create \
+		--cluster "${cluster}" \
+		--keypair payer.json
+fi
+
+echo " "
 echo "!!! IMPORTANT !!!"
-echo "SAVE THE OUTPUT from the command above before proceeding."
+echo "SAVE THE OUTPUT from the commands above before proceeding."
 
 echo " "
 echo "Should be safe to exit now. Just type 'exit' from this temporary container."
