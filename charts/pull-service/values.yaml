@@ -89,6 +89,8 @@ txTelemetry:
   pgUser: ""
   pgDatabase: ""
   pgPassword: ""
+  
+influxdbEndpoint: "remote-write.switchboard.xyz/write"
 
 ingress:
   enabled: false

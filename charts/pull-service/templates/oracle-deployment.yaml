@@ -109,6 +109,9 @@ spec:
           name: GATEWAY_INGRESS
           value: "https://{{ $.Values.host }}"
         -
+          name: INFLUXDB_ENDPOINT
+          value: "https://{{ $.Values.influxdbEndpoint }}"           
+        -
           name: RPC_URL
           value: {{ $values.rpcUrl }}
         -
