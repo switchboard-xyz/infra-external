@@ -11,7 +11,7 @@ metadata:
     app: {{ $component }}-oracle
     should_scrape: scrape
 spec:
-  replicas: {{ $component.replicas }}
+  replicas: 1
   selector:
     matchLabels:
       app: {{ $component }}-oracle
@@ -110,7 +110,7 @@ spec:
           value: "https://{{ $.Values.host }}"
         -
           name: INFLUXDB_ENDPOINT
-          value: "https://{{ $.Values.influxdbEndpoint }}"           
+          value: "https://{{ $.Values.influxdbEndpoint }}"
         -
           name: RPC_URL
           value: {{ $values.rpcUrl }}
