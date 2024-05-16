@@ -1,5 +1,5 @@
 cluster="${1:-devnet}"
-queueKey="${2:-5Qv744yu7DmEbU669GmYRqL9kpQsyYsaVKdR8YiBMTaP}"
+queueKey="${2:-FfD96yeXs4cxZshoPPSKhSPgVQxLAJUT3gefgh84m1Di}"
 
 echo "Creating new Oracle/Guardian permission request on Solana for:"
 echo "  -> Solana cluster: ${cluster}"
