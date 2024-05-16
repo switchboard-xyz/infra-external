@@ -1,4 +1,9 @@
-:80, :443 {
+# IPv4 -> use - instead of . -> 0.0.0.0 is 0-0-0-0.sslip.io
+# IPv6 -> use - instead of : --> AAAA:BBBB:CCCC:0000 is AAAA-BBBB-CCCC--0000
+__IPv4_IP__.sslip.io,
+__IPv6_IP__.sslip.io,
+:80,
+:443 {
   encode zstd gzip
 
   reverse_proxy /oracle/* oracle:8081
