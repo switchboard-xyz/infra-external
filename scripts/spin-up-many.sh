@@ -6,7 +6,7 @@ CHART_PATH="../charts/pull-service"
 # Path to your text file
 FILE_PATH="./oracle-keys.txt"
 
-VALUE_PATH="../chains/solana/values.yaml"
+VALUE_PATH="../values.yaml"
 
 counter=0
 
@@ -14,8 +14,8 @@ while IFS= read -r line
 do
   counter=$((counter+1))
   NAMESPACE="oracle-$counter"
-  HOST="oracle-$line.switchboard.xyz"
-  DEPLOYMENT_NAME="pull-oracle-$line"
+  HOST="oracle-$counter.switchboard.xyz"
+  DEPLOYMENT_NAME="pull-oracle-$counter"
 
   echo "Deploying Helm chart for $NAMESPACE"
 
@@ -23,7 +23,7 @@ do
     --namespace "$NAMESPACE" \
     --create-namespace \
     --set namespace="$NAMESPACE" \
-    --set host="$HOST" --dry-run \
+    --set host="$HOST" \
     --set components.oracle.key="$line" \
     -f "$VALUE_PATH"
 
