@@ -1,70 +1,7 @@
-version: '3'
-
-services:
-  oracle:
-    image: ${DOCKER_IMAGE}
-    devices:
-      - /dev/sgx:/dev/sgx
-    volumes:
-      - /data/protected_files/:/data/protected_files/
-    environment:
-      ENABLE_PULL_ORACLE: "1"
-      ENABLE_PUSH_ORACLE: "0"
-      ENABLE_PUSH_MODEL: "0"
-      ENABLE_GUARDIAN: "0"
-      ENABLE_GATEWAY: "0"
-    env_file:
-      - ./00-vars.env
-      - ./payer-secret.env
-    privileged: true
-    stdin_open: true
-    tty: true
-
-  guardian:
-    image: ${DOCKER_IMAGE}
-    devices:
-      - /dev/sgx:/dev/sgx
-    volumes:
-      - /data/protected_files/:/data/protected_files/
-    environment:
-      ENABLE_PULL_ORACLE: "0"
-      ENABLE_PUSH_ORACLE: "0"
-      ENABLE_PUSH_MODEL: "0"
-      ENABLE_GUARDIAN: "1"
-      ENABLE_GATEWAY: "0"
-    env_file:
-      - ./00-vars.env
-      - ./payer-secret.env
-    privileged: true
-    stdin_open: true
-    tty: true
-
-  gateway:
-    image: ${DOCKER_IMAGE}
-    devices:
-      - /dev/sgx:/dev/sgx
-    volumes:
-      - /data/protected_files/:/data/protected_files/
-    environment:
-      ENABLE_PULL_ORACLE: "0"
-      ENABLE_PUSH_ORACLE: "0"
-      ENABLE_PUSH_MODEL: "0"
-      ENABLE_GUARDIAN: "0"
-      ENABLE_GATEWAY: "1"
-    env_file:
-      - ./00-vars.env
-      - ./payer-secret.env
-    privileged: true
-    stdin_open: true
-    tty: true
-
-  webserver:
-    image: caddy
-    restart: always
-    ports:
-      - 80:80
-      - 443:443
-    volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile:ro
-      - ./caddy-data:/data
-      - ./caddy-config:/config
+# REMOVE THE # SIGN IN FRONT OF THE DEPLOYMENT
+# YOU WANT TO ENABLE
+# REMEMBER TO EDIT THE 00-vars.cfg FILE IN THE
+# RELATIVE DIRECTORY BEFORE CONTINUING
+include:
+  - devnet/docker-compose.yml
+  - mainnet/docker-compose.yml

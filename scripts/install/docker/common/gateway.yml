@@ -1,0 +1,25 @@
+##########
+### !!! - DO NOT CHANGE ANYTHING IN THIS FILE - !!!
+##########
+
+services:
+  # BEGIN GATEWAY
+  gateway:
+    image: ${DOCKER_IMAGE}
+    devices:
+      - /dev/sgx:/dev/sgx
+    restart: unless-stopped
+    logging:
+      driver: "local"
+      options:
+        max-size: "16g"
+    environment:
+      ENABLE_PULL_ORACLE: "0"
+      ENABLE_PUSH_ORACLE: "0"
+      ENABLE_PUSH_MODEL: "false"
+      ENABLE_GUARDIAN: "0"
+      ENABLE_GATEWAY: "1"
+    privileged: true
+    stdin_open: true
+    tty: true
+  # END GATEWAY

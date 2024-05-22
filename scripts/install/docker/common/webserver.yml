@@ -1,0 +1,28 @@
+##########
+### !!! - DO NOT CHANGE ANYTHING IN THIS FILE - !!!
+##########
+
+networks:
+  mainnet:
+  devnet:
+
+services:
+  # BEGIN SHARED MAIN WEBSERVER
+  webserver:
+    image: caddy
+    ports:
+      - 80:80
+      - 443:443
+    networks:
+      - devnet
+      - mainnet
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - ../data/caddy-data:/data
+      - ../data/caddy-config:/config
+    restart: unless-stopped
+    logging:
+      driver: "local"
+      options:
+        max-size: "64g"
+  # END SHARED MAIN WEBSERVER

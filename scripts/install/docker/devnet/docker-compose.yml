@@ -1,0 +1,52 @@
+##########
+### !!! - DO NOT CHANGE ANYTHING IN THIS FILE - !!!
+##########
+
+include:
+  - ../common/webserver.yml
+
+services:
+  # BEGIN ORACLE
+  devnet-oracle:
+    extends:
+      file: ../common/oracle.yml
+      service: oracle
+    volumes:
+      - ../data/devnet_protected_files/:/data/protected_files/
+    networks:
+      - devnet
+    env_file:
+      - ./00-vars.env
+      - ./payer-secret.env
+      - ./common.env
+  # END ORACLE
+
+  # BEGIN GUARDIAN
+  devnet-guardian:
+    extends:
+      file: ../common/guardian.yml
+      service: guardian
+    volumes:
+      - ../data/devnet_protected_files/:/data/protected_files/
+    networks:
+      - devnet
+    env_file:
+      - ./00-vars.env
+      - ./payer-secret.env
+      - ./common.env
+  # END GUARDIAN
+
+  # BEGIN GATEWAY
+  devnet-gateway:
+    extends:
+      file: ../common/gateway.yml
+      service: gateway
+    volumes:
+      - ../data/devnet_protected_files/:/data/protected_files/
+    networks:
+      - devnet
+    env_file:
+      - ./00-vars.env
+      - ./payer-secret.env
+      - ./common.env
+  # END GATEWAY
