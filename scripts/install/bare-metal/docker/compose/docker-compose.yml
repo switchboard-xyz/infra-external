@@ -4,4 +4,4 @@
 # RELATIVE DIRECTORY BEFORE CONTINUING
 include:
   - devnet/docker-compose.yml
-  - mainnet/docker-compose.yml
+  #- mainnet/docker-compose.yml
