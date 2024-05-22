@@ -1,3 +1,5 @@
+cluster="${1:-devnet}"
+
 apt-get update >/dev/null 2>&1 &&
 	apt-get install -y ca-certificates >/dev/null 2>&1
 
@@ -10,13 +12,16 @@ echo "Also save the following string (your SOL account private key) and NEVER SH
 
 cat ./payer.json
 
-echo " "
-echo "Requesting funding of 5 SOL on devnet:"
-solana airdrop 5 -u devnet -k ./payer.json
+# only on devnet
+if [[ "${cluster}" == "devnet" ]]; then
+	echo " "
+	echo "Requesting self-funding of 5 SOL on devnet:"
+	solana airdrop 5 -u devnet -k ./payer.json
+fi
 
 echo " "
 echo "Checking current balance for your new account:"
-solana balance -u devnet -k ./payer.json
+solana balance -u "${cluster}" -k ./payer.json
 
 echo " "
 echo "Should be safe to exit now. Just type 'exit' from this temporary container."
