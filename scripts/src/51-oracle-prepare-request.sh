@@ -22,7 +22,7 @@ while [[
 	"${register_guardian}" != "y" &&
 	"${register_guardian}" != "Y" &&
 	"${register_guardian}" != "n" &&
-	"${register_guardian}" != "n" ]]; do
+	"${register_guardian}" != "N" ]]; do
 	echo -n "Do you plan on running a guardian as well? (y/n) "
 	read -r register_guardian
 done
