@@ -1,9 +1,8 @@
 # IPv4 -> use - instead of . -> 0.0.0.0 -> 0-0-0-0.sslip.io
 # IPv6 -> use - instead of : -> AAAA:BBBB::0000 -> AAAA-BBBB--0000
 
-__CLUSTER_DOMAIN__,
-__IP4__,
-__IP6__
+__IP4__.sslip.io,
+__IP4__
 {
   # BEGIN DEVNET
   handle_path /devnet {
