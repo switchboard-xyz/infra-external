@@ -1,7 +1,3 @@
-##########
-### !!! - DO NOT CHANGE ANYTHING IN THIS FILE - !!!
-##########
-
 networks:
   mainnet:
   devnet:
@@ -11,8 +7,18 @@ services:
   webserver:
     image: caddy
     ports:
-      - 80:80
-      - 443:443
+      # HTTP
+      - target: 80
+        published: 80
+        protocol: tcp
+      # HTTPS
+      - target: 443
+        published: 443
+        protocol: tcp
+      # HTTPS/3
+      - target: 443
+        published: 443
+        protocol: udp
     networks:
       - devnet
       - mainnet

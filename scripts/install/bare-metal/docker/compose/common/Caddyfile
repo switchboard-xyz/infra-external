@@ -1,24 +1,49 @@
 # IPv4 -> use - instead of . -> 0.0.0.0 -> 0-0-0-0.sslip.io
 # IPv6 -> use - instead of : -> AAAA:BBBB::0000 -> AAAA-BBBB--0000
 
+(proxy) {
+  header_up Host {host}
+  header_up X-Real-IP {remote}
+}
+
+(error) {
+  handle {
+    respond "These are not the ORBs you're looking for! - Sincerily, Switchboard.xyz" 404
+  }
+}
+
 __IP4__.sslip.io,
 __IP4__
 {
   # BEGIN DEVNET
-  handle_path /devnet {
-    reverse_proxy /oracle*   devnet-oracle:8081
-    reverse_proxy /gateway*  devnet-gateway:8082
-    reverse_proxy /guardian* devnet-guardian:8083
+  handle_path /devnet* {
+    reverse_proxy /oracle* devnet-oracle:8081 {
+      import proxy
+    }
+    reverse_proxy /gateway* devnet-gateway:8082 {
+      import proxy
+    }
+    reverse_proxy /guardian* devnet-guardian:8083 {
+      import proxy
+    }
   }
   # END DEVNET
 
   # BEGIN MAINNET
-  handle_path /mainnet {
-    reverse_proxy /oracle*   mainnet-oracle:8081
-    reverse_proxy /gateway*  mainnet-gateway:8082
-    reverse_proxy /guardian* mainnet-guardian:8083
+  handle_path /mainnet* {
+    reverse_proxy /oracle* mainnet-oracle:8081 {
+      import proxy
+    }
+    reverse_proxy /gateway* mainnet-gateway:8082 {
+      import proxy
+    }
+    reverse_proxy /guardian* mainnet-guardian:8083 {
+      import proxy
+    }
   }
   # END MAINNET
+
+  import error
 
   header {
     X-Content-Type-Options nosniff
@@ -34,4 +59,10 @@ __IP4__
   encode zstd gzip
   # ENABLE THIS TO ENABLE LOGS FOR ALL REQUESTS
   #log output
+}
+
+:80, :443 {
+  handle {
+    respond "SHOO ... move along." 404
+  }
 }
