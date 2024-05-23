@@ -9,10 +9,10 @@ namespace: "__NAMESPACE__"
 
 jupiterSwapApiKey: "3a3b41bc06d49f9c89a8550ff84072be"
 
-infisicalSecretKey: "SOLANA_KEY" # must set up the infisical key/slug in order for these secrets to get provisioned
+infisicalSecretKey: "__INFISICAL_SECRET_KEY__" # must set up the infisical key/slug in order for these secrets to get provisioned
 infisicalSecretPath: "__INFISICAL_SECRETS_PATH__" # must set up the infisical key/slug in order for these secrets to get provisioned
 infisicalSecretSlug: "__INFISICAL_SLUG__"
-infisicalTokenNamespace: "infisical" # this is the namespace you deployed infisical in your Kubernetes cluster
+infisicalTokenNamespace: "__INFISICAL_TOKEN_NS__" # this is the namespace you deployed infisical in your Kubernetes cluster
 
 # You can get the keys below by running scripts/bootstrap.ts
 components:
