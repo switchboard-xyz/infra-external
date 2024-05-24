@@ -13,6 +13,7 @@ if [[ "${use_docker}" != "--docker" ]]; then
 else
 	docker run \
 		--privileged -it --rm --network host \
+		-v /var/run/aesmd:/var/run/aesmd \
 		-v /dev/sgx:/dev/sgx \
 		-e ENABLE_GATEWAY=1 \
 		-e LIST_CONFIG_AND_EXIT=true \
