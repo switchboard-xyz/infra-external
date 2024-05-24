@@ -1,0 +1,1 @@
+../../../.scripts/sgx/12-sgx-mcu-check.sh

@@ -1,0 +1,1 @@
+../../../.scripts/kubernetes/20-k3s-install.sh

@@ -1,0 +1,1 @@
+../../../.scripts/solana/40-oracle-ctr-sol.sh

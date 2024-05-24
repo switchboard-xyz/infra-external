@@ -1,0 +1,1 @@
+../../../.scripts/sgx/13-sgx-check-SAs.sh

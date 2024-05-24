@@ -1,0 +1,1 @@
+../../../.scripts/sgx/11-sgx-mcu-setup.sh

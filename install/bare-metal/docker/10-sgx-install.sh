@@ -1,0 +1,1 @@
+../../../.scripts/sgx/10-sgx-install.sh
