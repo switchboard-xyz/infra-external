@@ -4,7 +4,7 @@ set -u -e
 # import vars
 source ../../../cfg/00-vars.cfg
 
-export data_host_dir="../../../data"
+export data_host_dir="$(pwd)/../../../data"
 export data_ctr_dir="/data"
 
 export script_host_dir="$(pwd)"
