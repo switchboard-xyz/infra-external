@@ -1,6 +1,8 @@
 cluster="${1:-devnet}"
 queueKey="${2:-FfD96yeXs4cxZshoPPSKhSPgVQxLAJUT3gefgh84m1Di}"
 
+PAYER_FILE="/data/payer.json"
+
 echo "Creating new Oracle/Guardian permission request on Solana for:"
 echo "  -> Solana cluster: ${cluster}"
 echo "  -> queueKey: ${queueKey}"
@@ -14,7 +16,7 @@ echo " "
 sb solana on-demand oracle create \
 	--queue "${queueKey}" \
 	--cluster "${cluster}" \
-	--keypair payer.json
+	--keypair "${PAYER_FILE}"
 
 echo " "
 export register_guardian=""
@@ -31,7 +33,7 @@ if [[ "${register_guardian}" == "y" || "${register_guardian}" == "Y" ]]; then
 	echo " "
 	sb solana on-demand guardian create \
 		--cluster "${cluster}" \
-		--keypair payer.json
+		--keypair "${PAYER_FILE}"
 fi
 
 echo " "
