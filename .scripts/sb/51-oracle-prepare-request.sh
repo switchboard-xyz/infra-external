@@ -10,7 +10,7 @@ echo "  -> queueKey: ${queueKey}"
 echo " "
 echo "Installing Switchboard CLI now... please wait."
 echo "This step usually takes about 2 minutes."
-npm i -g "@switchboard-xyz/cli@3.3.40" >/dev/null 2>&1
+npm i -g "@switchboard-xyz/cli@3.3.44" >/dev/null 2>&1
 
 echo " "
 sb solana on-demand oracle create \
