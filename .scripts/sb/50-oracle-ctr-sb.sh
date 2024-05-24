@@ -2,10 +2,14 @@
 set -u -e
 
 # import vars
-source ./00-vars.cfg
+source ../../../cfg/00-vars.cfg
 
-export host_dir="$(pwd)/../src"
-export ctr_dir="/app"
+export data_host_dir="../../../data"
+export data_ctr_dir="/data"
+
+export script_host_dir="$(pwd)"
+export script_ctr_dir="/app"
+export script_filename="51-oracle-prepare-request.sh"
 
 CTR_NAME="CTR-sg-tmp-node"
 set +e
@@ -16,16 +20,18 @@ export use_docker="${1:-''}"
 export image="docker.io/library/node:22-bookworm"
 
 if [[ "${use_docker}" != "--docker" ]]; then
-	ctr image pull "${image}"
+	ctr i pull "${image}"
 	ctr run -t --net-host \
-		--rm --cwd "${ctr_dir}" \
-		--mount type=bind,src=${host_dir},dst="${ctr_dir}",options=rbind:rw \
+		--rm --cwd "${script_ctr_dir}" \
+		--mount "type=bind,src=${data_host_dir},dst=${data_ctr_dir},options=rbind:rw" \
+		--mount "type=bind,src=${script_host_dir}/${script_filename},dst=${script_ctr_dir}/${script_filename},options=rbind:rw" \
 		"${image}" "${CTR_NAME}" /bin/bash
 else
 	docker image pull "${image}"
 	docker run -it --rm \
-		--workdir "${ctr_dir}" \
-		--mount type=bind,src=${host_dir},dst="${ctr_dir}" \
+		--workdir "${script_ctr_dir}" \
+		-v "${data_host_dir}/:${data_ctr_dir}/" \
+		-v "${script_host_dir}/${script_filename}:${script_ctr_dir}/${script_filename}" \
 		--name "${CTR_NAME}" --entrypoint /bin/bash \
 		"${image}"
 fi
@@ -34,7 +40,7 @@ echo "!!! IMPORTANT !!!"
 echo "The output from last command represents your Oracle/Guardian public keys (and related data)."
 echo "It's all public data, so no harm in sharing it. Now you need to proceed with two steps:"
 echo ""
-echo "1 - Edit ./00-vars.cfg and add the entire output from above at the end of the file"
+echo "1 - Edit infra-external/cfg/00-vars.cfg and add the entire output from above at the end of the file"
 echo ""
 echo "2 - Copy Submit a request for acceptance of your new Oracle/Guardian data to -> https://forms.gle/2xWwFQ8XPBGu9DRL6"
 echo ""
