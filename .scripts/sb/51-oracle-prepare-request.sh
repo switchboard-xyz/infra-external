@@ -1,10 +1,23 @@
 cluster="${1:-devnet}"
-queueKey="${2:-FfD96yeXs4cxZshoPPSKhSPgVQxLAJUT3gefgh84m1Di}"
 
 PAYER_FILE="/data/${cluster}_payer.json"
 
+if [[ "${cluster}" != "devnet" &&
+	"${cluster}" != "mainnet" &&
+	"${cluster}" != "mainnet-beta" ]]; then
+	echo "Only valid cluster values are 'devnet' and 'mainnet'/'mainnet-beta'"
+	exit 1
+fi
+
 if [[ "${cluster}" == "mainnet" ]]; then
 	cluster="mainnet-beta"
+fi
+
+queueKey=""
+if [[ "${cluster}" == "devnet" ]]; then
+	queueKey="FfD96yeXs4cxZshoPPSKhSPgVQxLAJUT3gefgh84m1Di"
+elif [[ "${cluster}" == "mainnet-beta" ]]; then
+	queueKey="A43DyUGA7s8eXPxqEjJY6EBu1KKbNgfxF8h17VAHn13w"
 fi
 
 echo "==================================================="
@@ -17,7 +30,7 @@ echo " "
 if [[ "${cluster}" != "devnet" &&
 	"${cluster}" != "mainnet" &&
 	"${cluster}" != "mainnet-beta" ]]; then
-	echo "Only valid cluster values are 'devnet' and 'mainnet'/'mainnet-beta'."
+	echo "Only valid cluster values are 'devnet' and 'mainnet'/'mainnet-beta'"
 	exit 1
 fi
 
