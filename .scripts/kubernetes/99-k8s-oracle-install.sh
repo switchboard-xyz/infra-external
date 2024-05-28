@@ -2,7 +2,7 @@
 set -u -e
 
 # import vars
-source ./00-vars.cfg
+source ../../../cfg/00-vars.cfg
 
 helm_values_files="../../chains/solana/values.yaml"
 helm_chart_dir="../../charts/pull-service/"

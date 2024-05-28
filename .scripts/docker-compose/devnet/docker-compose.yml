@@ -12,13 +12,15 @@ services:
       file: ../common/oracle.yml
       service: oracle
     volumes:
-      - ../data/devnet_protected_files/:/data/protected_files/
+      - ../../../data/devnet_protected_files/:/data/protected_files/
     networks:
       - devnet
+    environment:
+      PAYER_SECRET_FILE: /run/secret/devnet_payer_secret
+    secrets:
+      - devnet_payer_secret
     env_file:
-      - ./00-vars.env
-      - ./payer-secret.env
-      - ./common.env
+      - ../common/devnet.env
   # END ORACLE
 
   # BEGIN GUARDIAN
@@ -27,13 +29,15 @@ services:
       file: ../common/guardian.yml
       service: guardian
     volumes:
-      - ../data/devnet_protected_files/:/data/protected_files/
+      - ../../../data/devnet_protected_files/:/data/protected_files/
     networks:
       - devnet
+    environment:
+      PAYER_SECRET_FILE: /run/secret/devnet_payer_secret
+    secrets:
+      - devnet_payer_secret
     env_file:
-      - ./00-vars.env
-      - ./payer-secret.env
-      - ./common.env
+      - ../common/devnet.env
   # END GUARDIAN
 
   # BEGIN GATEWAY
@@ -42,11 +46,13 @@ services:
       file: ../common/gateway.yml
       service: gateway
     volumes:
-      - ../data/devnet_protected_files/:/data/protected_files/
+      - ../../../data/devnet_protected_files/:/data/protected_files/
     networks:
       - devnet
+    environment:
+      PAYER_SECRET_FILE: /run/secret/devnet_payer_secret
+    secrets:
+      - devnet_payer_secret
     env_file:
-      - ./00-vars.env
-      - ./payer-secret.env
-      - ./common.env
+      - ../common/devnet.env
   # END GATEWAY

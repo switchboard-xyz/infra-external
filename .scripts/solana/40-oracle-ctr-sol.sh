@@ -1,9 +1,6 @@
 #!/usr/bin/env bash
 set -u -e
 
-# import vars
-source ../../../cfg/00-vars.cfg
-
 export data_host_dir="$(pwd)/../../../data"
 export data_ctr_dir="/data"
 
