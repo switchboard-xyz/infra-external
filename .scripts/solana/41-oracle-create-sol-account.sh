@@ -25,7 +25,7 @@ echo "Installing deps.. usually about 1-2 minutes."
 apt-get update >/dev/null 2>&1 &&
 	apt-get install -y ca-certificates >/dev/null 2>&1
 
-solana-keygen new --word-count 24 -o "${PAYER_FILE}"
+solana-keygen new --force --word-count 24 -o "${PAYER_FILE}"
 
 cat "${PAYER_FILE}"
 
