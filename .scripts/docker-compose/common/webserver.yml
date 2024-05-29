@@ -22,6 +22,8 @@ services:
     networks:
       - devnet
       - mainnet
+    env_file:
+      - ../../../cfg/00-vars.cfg
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
       - ../data/caddy-data:/data
