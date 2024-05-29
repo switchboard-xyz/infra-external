@@ -14,7 +14,7 @@ services:
       options:
         max-size: "16g"
     env_file:
-      - ../../../cfg/00-vars.cfg
+      - ../../../cfg/00-common-vars.cfg
     environment:
       ENABLE_PULL_ORACLE: "1"
       ENABLE_PUSH_ORACLE: "0"
