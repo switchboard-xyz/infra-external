@@ -63,3 +63,9 @@ services:
       - ../../../cfg/00-mainnet-vars.cfg
       - ../common/mainnet.env
   # END GATEWAY
+
+  # BEGIN WEBSERVER
+  webserver:
+    env_file:
+      - ../../../cfg/00-mainnet-vars.cfg
+  # END WEBSERVER

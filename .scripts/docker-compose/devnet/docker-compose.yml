@@ -63,3 +63,9 @@ services:
       - ../../../cfg/00-devnet-vars.cfg
       - ../common/devnet.env
   # END GATEWAY
+
+  # BEGIN WEBSERVER
+  webserver:
+    env_file:
+      - ../../../cfg/00-devnet-vars.cfg
+  # END WEBSERVER
