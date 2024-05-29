@@ -20,6 +20,7 @@ services:
     secrets:
       - devnet_payer_secret
     env_file:
+      - ../../../cfg/00-vars.cfg
       - ../common/devnet.env
   # END ORACLE
 
@@ -37,6 +38,7 @@ services:
     secrets:
       - devnet_payer_secret
     env_file:
+      - ../../../cfg/00-vars.cfg
       - ../common/devnet.env
   # END GUARDIAN
 
@@ -54,5 +56,6 @@ services:
     secrets:
       - devnet_payer_secret
     env_file:
+      - ../../../cfg/00-vars.cfg
       - ../common/devnet.env
   # END GATEWAY
