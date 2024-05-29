@@ -66,6 +66,9 @@ services:
 
   # BEGIN WEBSERVER
   webserver:
+    extends:
+      file: ../common/guardian.yml
+      service: webserver
     env_file:
       - ../../../cfg/00-mainnet-vars.cfg
   # END WEBSERVER

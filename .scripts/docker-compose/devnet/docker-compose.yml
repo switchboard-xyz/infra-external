@@ -2,9 +2,6 @@
 ### !!! - DO NOT CHANGE ANYTHING IN THIS FILE - !!!
 ##########
 
-include:
-  - ../common/webserver.yml
-
 secrets:
   devnet_payer_secret:
     file: ../../../data/devnet_payer.json
@@ -66,6 +63,9 @@ services:
 
   # BEGIN WEBSERVER
   webserver:
+    extends:
+      file: ../common/guardian.yml
+      service: webserver
     env_file:
       - ../../../cfg/00-devnet-vars.cfg
   # END WEBSERVER
