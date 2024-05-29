@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
 set -u -e
 
-cd ../../.scripts/docker-compose/
+cd "$(pwd)/../../../.scripts/docker-compose/"
 docker compose --env-file ../../cfg/00-vars.cfg "$@"
