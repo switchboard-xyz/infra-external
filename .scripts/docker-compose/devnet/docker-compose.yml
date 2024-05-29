@@ -5,6 +5,10 @@
 include:
   - ../common/webserver.yml
 
+secrets:
+  devnet_payer_secret:
+    file: ../../../data/devnet_payer.json
+
 services:
   # BEGIN ORACLE
   devnet-oracle:

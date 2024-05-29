@@ -5,6 +5,10 @@
 include:
   - ../common/webserver.yml
 
+secrets:
+  mainnet_payer_secret:
+    file: ../../../data/mainnet_payer.json
+
 services:
   # BEGIN ORACLE
   mainnet-oracle:
@@ -59,7 +63,3 @@ services:
       - ../../../cfg/00-vars.cfg
       - ../common/mainnet.env
   # END GATEWAY
-
-secrets:
-   mainnet_payer_secret:
-     file: ../../../data/mainnet_payer.json
