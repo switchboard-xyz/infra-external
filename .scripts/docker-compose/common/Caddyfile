@@ -12,8 +12,8 @@
   }
 }
 
-__IP4__.sslip.io,
-__IP4__
+{$IP4}.sslip.io,
+{$IP4}
 {
   # BEGIN DEVNET
   handle_path /devnet* {
