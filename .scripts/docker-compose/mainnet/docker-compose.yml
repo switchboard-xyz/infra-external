@@ -3,7 +3,7 @@
 ##########
 
 include:
-  - ../common/webserver.yml
+  - ../common/networks.yml
 
 secrets:
   mainnet_payer_secret:

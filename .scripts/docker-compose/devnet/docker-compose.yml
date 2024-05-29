@@ -2,6 +2,9 @@
 ### !!! - DO NOT CHANGE ANYTHING IN THIS FILE - !!!
 ##########
 
+include:
+  - ../common/networks.yml
+
 secrets:
   devnet_payer_secret:
     file: ../../../data/devnet_payer.json
