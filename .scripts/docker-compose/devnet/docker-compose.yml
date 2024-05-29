@@ -64,7 +64,7 @@ services:
   # BEGIN WEBSERVER
   webserver:
     extends:
-      file: ../common/guardian.yml
+      file: ../common/webserver.yml
       service: webserver
     env_file:
       - ../../../cfg/00-devnet-vars.cfg
