@@ -1,0 +1,1 @@
+../../../.scripts/docker-compose/63_cfg_disable_mainnet.sh

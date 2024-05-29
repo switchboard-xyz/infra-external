@@ -1,0 +1,1 @@
+../../../.scripts/docker-compose/62_cfg_disable_devnet.sh

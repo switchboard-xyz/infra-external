@@ -1,0 +1,1 @@
+../../../.scripts/docker-compose/60_cfg_enable_devnet.sh
