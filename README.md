@@ -1,6 +1,6 @@
 
 <p align="center">
-  <img src="logo.png" alt="Switchboard Solana Oracle .. according to ChatGPT"/>
+  <img src=".assets/logo.png" alt="Switchboard Solana Oracle .. according to ChatGPT"/>
 </p>
 
 # Switchboard On-Demand
