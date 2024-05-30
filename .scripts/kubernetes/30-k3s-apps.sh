@@ -74,7 +74,7 @@ helm upgrade -i ingress-nginx ingress-nginx/ingress-nginx \
 helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
 
 if [[ "${IP4}" == "0.0.0.0" || "${IP4}" == "" ]]; then
-	echo "INVALID IPv4 - Please fill out correctly all details in ./00-vars.cfg"
+	echo "INVALID IPv4 - Please fill out correctly all details in \$REPO/cfg/00-{devnet|mainnet}-vars.cfg"
 	exit 1
 fi
 
@@ -128,5 +128,5 @@ helm repo add vm https://victoriametrics.github.io/helm-charts/
 
 helm upgrade -i vmagent \
 	-n vmagent --create-namespace \
-	-f ./99-vmagent.yaml \
+	-f ../../.scripts/kubernetes/99-vmagent.yaml \
 	vm/victoria-metrics-agent
