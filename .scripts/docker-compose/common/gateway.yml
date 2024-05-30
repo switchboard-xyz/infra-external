@@ -24,4 +24,9 @@ services:
     privileged: true
     stdin_open: true
     tty: true
+    ulimits:
+      nproc: 65535
+      nofile:
+        soft: 40000
+        hard: 60000
   # END GATEWAY
