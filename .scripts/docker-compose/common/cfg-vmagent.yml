@@ -15,13 +15,13 @@ scrape_configs:
         - "localhost:8429"
 
     relabel_configs:
-    - labels: operator
+    - target_label: operator
       replacement: "%{CLUSTER_DOMAIN}"
-    - labels: pull_oracle
+    - target_label: pull_oracle
       replacement: "%{PULL_ORACLE}"
-    - labels: pull_queue
+    - target_label: pull_queue
       replacement: "%{PULL_QUEUE}"
-    - labels: guardian_oracle
+    - target_label: guardian_oracle
       replacement: "%{GUARDIAN_ORACLE}"
-    - labels: guardian_queue
+    - target_label: guardian_queue
       replacement: "%{GUARDIAN_QUEUE}"
