@@ -81,8 +81,8 @@ services:
     networks:
       - devnet
     volumes:
-      - ../data/vmagent-data:/vmagentdata
-      - ./devnet-cfg-vmagent.yml:/etc/prometheus/cfg-vmagent.yml:ro
+      - ../../../data/vmagent-data:/vmagentdata
+      - ../common/devnet-cfg-vmagent.yml:/etc/prometheus/cfg-vmagent.yml:ro
     env_file:
       - ../../../cfg/00-devnet-vars.cfg
   # END VMAGENT
