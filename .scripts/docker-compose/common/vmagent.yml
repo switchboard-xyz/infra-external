@@ -8,15 +8,10 @@ services:
     #  - target: 8429
     #    published: 8429
     #    protocol: tcp
-    volumes:
-      - ../data/vmagent-data:/vmagentdata
-      - ./cfg-vmagent.yml:/etc/prometheus/cfg-vmagent.yml:ro
     command:
       - "--promscrape.config=/etc/prometheus/cfg-vmagent.yml"
       - "--remoteWrite.url=https://remote-write.switchboard.xyz/api/v1/write"
-    networks:
-      - devnet
-      - mainnet
+      - "--loggerLevel=ERROR"
     restart: unless-stopped
     env_file:
       - ../../../cfg/00-common-vars.cfg

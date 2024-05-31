@@ -72,3 +72,17 @@ services:
     env_file:
       - ../../../cfg/00-mainnet-vars.cfg
   # END WEBSERVER
+
+  # BEGIN VMAGENT
+  vmagent:
+    extends:
+      file: ../common/vmagent.yml
+      service: vmagent
+    networks:
+      - mainnet
+    volumes:
+      - ../data/vmagent-data:/vmagentdata
+      - ./mainnet-cfg-vmagent.yml:/etc/prometheus/cfg-vmagent.yml:ro
+    env_file:
+      - ../../../cfg/00-mainnet-vars.cfg
+  # END VMAGENT
