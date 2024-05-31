@@ -72,3 +72,12 @@ services:
     env_file:
       - ../../../cfg/00-devnet-vars.cfg
   # END WEBSERVER
+
+  # BEGIN VMAGENT
+  vmagent:
+    extends:
+      file: ../common/vmagent.yml
+      service: vmagent
+    env_file:
+      - ../../../cfg/00-devnet-vars.cfg
+  # END VMAGENT

@@ -1,0 +1,27 @@
+# scrape_config_files:
+# - config/*.yml
+# - single/onefile.yml
+# - https://config-server/scrape_config.yml
+
+global:
+  scrape_interval: 60s
+  scrape_timeout: 20s
+
+scrape_configs:
+  - job_name: "switchboard-oracles"
+
+    static_configs:
+      - targets:
+        - "localhost:8429"
+
+    relabel_configs:
+    - labels: operator
+      replacement: "%{CLUSTER_DOMAIN}"
+    - labels: pull_oracle
+      replacement: "%{PULL_ORACLE}"
+    - labels: pull_queue
+      replacement: "%{PULL_QUEUE}"
+    - labels: guardian_oracle
+      replacement: "%{GUARDIAN_ORACLE}"
+    - labels: guardian_queue
+      replacement: "%{GUARDIAN_QUEUE}"
