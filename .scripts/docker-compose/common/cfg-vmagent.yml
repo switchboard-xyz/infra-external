@@ -26,7 +26,7 @@ scrape_configs:
 
     static_configs:
       - targets:
-        - "devnet-oracle:8083/metrics"
+        - "devnet-guardian:8083/metrics"
 
     relabel_configs:
     - target_label: operator
@@ -40,7 +40,7 @@ scrape_configs:
 
     static_configs:
       - targets:
-        - "devnet-oracle:8082/metrics"
+        - "devnet-gateway:8082/metrics"
 
     relabel_configs:
     - target_label: operator
