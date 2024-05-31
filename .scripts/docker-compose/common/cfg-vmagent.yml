@@ -8,11 +8,39 @@ global:
   scrape_timeout: 20s
 
 scrape_configs:
-  - job_name: "switchboard-oracles"
+  - job_name: "switchboard-pull-oracle"
 
     static_configs:
       - targets:
-        - "localhost:8429"
+        - "devnet-oracle:8081/metrics"
+
+    relabel_configs:
+    - target_label: operator
+      replacement: "%{CLUSTER_DOMAIN}"
+    - target_label: pull_oracle
+      replacement: "%{PULL_ORACLE}"
+    - target_label: pull_queue
+      replacement: "%{PULL_QUEUE}"
+
+  - job_name: "switchboard-pull-guardian"
+
+    static_configs:
+      - targets:
+        - "devnet-oracle:8083/metrics"
+
+    relabel_configs:
+    - target_label: operator
+      replacement: "%{CLUSTER_DOMAIN}"
+    - target_label: guardian_oracle
+      replacement: "%{GUARDIAN_ORACLE}"
+    - target_label: guardian_queue
+      replacement: "%{GUARDIAN_QUEUE}"
+
+  - job_name: "switchboard-pull-gateway"
+
+    static_configs:
+      - targets:
+        - "devnet-oracle:8082/metrics"
 
     relabel_configs:
     - target_label: operator
