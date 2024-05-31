@@ -1,7 +1,6 @@
 services:
   # BEGIN SHARED VMAGENT
   vmagent:
-    container_name: vmagent
     image: victoriametrics/vmagent:v1.101.0
     #ports:
     #  # HTTP
