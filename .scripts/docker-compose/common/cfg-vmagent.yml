@@ -15,7 +15,7 @@ scrape_configs:
         - "devnet-oracle:9090/metrics"
 
     metric_relabel_configs:
-    - if: '{__name__=~"switchboard-*" or __name__="up"}'
+    - if: '{__name__=~"switchboard-.*" or __name__="up"}'
       action: keep
 
     relabel_configs:
@@ -35,7 +35,7 @@ scrape_configs:
         - "devnet-guardian:9090/metrics"
 
     metric_relabel_configs:
-    - if: '{__name__=~"switchboard-*" or __name__="up"}'
+    - if: '{__name__=~"switchboard-.*" or __name__="up"}'
       action: keep
 
     relabel_configs:
@@ -55,7 +55,7 @@ scrape_configs:
         - "devnet-gateway:9090/metrics"
 
     metric_relabel_configs:
-    - if: '{__name__=~"switchboard-*" or __name__="up"}'
+    - if: '{__name__=~"switchboard-.*" or __name__="up"}'
       action: keep
 
     relabel_configs:
