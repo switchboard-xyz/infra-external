@@ -4,6 +4,7 @@
 
 include:
   - ../common/networks.yml
+  - ../common/webserver.yml
 
 secrets:
   mainnet_payer_secret:
@@ -64,17 +65,8 @@ services:
       - ../common/mainnet.env
   # END GATEWAY
 
-  # BEGIN WEBSERVER
-  webserver:
-    extends:
-      file: ../common/webserver.yml
-      service: webserver
-    env_file:
-      - ../../../cfg/00-mainnet-vars.cfg
-  # END WEBSERVER
-
   # BEGIN VMAGENT
-  vmagent:
+  mainnet-vmagent:
     extends:
       file: ../common/vmagent.yml
       service: vmagent

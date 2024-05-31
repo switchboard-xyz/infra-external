@@ -12,7 +12,7 @@
   }
 }
 
-{$IP4}.sslip.io,
+{$CLUSTER_DOMAIN},
 {$IP4}
 {
   # BEGIN DEVNET
