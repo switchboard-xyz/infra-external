@@ -2,7 +2,7 @@
 set -u -e
 
 # import vars
-source ../../cfg/00-common-vars.cfg
+source ../../../cfg/00-common-vars.cfg
 
 cluster="${1:-devnet}"
 
@@ -17,14 +17,14 @@ if [[ "${cluster}" != "devnet" &&
 	exit 1
 fi
 
-source "../../cfg/00-${cluster}-vars.cfg"
+source "../../../cfg/00-${cluster}-vars.cfg"
 
 helm_values_files="../../.scripts/helm/cfg/${cluster}-solana-values.yaml"
 helm_chart_dir="../../.scripts/helm/charts/pull-service/"
 tmp_helm_file="/tmp/helm_values.yaml"
 cp "${helm_values_files}" "${tmp_helm_file}"
 
-source ../../.scripts/var/_load_vars.sh
+source ../../../.scripts/var/_load_vars.sh
 load_vars "${tmp_helm_file}"
 
 # install the helm chart
