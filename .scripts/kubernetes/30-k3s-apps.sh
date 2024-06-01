@@ -14,7 +14,7 @@ helm upgrade -i cert-manager \
 	jetstack/cert-manager
 
 # import vars
-source ./00-vars.cfg
+source ../../cfg/00-common-vars.cfg
 
 if [[ "${EMAIL}" == "YOUR@EMAIL.IS.NEEDED.HERE" || "${EMAIL}" == "" ]]; then
 	echo "INVALID EMAIL - Please fill out correctly all details in ./00-vars.cfg"

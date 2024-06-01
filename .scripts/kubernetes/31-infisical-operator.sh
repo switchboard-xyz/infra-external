@@ -2,7 +2,23 @@
 set -u -e
 
 # import vars
-source ./00-vars.cfg
+source ../../cfg/00-common-vars.cfg
+
+cluster="${1:-devnet}"
+
+if [[ "${cluster}" == "mainnet-beta" ]]; then
+	cluster="mainnet"
+fi
+
+if [[ "${cluster}" != "devnet" &&
+	"${cluster}" != "mainnet" &&
+	"${cluster}" != "mainnet-beta" ]]; then
+	echo "Only valid cluster values are 'devnet' and 'mainnet'/'mainnet-beta'."
+	exit 1
+fi
+
+source "../../cfg/00-${cluster}-vars.cfg"
+
 echo -n "Please enter your Infisical Access Token (e.g. st.ABC.XYZ): "
 read -s INFISICAL_ACCESS_TOKEN
 echo "*****"
