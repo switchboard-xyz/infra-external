@@ -28,7 +28,7 @@ source ../../.scripts/var/_load_vars.sh
 load_vars "${tmp_helm_file}"
 
 # install the helm chart
-helm upgrade -i pull-oracle-${NETWORK} \
+helm upgrade -i "pull-oracle-${NETWORK}" \
 	-n "${NAMESPACE}" --create-namespace \
 	-f "${tmp_helm_file}" \
 	"${helm_chart_dir}"

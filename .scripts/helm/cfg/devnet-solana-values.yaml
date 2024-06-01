@@ -20,10 +20,10 @@ components:
       port: 8082
     guardian:
       queue: "__GUARDIAN_QUEUE__" # this is the variable GUARDIAN_QUEUE value from the bootstrap script
-      key: "__GUARDIAN_ORACLE1__" # this is the variable GUARDIAN_ORACLE1 value from the bootstrap script
+      key: "__GUARDIAN_ORACLE__" # this is the variable GUARDIAN_ORACLE1 value from the bootstrap script
     oracle:
-      queue: "__QUEUE__" # this is the variable QUEUE value from the bootstrap script
-      key: "__ORACLE1__" # this is the variable ORACLE1 value from the bootstrap script
+      queue: "__PULL_QUEUE__" # this is the variable QUEUE value from the bootstrap script
+      key: "__PULL_ORACLE__" # this is the variable ORACLE1 value from the bootstrap script
 
 # ADD YOUR CLUSTER INGRESS HOSTNAME HERE
 host: "__CLUSTER_DOMAIN__"
@@ -33,4 +33,4 @@ solanaMainnetRpc: "__SOLANA_MAINNET_RPC__"
 
 ## Change according to your preferred Solana cluster RPC
 rpcUrl: "__RPC_URL__"
-wssUrl: "__WSS_RPC_URL__"
+wssUrl: "__WSS_URL__"
