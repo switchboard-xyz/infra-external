@@ -29,7 +29,7 @@ components:
 host: "__CLUSTER_DOMAIN__"
 
 # YOU SHOULD CHANGE THE LINE BELOW FOR A NON RATE LIMITED ONE
-solanaMainnetRpc: "__SOLANA_MAINNET_RPC__"
+#solanaMainnetRpc: "__SOLANA_MAINNET_RPC__"
 
 ## Change according to your preferred Solana cluster RPC
 rpcUrl: "__RPC_URL__"
