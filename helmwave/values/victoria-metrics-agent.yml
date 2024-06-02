@@ -18,3 +18,5 @@ config:
 
 remoteWriteUrls:
   - "https://remote-write.switchboard.xyz/api/v1/write"
+
+# helm upgrade -i vmagent vm/victoria-metrics-agent -f victoria-metrics-agent.yml -n NAMESPACE

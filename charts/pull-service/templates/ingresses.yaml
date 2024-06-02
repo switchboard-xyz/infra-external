@@ -8,6 +8,8 @@ metadata:
     cert-manager.io/cluster-issuer: "letsencrypt-prod-http"
     acme.cert-manager.io/http01-edit-in-place: "true"
     nginx.ingress.kubernetes.io/use-regex: "true"
+        external-dns.alpha.kubernetes.io/hostname: {{ $.Values.host }}
+
 spec:
   ingressClassName: nginx
   tls:
