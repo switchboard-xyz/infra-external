@@ -2,6 +2,7 @@
 set -u -e
 
 helm repo add jetstack https://charts.jetstack.io
+helm repo update
 
 # if needed, update the version below to the latest one at the chart page:
 # https://artifacthub.io/packages/helm/cert-manager/cert-manager
@@ -14,7 +15,7 @@ helm upgrade -i cert-manager \
 	jetstack/cert-manager
 
 # import vars
-source ../../cfg/00-common-vars.cfg
+source ../../../cfg/00-common-vars.cfg
 
 if [[ "${EMAIL}" == "YOUR@EMAIL.IS.NEEDED.HERE" || "${EMAIL}" == "" ]]; then
 	echo "INVALID EMAIL - Please fill out correctly all details in ./00-vars.cfg"
@@ -65,6 +66,7 @@ EOF
 sleep 10s
 
 helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
+helm repo update
 
 helm upgrade -i ingress-nginx ingress-nginx/ingress-nginx \
 	--namespace ingress-nginx \
@@ -72,6 +74,7 @@ helm upgrade -i ingress-nginx ingress-nginx/ingress-nginx \
 	--timeout 600s
 
 helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
+helm repo update
 
 if [[ "${IP4}" == "0.0.0.0" || "${IP4}" == "" ]]; then
 	echo "INVALID IPv4 - Please fill out correctly all details in \$REPO/cfg/00-{devnet|mainnet}-vars.cfg"
@@ -125,8 +128,9 @@ helm upgrade --install \
 sleep 10s
 
 helm repo add vm https://victoriametrics.github.io/helm-charts/
+helm repo update
 
 helm upgrade -i vmagent \
 	-n vmagent --create-namespace \
-	-f ../../.scripts/kubernetes/99-vmagent.yaml \
+	-f ../../../.scripts/kubernetes/99-vmagent.yaml \
 	vm/victoria-metrics-agent
