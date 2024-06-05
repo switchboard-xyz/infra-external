@@ -1,20 +1,71 @@
-config:
-  scrape_configs:
-    - job_name: "switchboard-pods"
-      scrape_interval: 60s
-      kubernetes_sd_configs:
-        - role: pod
-      scheme: http
-      metrics_path: /metrics
-      relabel_configs:
-      - action: keep
-        regex: scrape
-        source_labels:
-        - __meta_kubernetes_pod_label_should_scrape
-      - action: replace
-        source_labels: []
-        target_label: operator
-        replacement: $EXAMPLE_OPERATOR
-
 remoteWriteUrls:
   - "https://remote-write.switchboard.xyz/api/v1/write"
+
+global:
+  scrape_interval: 60s
+  scrape_timeout: 20s
+
+scrape_configs:
+  - job_name: "switchboard-pull-oracle"
+
+    metrics_path: /metrics
+    kubernetes_sd_configs:
+      - role: pod
+
+    metric_relabel_configs:
+    - if: '{__name__=~"^switchboard_.*$|^up$|^.*scrape.*$"}'
+      action: keep
+
+    relabel_configs:
+    - target_label: operator
+      replacement: "%{CLUSTER_DOMAIN}"
+    - target_label: cluster
+      replacement: "%{NETWORK}"
+    - target_label: pull_oracle
+      replacement: "%{PULL_ORACLE}"
+    - target_label: pull_queue
+      replacement: "%{PULL_QUEUE}"
+
+  - job_name: "switchboard-pull-guardian"
+
+    static_configs:
+      - targets:
+        - "devnet-guardian:9090/metrics"
+
+    metric_relabel_configs:
+    - if: '{__name__=~"^switchboard_.*$|^up$"}'
+      action: keep
+
+    relabel_configs:
+    - target_label: operator
+      replacement: "%{CLUSTER_DOMAIN}"
+    - target_label: cluster
+      replacement: "%{NETWORK}"
+    - target_label: guardian_oracle
+      replacement: "%{GUARDIAN_ORACLE}"
+    - target_label: guardian_queue
+      replacement: "%{GUARDIAN_QUEUE}"
+
+  - job_name: "switchboard-pull-gateway"
+
+    static_configs:
+      - targets:
+        - "devnet-gateway:9090/metrics"
+
+    metric_relabel_configs:
+    - if: '{__name__=~"^switchboard_.*$|^up$"}'
+      action: keep
+
+    relabel_configs:
+    - target_label: operator
+      replacement: "%{CLUSTER_DOMAIN}"
+    - target_label: cluster
+      replacement: "%{NETWORK}"
+    - target_label: pull_oracle
+      replacement: "%{PULL_ORACLE}"
+    - target_label: pull_queue
+      replacement: "%{PULL_QUEUE}"
+    - target_label: guardian_oracle
+      replacement: "%{GUARDIAN_ORACLE}"
+    - target_label: guardian_queue
+      replacement: "%{GUARDIAN_QUEUE}"
