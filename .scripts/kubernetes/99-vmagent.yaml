@@ -1,6 +1,10 @@
 remoteWriteUrls:
   - "https://remote-write.switchboard.xyz/api/v1/write"
 
+envFrom:
+  - configMapRef:
+      name: vmagent-env
+
 config:
   global:
     scrape_interval: 60s
@@ -29,12 +33,12 @@ config:
 
     - job_name: "switchboard-pull-guardian"
 
-      static_configs:
-        - targets:
-          - "devnet-guardian:9090/metrics"
+      metrics_path: /metrics
+      kubernetes_sd_configs:
+        - role: pod
 
       metric_relabel_configs:
-      - if: '{__name__=~"^switchboard_.*$|^up$"}'
+      - if: '{__name__=~"^switchboard_.*$|^up$|^.*scrape.*$"}'
         action: keep
 
       relabel_configs:
@@ -49,12 +53,12 @@ config:
 
     - job_name: "switchboard-pull-gateway"
 
-      static_configs:
-        - targets:
-          - "devnet-gateway:9090/metrics"
+      metrics_path: /metrics
+      kubernetes_sd_configs:
+        - role: pod
 
       metric_relabel_configs:
-      - if: '{__name__=~"^switchboard_.*$|^up$"}'
+      - if: '{__name__=~"^switchboard_.*$|^up$|^.*scrape.*$"}'
         action: keep
 
       relabel_configs:

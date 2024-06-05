@@ -130,6 +130,11 @@ sleep 10s
 helm repo add vm https://victoriametrics.github.io/helm-charts/
 helm repo update
 
+kubectl create configmap \
+	-n vmagent \
+	vmagent-env \
+	--from-file=../../../cfg/00-common-vars.cfg
+
 helm upgrade -i vmagent \
 	-n vmagent --create-namespace \
 	-f ../../../.scripts/kubernetes/99-vmagent.yaml \
