@@ -6,7 +6,8 @@ export data_ctr_dir="/data"
 
 export script_host_dir="$(pwd)"
 export script_ctr_dir="/app"
-export script_filename="51-oracle-prepare-request.sh"
+export prep_script_filename="51-oracle-prepare-request.sh"
+export check_script_filename="52-check-oracle-perms.sh"
 
 CTR_NAME="CTR-sg-tmp-node"
 set +e
@@ -21,14 +22,16 @@ if [[ "${use_docker}" != "--docker" ]]; then
 	ctr run -t --net-host \
 		--rm --cwd "${script_ctr_dir}" \
 		--mount "type=bind,src=${data_host_dir},dst=${data_ctr_dir},options=rbind:rw" \
-		--mount "type=bind,src=${script_host_dir}/${script_filename},dst=${script_ctr_dir}/${script_filename},options=rbind:rw" \
+		--mount "type=bind,src=${script_host_dir}/${prep_script_filename},dst=${script_ctr_dir}/${prep_script_filename},options=rbind:rw" \
+		--mount "type=bind,src=${script_host_dir}/${check_script_filename},dst=${script_ctr_dir}/${check_script_filename},options=rbind:rw" \
 		"${image}" "${CTR_NAME}" /bin/bash
 else
 	docker image pull "${image}"
 	docker run -it --rm \
 		--workdir "${script_ctr_dir}" \
 		-v "${data_host_dir}/:${data_ctr_dir}/" \
-		-v "${script_host_dir}/${script_filename}:${script_ctr_dir}/${script_filename}" \
+		-v "${script_host_dir}/${prep_script_filename}:${script_ctr_dir}/${prep_script_filename}" \
+		-v "${script_host_dir}/${check_script_filename}:${script_ctr_dir}/${check_script_filename}" \
 		--name "${CTR_NAME}" --entrypoint /bin/bash \
 		"${image}"
 fi
