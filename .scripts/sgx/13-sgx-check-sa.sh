@@ -1,6 +1,6 @@
 export use_docker="${2:-''}"
 
-export SGX_CHECK_IMAGE="docker.io/switchboardlabs/pull-oracle:dev-RC_04_24_24_05_59"
+export SGX_CHECK_IMAGE="docker.io/switchboardlabs/pull-oracle:dev-RC_06_12_24_09_20"
 
 if [[ "${use_docker}" != "--docker" ]]; then
 	ctr i pull "${SGX_CHECK_IMAGE}"
