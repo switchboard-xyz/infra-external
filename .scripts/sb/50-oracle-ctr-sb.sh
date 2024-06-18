@@ -11,7 +11,7 @@ export check_script_filename="52-check-oracle-perms.sh"
 
 CTR_NAME="CTR-sg-tmp-node"
 set +e
-pkill -15 "${CTR_NAME}"
+pkill -9 -f "${CTR_NAME}"
 set -e
 
 export use_docker="${1:-''}"
