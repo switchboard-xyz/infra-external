@@ -21,6 +21,7 @@ export image="docker.io/library/node:22-bookworm"
 if [[ "${use_docker}" != "--docker" ]]; then
 	set +e
 	ctr snapshot rm "${CTR_NAME}" >/dev/null 2>&1
+	ctr c rm "${CTR_NAME}" >/dev/null 2>&1
 	set -e
 	ctr i pull "${image}"
 	ctr run -t --net-host \
@@ -30,6 +31,9 @@ if [[ "${use_docker}" != "--docker" ]]; then
 		--mount "type=bind,src=${script_host_dir}/${check_script_filename},dst=${script_ctr_dir}/${check_script_filename},options=rbind:rw" \
 		"${image}" "${CTR_NAME}" /bin/bash
 else
+	set +e
+	docker rm -f "${CTR_NAME}" >/dev/null 2>&1
+	set -e
 	docker image pull "${image}"
 	docker run -it --rm \
 		--workdir "${script_ctr_dir}" \
