@@ -18,7 +18,9 @@ export use_docker="${1:-''}"
 export image="docker.io/library/node:22-bookworm"
 
 if [[ "${use_docker}" != "--docker" ]]; then
-	ctr snapshot rm "${CTR_NAME}"
+	set +e
+	ctr snapshot rm "${CTR_NAME}" >/dev/null 2>&1
+	set +e
 	ctr i pull "${image}"
 	ctr run -t --net-host \
 		--rm --cwd "${script_ctr_dir}" \
