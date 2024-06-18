@@ -9,7 +9,7 @@ export script_ctr_dir="/app"
 export prep_script_filename="51-oracle-prepare-request.sh"
 export check_script_filename="52-check-oracle-perms.sh"
 
-CTR_NAME="CTR-sg-tmp-node"
+CTR_NAME="CTR-sb-tmp-node"
 set +e
 pkill -9 -f "${CTR_NAME}"
 set -e
@@ -18,6 +18,7 @@ export use_docker="${1:-''}"
 export image="docker.io/library/node:22-bookworm"
 
 if [[ "${use_docker}" != "--docker" ]]; then
+	ctr snapshot rm "${CTR_NAME}"
 	ctr i pull "${image}"
 	ctr run -t --net-host \
 		--rm --cwd "${script_ctr_dir}" \
