@@ -5,7 +5,6 @@
 services:
   # BEGIN ORACLE
   oracle:
-    image: ${DOCKER_IMAGE}
     devices:
       - /dev/sgx:/dev/sgx
     restart: unless-stopped
@@ -13,8 +12,6 @@ services:
       driver: "local"
       options:
         max-size: "16g"
-    env_file:
-      - ../../../cfg/00-common-vars.cfg
     environment:
       ENABLE_PULL_ORACLE: "1"
       ENABLE_PUSH_ORACLE: "0"
