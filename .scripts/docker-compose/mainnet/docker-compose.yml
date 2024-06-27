@@ -25,8 +25,8 @@ services:
     secrets:
       - mainnet_payer_secret
     env_file:
-      - ../../../cfg/00-mainnet-vars.cfg
       - ./mainnet.env
+      - ../../../cfg/00-mainnet-vars.cfg
   # END ORACLE
 
   # BEGIN GUARDIAN
@@ -43,8 +43,8 @@ services:
     secrets:
       - mainnet_payer_secret
     env_file:
+      - ./mainnet.env
       - ../../../cfg/00-mainnet-vars.cfg
-      - ../common/mainnet.env
   # END GUARDIAN
 
   # BEGIN GATEWAY
@@ -61,8 +61,8 @@ services:
     secrets:
       - mainnet_payer_secret
     env_file:
+      - ./mainnet.env
       - ../../../cfg/00-mainnet-vars.cfg
-      - ../common/mainnet.env
   # END GATEWAY
 
   # BEGIN VMAGENT
