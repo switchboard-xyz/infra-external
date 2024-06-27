@@ -25,8 +25,8 @@ services:
     secrets:
       - devnet_payer_secret
     env_file:
+      - ./devnet.env
       - ../../../cfg/00-devnet-vars.cfg
-      - ../common/devnet.env
   # END ORACLE
 
   # BEGIN GUARDIAN
@@ -43,8 +43,8 @@ services:
     secrets:
       - devnet_payer_secret
     env_file:
+      - ./devnet.env
       - ../../../cfg/00-devnet-vars.cfg
-      - ../common/devnet.env
   # END GUARDIAN
 
   # BEGIN GATEWAY
@@ -61,8 +61,8 @@ services:
     secrets:
       - devnet_payer_secret
     env_file:
+      - ./devnet.env
       - ../../../cfg/00-devnet-vars.cfg
-      - ../common/devnet.env
   # END GATEWAY
 
   # BEGIN VMAGENT
@@ -74,7 +74,7 @@ services:
       - devnet
     volumes:
       - ../../../data/vmagent-data:/vmagentdata
-      - ../common/devnet-cfg-vmagent.yml:/etc/prometheus/cfg-vmagent.yml:ro
+      - ./devnet-cfg-vmagent.yml:/etc/prometheus/cfg-vmagent.yml:ro
     env_file:
       - ../../../cfg/00-devnet-vars.cfg
   # END VMAGENT

@@ -26,7 +26,7 @@ services:
       - mainnet_payer_secret
     env_file:
       - ../../../cfg/00-mainnet-vars.cfg
-      - ../common/mainnet.env
+      - ./mainnet.env
   # END ORACLE
 
   # BEGIN GUARDIAN
