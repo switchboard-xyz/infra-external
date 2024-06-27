@@ -34,10 +34,12 @@ if [[ "${cluster}" != "devnet" &&
 	exit 1
 fi
 
-echo " "
-echo "Installing Switchboard CLI now... please wait."
-echo "This step usually takes about 2 minutes."
-npm i -g "@switchboard-xyz/cli@3.4.0" >/dev/null 2>&1
+if [[ "$(type -p sb)" == "" ]]; then
+	echo " "
+	echo "Installing Switchboard CLI now... please wait."
+	echo "This step usually takes about 2 minutes."
+	npm i -g "@switchboard-xyz/cli@3.5.0" >/dev/null 2>&1
+fi
 
 echo " "
 export register_guardian=""
