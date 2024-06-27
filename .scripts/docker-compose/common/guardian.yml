@@ -5,7 +5,6 @@
 services:
   # BEGIN GUARDIAN
   guardian:
-    image: ${DOCKER_IMAGE}
     devices:
       - /dev/sgx:/dev/sgx
     restart: unless-stopped

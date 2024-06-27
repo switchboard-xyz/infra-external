@@ -16,6 +16,7 @@ services:
     extends:
       file: ../common/oracle.yml
       service: oracle
+    image: ${DOCKER_IMAGE}
     volumes:
       - ../../../data/devnet_protected_files/:/data/protected_files/
     networks:
@@ -34,6 +35,7 @@ services:
     extends:
       file: ../common/guardian.yml
       service: guardian
+    image: ${DOCKER_IMAGE}
     volumes:
       - ../../../data/devnet_protected_files/:/data/protected_files/
     networks:
@@ -52,6 +54,7 @@ services:
     extends:
       file: ../common/gateway.yml
       service: gateway
+    image: ${DOCKER_IMAGE}
     volumes:
       - ../../../data/devnet_protected_files/:/data/protected_files/
     networks:
