@@ -5,6 +5,7 @@
 services:
   # BEGIN GATEWAY
   gateway:
+    image: ${DOCKER_IMAGE}
     devices:
       - /dev/sgx:/dev/sgx
     restart: unless-stopped
