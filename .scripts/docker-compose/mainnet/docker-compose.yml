@@ -80,7 +80,7 @@ services:
       - mainnet
     volumes:
       - ../../../data/vmagent-data:/vmagentdata
-      - ../common/mainnet-cfg-vmagent.yml:/etc/prometheus/cfg-vmagent.yml:ro
+      - ./mainnet-cfg-vmagent.yml:/etc/prometheus/cfg-vmagent.yml:ro
     env_file:
       - ../../../cfg/00-mainnet-vars.cfg
   # END VMAGENT
