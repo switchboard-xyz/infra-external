@@ -18,7 +18,7 @@ helm upgrade -i cert-manager \
 source ../../../cfg/00-common-vars.cfg
 
 if [[ "${EMAIL}" == "YOUR@EMAIL.IS.NEEDED.HERE" || "${EMAIL}" == "" ]]; then
-	echo "INVALID EMAIL - Please fill out correctly all details in ./00-vars.cfg"
+	echo "INVALID EMAIL - Please fill out correctly all details in \$REPO/cfg/00-common-vars.cfg"
 	exit 1
 fi
 
@@ -77,7 +77,7 @@ helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
 helm repo update
 
 if [[ "${IP4}" == "0.0.0.0" || "${IP4}" == "" ]]; then
-	echo "INVALID IPv4 - Please fill out correctly all details in \$REPO/cfg/00-{devnet|mainnet}-vars.cfg"
+	echo "INVALID IPv4 - Please fill out correctly all details in \$REPO/cfg/00-common-vars.cfg"
 	exit 1
 fi
 
@@ -127,15 +127,6 @@ helm upgrade --install \
 
 sleep 10s
 
-helm repo add vm https://victoriametrics.github.io/helm-charts/
-helm repo update
-
-kubectl create configmap \
-	-n vmagent \
-	vmagent-env \
-	--from-file=../../../cfg/00-common-vars.cfg
-
-helm upgrade -i vmagent \
-	-n vmagent --create-namespace \
-	-f ../../../.scripts/kubernetes/99-vmagent.yaml \
-	vm/victoria-metrics-agent
+echo "======"
+echo "This step is complete, please proceed with the next step."
+echo "======"

@@ -42,19 +42,19 @@ cat <<-EOF |
 	  authentication:
 	    serviceToken:
 	      serviceTokenSecretReference:
-	        secretName: service-token
+	        secretName: service-token-${cluster}
 	        secretNamespace: infisical
 	      secretsScope:
 	        envSlug: ${INFISICAL_SLUG}
 	        secretsPath: ${INFISICAL_SECRETS_PATH}
 	  managedSecretReference:
 	    secretName: keys   # <-- the name of kubernetes secret that will be created
-	    secretNamespace: oracle # <-- where the kubernetes secret should be created
+	    secretNamespace: ${NAMESPACE} # <-- where the kubernetes secret should be created, source by cfg/00-{devnet,mainnet}-vars.cfg
 EOF
 	kubectl apply -f -
 
 if [[ "${INFISICAL_ACCESS_TOKEN}" == "st.ABC.XYZ" || "${INFISICAL_ACCESS_TOKEN}" == "" ]]; then
-	echo "INVALID INFISICAL ACCESS TOKEN - Please fill out correctly all details in ./00-vars.cfg"
+	echo "INVALID INFISICAL ACCESS TOKEN - Please fill out correctly all details in \$REPO/cfg./00-{devnet,mainnet}-vars.cfg"
 	exit 1
 fi
 
@@ -63,7 +63,7 @@ cat <<-EOF |
 	kind: Secret
 	type: Opaque
 	metadata:
-	  name: service-token
+	  name: service-token-${cluster}
 	  namespace: infisical
 	stringData:
 	  infisicalToken: ${INFISICAL_ACCESS_TOKEN}

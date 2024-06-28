@@ -19,6 +19,15 @@ fi
 
 source "../../cfg/00-${cluster}-vars.cfg"
 
-kubectl delete -f testcert.yml ${NAMESPACE}
+helm repo add vm https://victoriametrics.github.io/helm-charts/
+helm repo update
 
-rm -f ./testcert.yml
+kubectl create configmap \
+	-n vmagent-${cluster} \
+	vmagent-env \
+	--from-file=../../../cfg/00-${cluster}-vars.cfg
+
+helm upgrade -i vmagent-${cluster} \
+	-n vmagent-${cluster} --create-namespace \
+	-f ../../../.scripts/kubernetes/99-vmagent.yaml \
+	vm/victoria-metrics-agent

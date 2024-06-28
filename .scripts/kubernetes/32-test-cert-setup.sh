@@ -76,4 +76,4 @@ cat >testcert.yml <<-EOF
 	          ports:
 	            - containerPort: 80
 EOF
-kubectl apply -f testcert.yml
+kubectl apply -f testcert.yml -n "${NAMESPACE}"
