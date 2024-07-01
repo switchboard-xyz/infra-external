@@ -1,1 +1,1 @@
-../../../.scripts/sgx/11-sgx-mcu-setup.sh
+../../../.scripts/sgx/sgx-mcu-setup.sh

@@ -1,1 +1,1 @@
-../../../.scripts/sb/52-check-oracle-perms.sh
+../../../.scripts/sb/check-oracle-perms.sh

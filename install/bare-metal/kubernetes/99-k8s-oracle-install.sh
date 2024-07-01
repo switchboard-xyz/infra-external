@@ -1,1 +1,1 @@
-../../../.scripts/kubernetes/99-k8s-oracle-install.sh
+../../../.scripts/kubernetes/k8s-oracle-install.sh

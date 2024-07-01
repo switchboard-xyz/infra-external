@@ -1,1 +1,1 @@
-../../../.scripts/sgx/10-sgx-install.sh
+../../../.scripts/sgx/sgx-install.sh

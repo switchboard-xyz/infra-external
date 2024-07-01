@@ -1,1 +1,1 @@
-../../../.scripts/sb/51-oracle-prepare-request.sh
+../../../.scripts/sb/oracle-prepare-request.sh

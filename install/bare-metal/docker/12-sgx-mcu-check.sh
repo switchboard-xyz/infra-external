@@ -1,1 +1,1 @@
-../../../.scripts/sgx/12-sgx-mcu-check.sh
+../../../.scripts/sgx/sgx-mcu-check.sh

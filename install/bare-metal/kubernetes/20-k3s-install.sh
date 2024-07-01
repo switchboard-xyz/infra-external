@@ -1,1 +1,1 @@
-../../../.scripts/kubernetes/20-k3s-install.sh
+../../../.scripts/kubernetes/k3s-install.sh

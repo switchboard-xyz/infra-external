@@ -1,1 +1,1 @@
-../../../.scripts/var/00-docker-install.sh
+../../../.scripts/var/docker-install.sh

@@ -1,1 +1,1 @@
-../../../.scripts/sgx/13-sgx-check-sa.sh
+../../../.scripts/sgx/sgx-check-sa.sh

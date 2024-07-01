@@ -1,1 +1,1 @@
-../../../.scripts/sb/50-oracle-ctr-sb.sh
+../../../.scripts/sb/oracle-ctr-sb.sh

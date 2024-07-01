@@ -1,1 +1,1 @@
-../../../.scripts/kubernetes/31-infisical-operator.sh
+../../../.scripts/kubernetes/infisical-operator.sh

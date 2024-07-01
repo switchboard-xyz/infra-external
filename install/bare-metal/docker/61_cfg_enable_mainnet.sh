@@ -1,1 +1,1 @@
-../../../.scripts/docker-compose/61_cfg_enable_mainnet.sh
+../../../.scripts/docker-compose/cfg_enable_mainnet.sh

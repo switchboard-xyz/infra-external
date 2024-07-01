@@ -1,1 +1,1 @@
-../../../.scripts/docker-compose/90_docker_compose_up.sh
+../../../.scripts/docker-compose/docker_compose_up.sh

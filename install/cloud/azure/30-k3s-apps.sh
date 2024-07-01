@@ -1,1 +1,0 @@
-../../../.scripts/kubernetes/30-k3s-apps.sh

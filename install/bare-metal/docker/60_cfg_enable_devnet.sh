@@ -1,1 +1,1 @@
-../../../.scripts/docker-compose/60_cfg_enable_devnet.sh
+../../../.scripts/docker-compose/cfg_enable_devnet.sh

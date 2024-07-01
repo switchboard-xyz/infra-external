@@ -1,1 +1,1 @@
-../../../.scripts/kubernetes/32-test-cert-setup.sh
+../../../.scripts/kubernetes/test-cert-setup.sh
