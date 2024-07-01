@@ -2,9 +2,11 @@ export use_docker="${1:-''}"
 
 export SGX_CHECK_IMAGE="docker.io/switchboardlabs/pull-oracle:stable"
 
-export DATA_DIR="../../../data/devnet_protected_files"
+export DATA_DIR="realpath ../../../data/devnet_protected_files"
 
-mkdir -p $DATA_DIR
+if [[ ! -d "${DATA_DIR}" ]]; then
+	mkdir -p "$DATA_DIR" || (echo "error creating ${DATA_DIR}" && exit 1)
+fi
 
 if [[ "${use_docker}" != "--docker" ]]; then
 	ctr i pull "${SGX_CHECK_IMAGE}"
