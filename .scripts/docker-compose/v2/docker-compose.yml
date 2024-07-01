@@ -27,7 +27,7 @@ services:
     env_file:
       - ../../../cfg/00-common-vars.cfg
       - ./v2.env
-      - ../../../cfg/deprecated-v2-vars.cfg
+      - ../../../cfg/00-deprecated-v2-vars.cfg
   # END ORACLE
 
   # BEGIN VMAGENT
@@ -41,5 +41,5 @@ services:
       - ../../../data/v2-vmagent-data:/vmagentdata
       - ./v2-cfg-vmagent.yml:/etc/prometheus/cfg-vmagent.yml:ro
     env_file:
-      - ../../../cfg/deprecated-v2-vars.cfg
+      - ../../../cfg/00-deprecated-v2-vars.cfg
   # END VMAGENT

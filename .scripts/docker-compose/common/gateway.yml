@@ -24,6 +24,6 @@ services:
     ulimits:
       nproc: 65535
       nofile:
-        soft: 40000
-        hard: 60000
+        soft: 800000
+        hard: 1000000
   # END GATEWAY
