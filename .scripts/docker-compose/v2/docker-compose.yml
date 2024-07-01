@@ -1,0 +1,45 @@
+##########
+### !!! - DO NOT CHANGE ANYTHING IN THIS FILE - !!!
+##########
+
+include:
+  - ../common/networks.yml
+
+secrets:
+  deprecated_v2_payer_secret:
+    file: ../../../data/deprecated_v2_payer.json
+
+services:
+  # BEGIN ORACLE
+  v2-oracle:
+    extends:
+      file: ../common/oracle.yml
+      service: oracle
+    image: ${DOCKER_IMAGE:-docker.io/switchboardlabs/pull-oracle:stable}
+    volumes:
+      - ../../../data/deprecated_v2_protected_files/:/data/protected_files/
+    networks:
+      - v2
+    environment:
+      PAYER_SECRET_FILEPATH: /run/secrets/deprecated_v2_payer_secret
+    secrets:
+      - mainnet_payer_secret
+    env_file:
+      - ../../../cfg/00-common-vars.cfg
+      - ./v2.env
+      - ../../../cfg/deprecated-v2-vars.cfg
+  # END ORACLE
+
+  # BEGIN VMAGENT
+  v2-vmagent:
+    extends:
+      file: ../common/vmagent.yml
+      service: vmagent
+    networks:
+      - mainnet
+    volumes:
+      - ../../../data/v2-vmagent-data:/vmagentdata
+      - ./v2-cfg-vmagent.yml:/etc/prometheus/cfg-vmagent.yml:ro
+    env_file:
+      - ../../../cfg/deprecated-v2-vars.cfg
+  # END VMAGENT

@@ -79,7 +79,7 @@ services:
     networks:
       - devnet
     volumes:
-      - ../../../data/vmagent-data:/vmagentdata
+      - ../../../data/devnet-vmagent-data:/vmagentdata
       - ./devnet-cfg-vmagent.yml:/etc/prometheus/cfg-vmagent.yml:ro
     env_file:
       - ../../../cfg/00-devnet-vars.cfg

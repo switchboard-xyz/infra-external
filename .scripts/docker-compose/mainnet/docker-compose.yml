@@ -79,7 +79,7 @@ services:
     networks:
       - mainnet
     volumes:
-      - ../../../data/vmagent-data:/vmagentdata
+      - ../../../data/mainnet-vmagent-data:/vmagentdata
       - ./mainnet-cfg-vmagent.yml:/etc/prometheus/cfg-vmagent.yml:ro
     env_file:
       - ../../../cfg/00-mainnet-vars.cfg
