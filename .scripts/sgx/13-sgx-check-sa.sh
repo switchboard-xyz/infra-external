@@ -1,4 +1,4 @@
-export use_docker="${2:-''}"
+export use_docker="${1:-''}"
 
 export SGX_CHECK_IMAGE="docker.io/switchboardlabs/pull-oracle:stable"
 
