@@ -12,22 +12,40 @@ secrets:
 services:
   # BEGIN ORACLE
   v2-oracle:
-    extends:
-      file: ../common/oracle.yml
-      service: oracle
-    image: ${DOCKER_IMAGE:-docker.io/switchboardlabs/pull-oracle:stable}
+    # dev-RC_06_30_24_23_12
+    image: ${DOCKER_IMAGE:-docker.io/switchboardlabs/pull-oracle:v2-on-v3}
     volumes:
       - ../../../data/deprecated_v2_protected_files/:/data/protected_files/
     networks:
       - v2
-    environment:
-      PAYER_SECRET_FILEPATH: /run/secrets/deprecated_v2_payer_secret
     secrets:
-      - mainnet_payer_secret
+      - deprecated_v2_payer_secret
     env_file:
       - ../../../cfg/00-common-vars.cfg
       - ./v2.env
       - ../../../cfg/00-deprecated-v2-vars.cfg
+    devices:
+      - /dev/sgx:/dev/sgx
+    restart: unless-stopped
+    logging:
+      driver: "local"
+      options:
+        max-size: "16g"
+    environment:
+      ENABLE_PUSH_ORACLE: "1"
+      ENABLE_PUSH_MODEL: "false"
+      ENABLE_PULL_ORACLE: "0"
+      ENABLE_GUARDIAN: "0"
+      ENABLE_GATEWAY: "0"
+      PAYER_SECRET_FILEPATH: /run/secrets/deprecated_v2_payer_secret
+    privileged: true
+    stdin_open: true
+    tty: true
+    ulimits:
+      nproc: 65535
+      nofile:
+        soft: 800000
+        hard: 1000000
   # END ORACLE
 
   # BEGIN VMAGENT
@@ -36,7 +54,7 @@ services:
       file: ../common/vmagent.yml
       service: vmagent
     networks:
-      - mainnet
+      - v2
     volumes:
       - ../../../data/v2-vmagent-data:/vmagentdata
       - ./v2-cfg-vmagent.yml:/etc/prometheus/cfg-vmagent.yml:ro
