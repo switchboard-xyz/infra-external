@@ -3,7 +3,7 @@ global:
   scrape_timeout: 20s
 
 scrape_configs:
-  - job_name: "switchboard-pull-oracle"
+  - job_name: "switchboard-push-oracle"
 
     static_configs:
       - targets:
@@ -18,51 +18,7 @@ scrape_configs:
       replacement: "%{CLUSTER_DOMAIN}"
     - target_label: cluster
       replacement: "%{NETWORK}"
-    - target_label: pull_oracle
-      replacement: "%{PULL_ORACLE}"
-    - target_label: pull_queue
-      replacement: "%{PULL_QUEUE}"
-
-  - job_name: "switchboard-pull-guardian"
-
-    static_configs:
-      - targets:
-        - "mainnet-guardian:9090/metrics"
-
-    metric_relabel_configs:
-    - if: '{__name__=~"^switchboard_.*$|^up$"}'
-      action: keep
-
-    relabel_configs:
-    - target_label: operator
-      replacement: "%{CLUSTER_DOMAIN}"
-    - target_label: cluster
-      replacement: "%{NETWORK}"
-    - target_label: guardian_oracle
-      replacement: "%{GUARDIAN_ORACLE}"
-    - target_label: guardian_queue
-      replacement: "%{GUARDIAN_QUEUE}"
-
-  - job_name: "switchboard-pull-gateway"
-
-    static_configs:
-      - targets:
-        - "mainnet-gateway:9090/metrics"
-
-    metric_relabel_configs:
-    - if: '{__name__=~"^switchboard_.*$|^up$"}'
-      action: keep
-
-    relabel_configs:
-    - target_label: operator
-      replacement: "%{CLUSTER_DOMAIN}"
-    - target_label: cluster
-      replacement: "%{NETWORK}"
-    - target_label: pull_oracle
-      replacement: "%{PULL_ORACLE}"
-    - target_label: pull_queue
-      replacement: "%{PULL_QUEUE}"
-    - target_label: guardian_oracle
-      replacement: "%{GUARDIAN_ORACLE}"
-    - target_label: guardian_queue
-      replacement: "%{GUARDIAN_QUEUE}"
+    - target_label: push_oracle
+      replacement: "%{PUSH_ORACLE}"
+    - target_label: push_queue
+      replacement: "%{PUSH_QUEUE}"
