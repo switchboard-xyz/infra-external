@@ -23,7 +23,9 @@ if [[ "$(kubectl get ns | grep -e '^'${NAMESPACE}'\W')" == "" ]]; then
 	kubectl create namespace "${NAMESPACE}"
 fi
 
-cat >testcert.yml <<-EOF
+TMP_FILE="./testcert.yml"
+
+cat >"${TMP_FILE}" <<-EOF
 	---
 	apiVersion: networking.k8s.io/v1
 	kind: Ingress
@@ -80,4 +82,17 @@ cat >testcert.yml <<-EOF
 	          ports:
 	            - containerPort: 80
 EOF
-kubectl apply -f testcert.yml -n "${NAMESPACE}"
+kubectl apply -f "${TMP_FILE}" -n "${NAMESPACE}"
+
+echo "======"
+echo " "
+echo "Now give the certificate about 3-5 minutes to be created."
+echo "Then by visiting https://${CLUSTER_DOMAIN} and looking into the certificate details,"
+echo "you should be greeted with an INVALID certificate issued by Let's Encrypt Staging."
+echo "If that's the case, everything worked correctly."
+echo "If you get a certificate from 'Kubernetes Local Issuer',"
+echo "give it a few more minutes and try from a different browser (for caching reasons)."
+echo " "
+echo "======"
+echo "This step is complete, please proceed with the next step."
+echo "======"
