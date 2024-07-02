@@ -1,9 +1,6 @@
 #!/usr/bin/env bash
 set -u -e
 
-# import vars
-source ../../../cfg/00-common-vars.cfg
-
 cluster="${1:-devnet}"
 
 if [[ "${cluster}" == "mainnet-beta" ]]; then
@@ -17,7 +14,13 @@ if [[ "${cluster}" != "devnet" &&
   exit 1
 fi
 
-source "../../../cfg/00-${cluster}-vars.cfg"
+cfg_dir="../../../cfg"
+cfg_common_file="${cfg_dir}/00-common-vars.cfg"
+cfg_cluster_file="${cfg_dir}/00-${cluster}-vars.cfg"
+
+# import vars
+source "${cfg_common_file}"
+source "${cfg_cluster_file}"
 
 helm repo add vm https://victoriametrics.github.io/helm-charts/
 helm repo update
@@ -27,9 +30,6 @@ if [[ "$(kubectl get ns | grep -e '^'${VMAGENT_NS}'\W')" == "" ]]; then
   kubectl create namespace "${VMAGENT_NS}"
 fi
 
-cfg_dir="../../../cfg"
-cfg_common_file="${cfg_dir}/00-common-vars.cfg"
-cfg_cluster_file="${cfg_dir}/00-${cluster}-vars.cfg"
 tmp_helm_file="/tmp/helm_values.yaml"
 
 cat \

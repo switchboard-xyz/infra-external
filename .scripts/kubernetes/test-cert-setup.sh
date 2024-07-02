@@ -1,26 +1,29 @@
 #!/usr/bin/env bash
 set -u -e
 
-# import vars
-source ../../../cfg/00-common-vars.cfg
-
 cluster="${1:-devnet}"
 
 if [[ "${cluster}" == "mainnet-beta" ]]; then
-	cluster="mainnet"
+  cluster="mainnet"
 fi
 
 if [[ "${cluster}" != "devnet" &&
-	"${cluster}" != "mainnet" &&
-	"${cluster}" != "mainnet-beta" ]]; then
-	echo "Only valid cluster values are 'devnet' and 'mainnet'/'mainnet-beta'."
-	exit 1
+  "${cluster}" != "mainnet" &&
+  "${cluster}" != "mainnet-beta" ]]; then
+  echo "Only valid cluster values are 'devnet' and 'mainnet'/'mainnet-beta'."
+  exit 1
 fi
 
-source "../../../cfg/00-${cluster}-vars.cfg"
+cfg_dir="../../../cfg"
+cfg_common_file="${cfg_dir}/00-common-vars.cfg"
+cfg_cluster_file="${cfg_dir}/00-${cluster}-vars.cfg"
+
+# import vars
+source "${cfg_common_file}"
+source "${cfg_cluster_file}"
 
 if [[ "$(kubectl get ns | grep -e '^'${NAMESPACE}'\W')" == "" ]]; then
-	kubectl create namespace "${NAMESPACE}"
+  kubectl create namespace "${NAMESPACE}"
 fi
 
 TMP_FILE="./testcert.yml"
