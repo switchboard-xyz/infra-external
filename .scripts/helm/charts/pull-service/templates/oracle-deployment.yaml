@@ -29,7 +29,7 @@ spec:
       serviceAccountName: {{ $.Values.serviceAccount }}
       dnsPolicy: ClusterFirst
       containers:
-      - image: {{ $values.image }}
+      - image: {{ $component.image }}
         env:
         -
           name: LIST_CONFIG_AND_EXIT

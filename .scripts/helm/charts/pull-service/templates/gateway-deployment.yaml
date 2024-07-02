@@ -26,7 +26,7 @@ spec:
     spec:
       dnsPolicy: ClusterFirst
       containers:
-      - image: {{ $.Values.image }}
+      - image: {{ $.Values.components.gateway.image }}
         env:
         -
           name: CHAIN

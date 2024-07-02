@@ -24,7 +24,6 @@ googlePayerSecretPath: ""
 heartbeatInterval: "15"
 
 host: "x.y.z"
-image: ""
 
 infisicalSecretKey: ""
 infisicalSecretPath: "/"
@@ -62,14 +61,17 @@ components:
     queue: ""
     type: "oracle"
     oracle:
+      image: "docker.io/switchboardlabs/pull-oracle:stable"
       queue: ""
       key: ""
       host: ""
       port: 8081
     gateway:
+      image: "docker.io/switchboardlabs/pull-oracle:stable"
       host: ""
       port: 8082
     guardian:
+      image: "docker.io/switchboardlabs/pull-oracle:stable"
       queue: ""
       key: ""
       host: ""
