@@ -3,6 +3,7 @@ function load_vars() {
 	sed -i 's;__EMAIL__;'"${EMAIL}"';g' "${tmp_helm_file}"
 	sed -i 's;__IP4__;'"${IP4}"';g' "${tmp_helm_file}"
 	sed -i 's;__IP6__;'"${IP6}"';g' "${tmp_helm_file}"
+	sed -i 's;__PAYER_SECRET_KEY__;'"${PAYER_SECRET_KEY}"';g' "${tmp_helm_file}"
 	sed -i 's;__INFISICAL_SECRET_KEY__;'"${INFISICAL_SECRET_KEY}"';g' "${tmp_helm_file}"
 	sed -i 's;__INFISICAL_SECRET_PATH__;'"${INFISICAL_SECRET_PATH}"';g' "${tmp_helm_file}"
 	sed -i 's;__INFISICAL_SECRET_SLUG__;'"${INFISICAL_SECRET_SLUG}"';g' "${tmp_helm_file}"

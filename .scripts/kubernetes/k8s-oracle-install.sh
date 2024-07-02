@@ -39,7 +39,14 @@ set +u
 load_vars "${tmp_helm_file}" >/dev/null 2>&1
 set -u
 
-# install the helm chart
+if [[ "${PAYER_SECRET_KEY}" != "" ]]; then
+	kubectl \
+		-n "${NAMESPACE}" \
+		create secret generic \
+		--from-file="${PAYER_SECRET_KEY}=../../../data/${cluster}_payer.json" \
+		payer-secret
+fi
+
 helm upgrade -i "sb-oracle-${NETWORK}" \
 	-n "${NAMESPACE}" --create-namespace \
 	-f "${helm_default_values_file}" \

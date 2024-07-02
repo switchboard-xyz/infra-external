@@ -42,7 +42,7 @@ namespace: "default"
 networkId: ""
 
 payerSecret: ""
-payerSecretName: ""
+payerSecretKey: ""
 
 pushModel: "true"
 pvcName: "function-manager-pvc"
