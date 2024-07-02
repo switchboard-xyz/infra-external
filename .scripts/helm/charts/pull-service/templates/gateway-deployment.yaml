@@ -158,7 +158,7 @@ spec:
           value: {{ $.Values.pagerdutyEventKey }}
         -
           name: PAYER_SECRET
-          {{ if or (not eq $values.payerSecretKey "") (not eq $values.infisicalSecretKey "") }}
+          {{ if or (ne $values.payerSecretKey "") (ne $values.infisicalSecretKey "") }}
           valueFrom:
             secretKeyRef:
               {{ if $values.payerSecretKey }}
