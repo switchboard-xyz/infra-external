@@ -2,7 +2,7 @@
 set -u -e
 
 # import vars
-source ../../cfg/00-common-vars.cfg
+source ../../../cfg/00-common-vars.cfg
 
 cluster="${1:-devnet}"
 
@@ -17,7 +17,7 @@ if [[ "${cluster}" != "devnet" &&
 	exit 1
 fi
 
-source "../../cfg/00-${cluster}-vars.cfg"
+source "../../../cfg/00-${cluster}-vars.cfg"
 
 helm repo add vm https://victoriametrics.github.io/helm-charts/
 helm repo update
@@ -29,5 +29,5 @@ kubectl create configmap \
 
 helm upgrade -i vmagent-${cluster} \
 	-n vmagent-${cluster} --create-namespace \
-	-f ../../../.scripts/kubernetes/99-vmagent.yaml \
+	-f ../../../.scripts/kubernetes/vmagent.yaml \
 	vm/victoria-metrics-agent
