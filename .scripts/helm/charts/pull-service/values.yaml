@@ -66,17 +66,14 @@ components:
       key: ""
       host: ""
       port: 8081
-      replicas: 1
     gateway:
       host: ""
       port: 8082
-      replicas: 1
     guardian:
       queue: ""
       key: ""
       host: ""
       port: 8083
-      replicas: 1
 
 appType: "oracle"
 azureClientID: ""
