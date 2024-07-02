@@ -40,6 +40,12 @@ load_vars "${tmp_helm_file}" >/dev/null 2>&1
 set -u
 
 if [[ "${PAYER_SECRET_KEY}" != "" ]]; then
+	# delete pre-existing secret
+	kubectl \
+		-n "${NAMESPACE}" \
+		delete secret payer-secret >/dev/null 2>&1
+
+	# re-create secret
 	kubectl \
 		-n "${NAMESPACE}" \
 		create secret generic \
