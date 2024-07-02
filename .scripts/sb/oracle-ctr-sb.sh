@@ -7,7 +7,7 @@ export data_ctr_dir="/data"
 export script_host_dir="$(pwd)"
 export script_ctr_dir="/app"
 export prep_script_filename="51-oracle-prepare-request.sh"
-export check_script_filename="52-check-oracle-perms.sh"
+export check_script_filename="52-oracle-check-perms.sh"
 
 CTR_NAME="CTR-sb-tmp-node"
 set +e
