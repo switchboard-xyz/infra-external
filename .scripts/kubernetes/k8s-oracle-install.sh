@@ -32,7 +32,9 @@ tmp_helm_file="/tmp/helm_values.yaml"
 cp "${helm_values_files}" "${tmp_helm_file}"
 
 source ../../../.scripts/var/_load_vars.sh
-load_vars "${tmp_helm_file}"
+set +e
+load_vars "${tmp_helm_file}" >/dev/null 2>&1
+set -e
 
 # install the helm chart
 helm upgrade -i "sb-oracle-${NETWORK}" \
