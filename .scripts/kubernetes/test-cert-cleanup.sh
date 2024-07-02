@@ -25,6 +25,7 @@ echo " "
 echo "======"
 echo "This step will delete the tmp file and resources created in the previous step."
 echo "======"
+echo " "
 
 kubectl delete -n "${NAMESPACE}" -f "${TMP_FILE}" && rm -f "${TMP_FILE}"
 

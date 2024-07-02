@@ -19,6 +19,13 @@ fi
 
 source "../../../cfg/00-${cluster}-vars.cfg"
 
+echo "===="
+echo " "
+
+if [[ "$(kubectl get ns | grep -e '^'${NAMESPACE}'\W')" == "" ]]; then
+	kubectl create namespace "${NAMESPACE}"
+fi
+
 helm_values_files="../../../.scripts/helm/cfg/${cluster}-solana-values.yaml"
 helm_chart_dir="../../../.scripts/helm/charts/pull-service/"
 tmp_helm_file="/tmp/helm_values.yaml"
