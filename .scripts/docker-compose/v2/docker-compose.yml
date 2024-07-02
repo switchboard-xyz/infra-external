@@ -38,6 +38,8 @@ services:
       ENABLE_GUARDIAN: "0"
       ENABLE_GATEWAY: "0"
       PAYER_SECRET_FILEPATH: /run/secrets/deprecated_v2_payer_secret
+      PAYER_KEY: ""
+      ORACLE_AUTHORITY: ""
     privileged: true
     stdin_open: true
     tty: true
