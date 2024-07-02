@@ -86,13 +86,13 @@ spec:
           value: "0"
         -
           name: GUARDIAN_INGRESS
-          value: "https://{{ $.Values.guardian.ingress }}"
+          value: "{{ $.Values.components.guardian.ingress }}"
         -
           name: ORACLE_INGRESS
-          value: "https://{{ $.Values.oracle.ingress }}"
+          value: "{{ $.Values.components.oracle.ingress }}"
         -
           name: GATEWAY_INGRESS
-          value: "https://{{ $.Values.gateway.ingress }}"
+          value: "{{ $.Values.components.gateway.ingress }}"
         -
           name: RPC_URL
           value: {{ $values.rpcUrl }}
