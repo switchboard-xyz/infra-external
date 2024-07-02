@@ -19,6 +19,10 @@ fi
 
 source "../../../cfg/00-${cluster}-vars.cfg"
 
+if [[ "$(kubectl get ns | grep -e '^'${NAMESPACE}'\W')" == "" ]]; then
+	kubectl create namespace "${NAMESPACE}"
+fi
+
 cat >testcert.yml <<-EOF
 	---
 	apiVersion: networking.k8s.io/v1
