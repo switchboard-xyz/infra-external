@@ -29,6 +29,7 @@ fi
 
 kubectl create configmap \
 	-n "${VMAGENT_NS}" \
+	--from-file="../../../cfg/00-common-vars.cfg" \
 	--from-file="../../../cfg/00-${cluster}-vars.cfg" \
 	vmagent-env
 
