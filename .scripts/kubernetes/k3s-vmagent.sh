@@ -29,18 +29,11 @@ fi
 
 kubectl delete configmap -n "${VMAGENT_NS}" vmagent-env >/dev/null 2>&1
 
-tmp_vmagent_file="/tmp/vmagent_values.cfg"
-cat \
-  ../../../cfg/00-common-vars.cfg \
-  ../../../cfg/00-${cluster}-vars.cfg \
-  >"${tmp_vmagent_file}"
-
 kubectl create configmap \
   -n "${VMAGENT_NS}" \
-  --from-file="${tmp_vmagent_file}" \
+  --from-env-file="../../../cfg/00-common-vars.cfg" \
+  --from-env-file="../../../cfg/00-${cluster}-vars.cfg" \
   vmagent-env
-
-rm "${tmp_vmagent_file}"
 
 helm upgrade -i "vmagent-${cluster}" \
   -n "${VMAGENT_NS}" \
