@@ -17,6 +17,7 @@ if [[ "${use_docker}" != "--docker" ]]; then
 		--mount type=bind,options=rbind:rw,src=/var/run/aesmd,dst=/var/run/aesmd \
 		--mount src=/dev/sgx,dst=/dev/sgx,type=bind,options=rbind:rw \
 		--mount src="${DATA_DIR}/",dst=/data/protected_files/,options=rbind:rw \
+		--mount src="${DATA_DIR}/",dst=/run/secrets/,options=rbind:rw \
 		"${SGX_CHECK_IMAGE}" test_sgx
 else
 	docker run \
@@ -26,5 +27,6 @@ else
 		-v /var/run/aesmd:/var/run/aesmd \
 		-v /dev/sgx:/dev/sgx \
 		-v "${DATA_DIR}/":/data/protected_files/ \
+		-v "${DATA_DIR}/":/run/secrets/ \
 		"${SGX_CHECK_IMAGE}"
 fi
