@@ -20,12 +20,15 @@ infisicalTokenNamespace: "__INFISICAL_TOKEN_NS__" # this is the namespace you de
 components:
     gateway:
       port: 8082
+      ingress: "__GATEWAY_INGRESS__"
     guardian:
       queue: "__GUARDIAN_QUEUE__" # this is the variable GUARDIAN_QUEUE value from the bootstrap script
       key: "__GUARDIAN_ORACLE__" # this is the variable GUARDIAN_ORACLE1 value from the bootstrap script
+      ingress: "__GUARDIAN_INGRESS__"
     oracle:
       queue: "__PULL_QUEUE__" # this is the variable QUEUE value from the bootstrap script
       key: "__PULL_ORACLE__" # this is the variable ORACLE1 value from the bootstrap script
+      ingress: "__ORACLE_INGRESS__"
 
 # ADD YOUR CLUSTER INGRESS HOSTNAME HERE
 host: "__CLUSTER_DOMAIN__"
