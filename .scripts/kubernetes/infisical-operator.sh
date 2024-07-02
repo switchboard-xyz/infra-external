@@ -2,7 +2,7 @@
 set -u -e
 
 # import vars
-source ../../cfg/00-common-vars.cfg
+source ../../../cfg/00-common-vars.cfg
 
 cluster="${1:-devnet}"
 
@@ -17,7 +17,7 @@ if [[ "${cluster}" != "devnet" &&
 	exit 1
 fi
 
-source "../../cfg/00-${cluster}-vars.cfg"
+source "../../../cfg/00-${cluster}-vars.cfg"
 
 echo -n "Please enter your Infisical Access Token (e.g. st.ABC.XYZ): "
 read -s INFISICAL_ACCESS_TOKEN
@@ -49,7 +49,7 @@ cat <<-EOF |
 	        secretsPath: ${INFISICAL_SECRETS_PATH}
 	  managedSecretReference:
 	    secretName: keys   # <-- the name of kubernetes secret that will be created
-	    secretNamespace: ${NAMESPACE} # <-- where the kubernetes secret should be created, source by cfg/00-{devnet,mainnet}-vars.cfg
+	    secretNamespace: ${NAMESPACE} # <-- where the kubernetes secret should be created, sourced by cfg/00-{devnet,mainnet}-vars.cfg
 EOF
 	kubectl apply -f -
 
