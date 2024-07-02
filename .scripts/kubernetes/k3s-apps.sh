@@ -1,11 +1,13 @@
 #!/usr/bin/env bash
 set -u -e
 
-curl https://baltocdn.com/helm/signing.asc | gpg --dearmor | sudo tee /usr/share/keyrings/helm.gpg >/dev/null
-sudo apt-get install apt-transport-https --yes
-echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/helm.gpg] https://baltocdn.com/helm/stable/debian/ all main" | sudo tee /etc/apt/sources.list.d/helm-stable-debian.list
-sudo apt-get update
-sudo apt-get install -y helm
+if [[ "$(type -p helm)" == "" ]]; then
+	curl https://baltocdn.com/helm/signing.asc | gpg --dearmor | sudo tee /usr/share/keyrings/helm.gpg >/dev/null
+	sudo apt-get install apt-transport-https --yes
+	echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/helm.gpg] https://baltocdn.com/helm/stable/debian/ all main" | sudo tee /etc/apt/sources.list.d/helm-stable-debian.list
+	sudo apt-get update
+	sudo apt-get install -y helm
+fi
 
 helm repo add jetstack https://charts.jetstack.io
 helm repo update
@@ -69,7 +71,7 @@ cat <<-EOF |
 EOF
 	kubectl apply -f -
 
-sleep 10s
+sleep 5s
 
 helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
 helm repo update
@@ -108,7 +110,7 @@ else
 		--set controller.service.externalIPs[1]="${IP6}"
 fi
 
-sleep 10s
+sleep 5s
 
 helm repo add intel https://intel.github.io/helm-charts/
 helm repo add nfd https://kubernetes-sigs.github.io/node-feature-discovery/charts
@@ -125,13 +127,15 @@ helm upgrade --install \
 	--version v0.29.0 device-plugin-operator \
 	intel/intel-device-plugins-operator
 
+sleep 5s
+
 helm upgrade --install \
 	--create-namespace --namespace sgx \
 	--version v0.29.0 sgx-device-plugin \
 	--set nodeFeatureRule=true \
 	intel/intel-device-plugins-sgx
 
-sleep 10s
+sleep 5s
 
 echo "======"
 echo "This step is complete, please proceed with the next step."
