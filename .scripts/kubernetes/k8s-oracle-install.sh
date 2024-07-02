@@ -26,10 +26,13 @@ if [[ "$(kubectl get ns | grep -e '^'${NAMESPACE}'\W')" == "" ]]; then
 	kubectl create namespace "${NAMESPACE}"
 fi
 
-helm_values_files="../../../.scripts/helm/cfg/${cluster}-solana-values.yaml"
-helm_chart_dir="../../../.scripts/helm/charts/pull-service/"
+helm_dir="../../../.scripts/helm/"
+helm_chart_dir="${helm_dir}/charts/pull-service/"
+helm_default_values_file="${helm_chart_dir}/values.yaml"
+helm_values_file="${helm_dir}/cfg/${cluster}-solana-values.yaml"
 tmp_helm_file="/tmp/helm_values.yaml"
-cp "${helm_values_files}" "${tmp_helm_file}"
+
+cp "${helm_values_file}" "${tmp_helm_file}"
 
 source ../../../.scripts/var/_load_vars.sh
 set +u
@@ -39,6 +42,7 @@ set -u
 # install the helm chart
 helm upgrade -i "sb-oracle-${NETWORK}" \
 	-n "${NAMESPACE}" --create-namespace \
+	-f "${helm_default_values_file}" \
 	-f "${tmp_helm_file}" \
 	"${helm_chart_dir}"
 
