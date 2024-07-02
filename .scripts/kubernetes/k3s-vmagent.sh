@@ -49,7 +49,7 @@ kubectl create configmap \
   --from-env-file="${tmp_helm_file}" \
   vmagent-env
 
-rm "$tmp_helm_file}"
+rm "${tmp_helm_file}"
 
 helm upgrade -i "vmagent-${cluster}" \
   -n "${VMAGENT_NS}" \
