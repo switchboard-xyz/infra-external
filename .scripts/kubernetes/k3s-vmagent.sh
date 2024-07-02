@@ -23,8 +23,8 @@ helm repo add vm https://victoriametrics.github.io/helm-charts/
 helm repo update
 
 VMAGENT_NS="vmagent-${cluster}"
-if [[ "$(kubectl get ns | grep -e '^'${VMAGENT_NS}'\W'" == "" ]]; then
-  kubectl create namespace "${VMAGENT_NS}"
+if [[ "$(kubectl get ns | grep -e '^'${VMAGENT_NS}'\W')" == "" ]]; then
+	kubectl create namespace "${VMAGENT_NS}"
 fi
 
 kubectl create configmap \
