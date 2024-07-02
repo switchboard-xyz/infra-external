@@ -22,12 +22,16 @@ source "../../../cfg/00-${cluster}-vars.cfg"
 helm repo add vm https://victoriametrics.github.io/helm-charts/
 helm repo update
 
+if [[ ]]; then
+  kubectl create namespace "vmagent-${cluster}"
+fi
+
 kubectl create configmap \
-	-n vmagent-${cluster} --create-namespace \
-	--from-file=../../../cfg/00-${cluster}-vars.cfg \
+	-n "vmagent-${cluster}" \
+	--from-file="../../../cfg/00-${cluster}-vars.cfg" \
 	vmagent-env
 
-helm upgrade -i vmagent-${cluster} \
-	-n vmagent-${cluster} --create-namespace \
-	-f ../../../.scripts/kubernetes/vmagent.yaml \
+helm upgrade -i "vmagent-${cluster}" \
+	-n "vmagent-${cluster}" \
+	-f "../../../.scripts/kubernetes/vmagent.yaml" \
 	vm/victoria-metrics-agent
