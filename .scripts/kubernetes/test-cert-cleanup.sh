@@ -2,7 +2,7 @@
 set -u -e
 
 # import vars
-source ../../cfg/00-common-vars.cfg
+source ../../../cfg/00-common-vars.cfg
 
 cluster="${1:-devnet}"
 
@@ -17,7 +17,7 @@ if [[ "${cluster}" != "devnet" &&
 	exit 1
 fi
 
-source "../../cfg/00-${cluster}-vars.cfg"
+source "../../../cfg/00-${cluster}-vars.cfg"
 
 kubectl delete -f testcert.yml ${NAMESPACE}
 
