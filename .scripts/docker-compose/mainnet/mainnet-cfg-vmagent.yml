@@ -2,6 +2,39 @@ global:
   scrape_interval: 60s
   scrape_timeout: 20s
 
+remote_write:
+  write_relabel_configs:
+    - source_labels: [instance]
+      regex: '"'
+      replacement: ''
+    - source_labels: [job]
+      regex: '"'
+      replacement: ''
+    - source_labels: [operator]
+      regex: '"'
+      replacement: ''
+    - source_labels: [cluster]
+      regex: '"'
+      replacement: ''
+    - source_labels: [guardian_oracle]
+      regex: '"'
+      replacement: ''
+    - source_labels: [guardian_queue]
+      regex: '"'
+      replacement: ''
+    - source_labels: [pull_oracle]
+      regex: '"'
+      replacement: ''
+    - source_labels: [pull_queue]
+      regex: '"'
+      replacement: ''
+    - source_labels: [push_oracle]
+      regex: '"'
+      replacement: ''
+    - source_labels: [push_queue]
+      regex: '"'
+      replacement: ''
+
 scrape_configs:
   - job_name: "switchboard-pull-oracle"
 
