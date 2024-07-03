@@ -17,6 +17,10 @@ config:
       kubernetes_sd_configs:
         - role: pod
 
+      metric_relabel_configs:
+      - if: '{__name__=~"^switchboard_.*$|^up$"}'
+        action: keep
+
       relabel_configs:
 
       - source_labels: [__meta_kubernetes_pod_label_app]
@@ -44,6 +48,10 @@ config:
       kubernetes_sd_configs:
         - role: pod
 
+      metric_relabel_configs:
+      - if: '{__name__=~"^switchboard_.*$|^up$"}'
+        action: keep
+
       relabel_configs:
 
       - source_labels: [__meta_kubernetes_pod_label_app]
@@ -70,6 +78,10 @@ config:
       metrics_path: /metrics
       kubernetes_sd_configs:
         - role: pod
+
+      metric_relabel_configs:
+      - if: '{__name__=~"^switchboard_.*$|^up$"}'
+        action: keep
 
       relabel_configs:
 
