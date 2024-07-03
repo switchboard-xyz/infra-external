@@ -31,8 +31,7 @@ config:
         replacement: $1:9090
         target_label: __address__
       - action: labelmap_all
-        regex: '["]'
-        replacement: ''
+        regex: '([^"]*)'
       - target_label: operator
         replacement: "%{CLUSTER_DOMAIN}"
       - target_label: cluster
@@ -43,44 +42,34 @@ config:
         replacement: "%{PULL_QUEUE}"
       - source_labels: [instance]
         target_label: instance
-        regex: '["]'
-        replacement: ''
+        regex: '([^"]*)'
       - source_labels: [job]
         target_label: job
-        regex: '["]'
-        replacement: ''
+        regex: '([^"]*)'
       - source_labels: [operator]
         target_label: operator
-        regex: '["]'
-        replacement: ''
+        regex: '([^"]*)'
       - source_labels: [cluster]
         target_label: cluster
-        regex: '["]'
-        replacement: ''
+        regex: '([^"]*)'
       - source_labels: [guardian_oracle]
         target_label: guardian_oracle
-        regex: '["]'
-        replacement: ''
+        regex: '([^"]*)'
       - source_labels: [guardian_queue]
         target_label: guardian_queue
-        regex: '["]'
-        replacement: ''
+        regex: '([^"]*)'
       - source_labels: [pull_oracle]
         target_label: pull_oracle
-        regex: '["]'
-        replacement: ''
+        regex: '([^"]*)'
       - source_labels: [pull_queue]
         target_label: pull_queue
-        regex: '["]'
-        replacement: ''
+        regex: '([^"]*)'
       - source_labels: [push_oracle]
         target_label: push_oracle
-        regex: '["]'
-        replacement: ''
+        regex: '([^"]*)'
       - source_labels: [push_queue]
         target_label: push_queue
-        regex: '["]'
-        replacement: ''
+        regex: '([^"]*)'
 
     - job_name: "switchboard-pull-guardian"
 
@@ -102,8 +91,7 @@ config:
         replacement: $1:9090
         target_label: __address__
       - action: labelmap_all
-        regex: '["]'
-        replacement: ''
+        regex: '([^"]*)'
       - target_label: operator
         replacement: "%{CLUSTER_DOMAIN}"
       - target_label: cluster
@@ -114,45 +102,34 @@ config:
         replacement: "%{GUARDIAN_QUEUE}"
       - source_labels: [instance]
         target_label: instance
-        regex: '["]'
-        replacement: ''
+        regex: '([^"]*)'
       - source_labels: [job]
         target_label: job
-        regex: '["]'
-        replacement: ''
+        regex: '([^"]*)'
       - source_labels: [operator]
         target_label: operator
-        regex: '["]'
-        replacement: ''
+        regex: '([^"]*)'
       - source_labels: [cluster]
         target_label: cluster
-        regex: '["]'
-        replacement: ''
+        regex: '([^"]*)'
       - source_labels: [guardian_oracle]
         target_label: guardian_oracle
-        regex: '["]'
-        replacement: ''
+        regex: '([^"]*)'
       - source_labels: [guardian_queue]
         target_label: guardian_queue
-        regex: '["]'
-        replacement: ''
+        regex: '([^"]*)'
       - source_labels: [pull_oracle]
         target_label: pull_oracle
-        regex: '["]'
-        replacement: ''
-        replacement: ''
+        regex: '([^"]*)'
       - source_labels: [pull_queue]
         target_label: pull_queue
-        regex: '["]'
-        replacement: ''
+        regex: '([^"]*)'
       - source_labels: [push_oracle]
         target_label: push_oracle
-        regex: '["]'
-        replacement: ''
+        regex: '([^"]*)'
       - source_labels: [push_queue]
         target_label: push_queue
-        regex: '["]'
-        replacement: ''
+        regex: '([^"]*)'
 
     - job_name: "switchboard-pull-gateway"
 
@@ -174,8 +151,7 @@ config:
         replacement: $1:9090
         target_label: __address__
       - action: labelmap_all
-        regex: '["]'
-        replacement: ''
+        regex: '([^"]*)'
       - target_label: operator
         replacement: "%{CLUSTER_DOMAIN}"
       - target_label: cluster
@@ -190,41 +166,31 @@ config:
         replacement: "%{GUARDIAN_QUEUE}"
       - source_labels: [instance]
         target_label: instance
-        regex: '["]'
-        replacement: ''
+        regex: '([^"]*)'
       - source_labels: [job]
         target_label: job
-        regex: '["]'
-        replacement: ''
+        regex: '([^"]*)'
       - source_labels: [operator]
         target_label: operator
-        regex: '["]'
-        replacement: ''
+        regex: '([^"]*)'
       - source_labels: [cluster]
         target_label: cluster
-        regex: '["]'
-        replacement: ''
+        regex: '([^"]*)'
       - source_labels: [guardian_oracle]
         target_label: guardian_oracle
-        regex: '["]'
-        replacement: ''
+        regex: '([^"]*)'
       - source_labels: [guardian_queue]
         target_label: guardian_queue
-        regex: '["]'
-        replacement: ''
+        regex: '([^"]*)'
       - source_labels: [pull_oracle]
         target_label: pull_oracle
-        regex: '["]'
-        replacement: ''
+        regex: '([^"]*)'
       - source_labels: [pull_queue]
         target_label: pull_queue
-        regex: '["]'
-        replacement: ''
+        regex: '([^"]*)'
       - source_labels: [push_oracle]
         target_label: push_oracle
-        regex: '["]'
-        replacement: ''
+        regex: '([^"]*)'
       - source_labels: [push_queue]
         target_label: push_queue
-        regex: '["]'
-        replacement: ''
+        regex: '([^"]*)'
