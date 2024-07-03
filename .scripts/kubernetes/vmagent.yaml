@@ -26,7 +26,7 @@ config:
       - source_labels: [__address__]
         action: replace
         regex: ([^:]+):.*
-        replacement: $1:9090 # port you want to use
+        replacement: $1:9090
         target_label: __address__
 
       - target_label: operator
