@@ -17,13 +17,6 @@ scrape_configs:
     - action: labelmap_all
       regex: '"'
       replacement: ''
-
-    - action: replace_all
-      regex: "^\""
-      replacement: ""
-    - action: replace_all
-      regex: "\"$"
-      replacement: ""
     - target_label: operator
       replacement: "%{CLUSTER_DOMAIN}"
     - target_label: cluster
@@ -47,13 +40,6 @@ scrape_configs:
     - action: labelmap_all
       regex: '"'
       replacement: ''
-
-    - action: replace_all
-      regex: "^\""
-      replacement: ""
-    - action: replace_all
-      regex: "\"$"
-      replacement: ""
     - target_label: operator
       replacement: "%{CLUSTER_DOMAIN}"
     - target_label: cluster
@@ -77,14 +63,6 @@ scrape_configs:
     - action: labelmap_all
       regex: '"'
       replacement: ''
-
-    - action: replace_all
-      regex: "^\""
-      replacement: ""
-    - action: replace_all
-      regex: "\"$"
-      replacement: ""
-
     - target_label: operator
       replacement: "%{CLUSTER_DOMAIN}"
     - target_label: cluster

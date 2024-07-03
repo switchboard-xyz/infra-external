@@ -22,28 +22,17 @@ config:
         action: keep
 
       relabel_configs:
-
       - source_labels: [__meta_kubernetes_pod_label_app]
         regex: "oracle-oracle"
         action: keep
-
       - source_labels: [__address__]
         action: replace
         regex: ([^:]+):.*
         replacement: $1:9090
         target_label: __address__
-
       - action: labelmap_all
         regex: '"'
         replacement: ''
-
-      - action: replace_all
-        regex: '^"'
-        replacement: ""
-      - action: replace_all
-        regex: '"$'
-        replacement: ""
-
       - target_label: operator
         replacement: "%{CLUSTER_DOMAIN}"
       - target_label: cluster
@@ -64,28 +53,17 @@ config:
         action: keep
 
       relabel_configs:
-
       - source_labels: [__meta_kubernetes_pod_label_app]
         regex: "guardian-oracle"
         action: keep
-
       - source_labels: [__address__]
         action: replace
         regex: ([^:]+):.*
         replacement: $1:9090
         target_label: __address__
-
       - action: labelmap_all
         regex: '"'
         replacement: ''
-
-      - action: replace_all
-        regex: '^"'
-        replacement: ""
-      - action: replace_all
-        regex: '"$'
-        replacement: ""
-
       - target_label: operator
         replacement: "%{CLUSTER_DOMAIN}"
       - target_label: cluster
@@ -106,28 +84,17 @@ config:
         action: keep
 
       relabel_configs:
-
       - source_labels: [__meta_kubernetes_pod_label_app]
         regex: "gateway-oracle"
         action: keep
-
       - source_labels: [__address__]
         action: replace
         regex: ([^:]+):.*
         replacement: $1:9090
         target_label: __address__
-
       - action: labelmap_all
         regex: '"'
         replacement: ''
-
-      - action: replace_all
-        regex: '^"'
-        replacement: ""
-      - action: replace_all
-        regex: '"$'
-        replacement: ""
-
       - target_label: operator
         replacement: "%{CLUSTER_DOMAIN}"
       - target_label: cluster
