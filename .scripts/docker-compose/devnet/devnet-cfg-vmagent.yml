@@ -44,16 +44,6 @@ scrape_configs:
       action: replace_all
       regex: '"'
       replacement: ''
-    - source_labels: [guardian_oracle]
-      target_label: guardian_oracle
-      action: replace_all
-      regex: '"'
-      replacement: ''
-    - source_labels: [guardian_queue]
-      target_label: guardian_queue
-      action: replace_all
-      regex: '"'
-      replacement: ''
     - source_labels: [job]
       target_label: job
       action: replace_all
@@ -93,16 +83,6 @@ scrape_configs:
       replacement: ''
     - source_labels: [cluster]
       target_label: cluster
-      action: replace_all
-      regex: '"'
-      replacement: ''
-    - source_labels: [pull_oracle]
-      target_label: pull_oracle
-      action: replace_all
-      regex: '"'
-      replacement: ''
-    - source_labels: [pull_queue]
-      target_label: pull_queue
       action: replace_all
       regex: '"'
       replacement: ''
