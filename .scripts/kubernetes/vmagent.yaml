@@ -38,10 +38,10 @@ config:
         replacement: ''
 
       - action: replace_all
-        regex: "^\""
+        regex: '^"'
         replacement: ""
       - action: replace_all
-        regex: "\"$"
+        regex: '"$'
         replacement: ""
 
       - target_label: operator
@@ -76,14 +76,14 @@ config:
         target_label: __address__
 
       - action: labelmap_all
-        regex: "\""
-        replacement: ""
+        regex: '"'
+        replacement: ''
 
       - action: replace_all
-        regex: "^\""
+        regex: '^"'
         replacement: ""
       - action: replace_all
-        regex: "\"$"
+        regex: '"$'
         replacement: ""
 
       - target_label: operator
@@ -122,10 +122,10 @@ config:
         replacement: ''
 
       - action: replace_all
-        regex: "^\""
+        regex: '^"'
         replacement: ""
       - action: replace_all
-        regex: "\"$"
+        regex: '"$'
         replacement: ""
 
       - target_label: operator
