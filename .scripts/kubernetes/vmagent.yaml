@@ -1,41 +1,6 @@
 remoteWriteUrls:
   - "https://remote-write.switchboard.xyz/api/v1/write"
 
-extraScrapeConfigs:
-  remote_write:
-    write_relabel_configs:
-      - source_labels: [instance]
-        regex: '"'
-        replacement: ''
-      - source_labels: [job]
-        regex: '"'
-        replacement: ''
-      - source_labels: [operator]
-        regex: '"'
-        replacement: ''
-      - source_labels: [cluster]
-        regex: '"'
-        replacement: ''
-      - source_labels: [guardian_oracle]
-        regex: '"'
-        replacement: ''
-      - source_labels: [guardian_queue]
-        regex: '"'
-        replacement: ''
-      - source_labels: [pull_oracle]
-        regex: '"'
-        replacement: ''
-      - source_labels: [pull_queue]
-        regex: '"'
-        replacement: ''
-      - source_labels: [push_oracle]
-        regex: '"'
-        replacement: ''
-      - source_labels: [push_queue]
-        regex: '"'
-        replacement: ''
-
-
 envFrom:
   - configMapRef:
       name: vmagent-env
@@ -73,6 +38,36 @@ config:
         replacement: "%{PULL_ORACLE}"
       - target_label: pull_queue
         replacement: "%{PULL_QUEUE}"
+      - source_labels: [instance]
+        regex: '"'
+        replacement: ''
+      - source_labels: [job]
+        regex: '"'
+        replacement: ''
+      - source_labels: [operator]
+        regex: '"'
+        replacement: ''
+      - source_labels: [cluster]
+        regex: '"'
+        replacement: ''
+      - source_labels: [guardian_oracle]
+        regex: '"'
+        replacement: ''
+      - source_labels: [guardian_queue]
+        regex: '"'
+        replacement: ''
+      - source_labels: [pull_oracle]
+        regex: '"'
+        replacement: ''
+      - source_labels: [pull_queue]
+        regex: '"'
+        replacement: ''
+      - source_labels: [push_oracle]
+        regex: '"'
+        replacement: ''
+      - source_labels: [push_queue]
+        regex: '"'
+        replacement: ''
 
     - job_name: "switchboard-pull-guardian"
 
@@ -104,6 +99,36 @@ config:
         replacement: "%{GUARDIAN_ORACLE}"
       - target_label: guardian_queue
         replacement: "%{GUARDIAN_QUEUE}"
+      - source_labels: [instance]
+        regex: '"'
+        replacement: ''
+      - source_labels: [job]
+        regex: '"'
+        replacement: ''
+      - source_labels: [operator]
+        regex: '"'
+        replacement: ''
+      - source_labels: [cluster]
+        regex: '"'
+        replacement: ''
+      - source_labels: [guardian_oracle]
+        regex: '"'
+        replacement: ''
+      - source_labels: [guardian_queue]
+        regex: '"'
+        replacement: ''
+      - source_labels: [pull_oracle]
+        regex: '"'
+        replacement: ''
+      - source_labels: [pull_queue]
+        regex: '"'
+        replacement: ''
+      - source_labels: [push_oracle]
+        regex: '"'
+        replacement: ''
+      - source_labels: [push_queue]
+        regex: '"'
+        replacement: ''
 
     - job_name: "switchboard-pull-gateway"
 
@@ -139,3 +164,33 @@ config:
         replacement: "%{GUARDIAN_ORACLE}"
       - target_label: guardian_queue
         replacement: "%{GUARDIAN_QUEUE}"
+      - source_labels: [instance]
+        regex: '"'
+        replacement: ''
+      - source_labels: [job]
+        regex: '"'
+        replacement: ''
+      - source_labels: [operator]
+        regex: '"'
+        replacement: ''
+      - source_labels: [cluster]
+        regex: '"'
+        replacement: ''
+      - source_labels: [guardian_oracle]
+        regex: '"'
+        replacement: ''
+      - source_labels: [guardian_queue]
+        regex: '"'
+        replacement: ''
+      - source_labels: [pull_oracle]
+        regex: '"'
+        replacement: ''
+      - source_labels: [pull_queue]
+        regex: '"'
+        replacement: ''
+      - source_labels: [push_oracle]
+        regex: '"'
+        replacement: ''
+      - source_labels: [push_queue]
+        regex: '"'
+        replacement: ''
