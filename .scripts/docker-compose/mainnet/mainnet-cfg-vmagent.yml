@@ -2,49 +2,6 @@ global:
   scrape_interval: 60s
   scrape_timeout: 20s
 
-remote_write:
-  write_relabel_configs:
-    - source_labels: [instance]
-      target_label: instance
-      regex: '"'
-      replacement: ''
-    - source_labels: [job]
-      target_label: job
-      regex: '"'
-      replacement: ''
-    - source_labels: [operator]
-      target_label: operator
-      regex: '"'
-      replacement: ''
-    - source_labels: [cluster]
-      target_label: cluster
-      regex: '"'
-      replacement: ''
-    - source_labels: [guardian_oracle]
-      target_label: guardian_oracle
-      regex: '"'
-      replacement: ''
-    - source_labels: [guardian_queue]
-      target_label: guardian_queue
-      regex: '"'
-      replacement: ''
-    - source_labels: [pull_oracle]
-      target_label: pull_oracle
-      regex: '"'
-      replacement: ''
-    - source_labels: [pull_queue]
-      target_label: pull_queue
-      regex: '"'
-      replacement: ''
-    - source_labels: [push_oracle]
-      target_label: push_oracle
-      regex: '"'
-      replacement: ''
-    - source_labels: [push_queue]
-      target_label: push_queue
-      regex: '"'
-      replacement: ''
-
 scrape_configs:
   - job_name: "switchboard-pull-oracle"
 
@@ -60,6 +17,8 @@ scrape_configs:
     - action: labelmap_all
       regex: '"'
       replacement: ''
+    - target_label: platform
+      replacement: "docker-compose"
     - target_label: operator
       replacement: "%{CLUSTER_DOMAIN}"
     - target_label: cluster
@@ -83,6 +42,8 @@ scrape_configs:
     - action: labelmap_all
       regex: '"'
       replacement: ''
+    - target_label: platform
+      replacement: "docker-compose"
     - target_label: operator
       replacement: "%{CLUSTER_DOMAIN}"
     - target_label: cluster
@@ -106,6 +67,8 @@ scrape_configs:
     - action: labelmap_all
       regex: '"'
       replacement: ''
+    - target_label: platform
+      replacement: "docker-compose"
     - target_label: operator
       replacement: "%{CLUSTER_DOMAIN}"
     - target_label: cluster
