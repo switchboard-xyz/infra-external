@@ -30,7 +30,7 @@ config:
         regex: ([^:]+):.*
         replacement: $1:9090
         target_label: __address__
-      - source_labels: operator
+      - source_labels: [operator]
         target_label: operator
         replacement: "%{CLUSTER_DOMAIN}"
       - source_labels: [cluster]
@@ -92,7 +92,7 @@ config:
         regex: ([^:]+):.*
         replacement: $1:9090
         target_label: __address__
-      - source_labels: operator
+      - source_labels: [operator]
         target_label: operator
         replacement: "%{CLUSTER_DOMAIN}"
       - source_labels: [cluster]
@@ -154,7 +154,7 @@ config:
         regex: ([^:]+):.*
         replacement: $1:9090
         target_label: __address__
-      - source_labels: operator
+      - source_labels: [operator]
         target_label: operator
         replacement: "%{CLUSTER_DOMAIN}"
       - source_labels: [cluster]
