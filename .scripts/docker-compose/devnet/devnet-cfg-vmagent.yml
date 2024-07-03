@@ -14,9 +14,6 @@ scrape_configs:
       action: keep
 
     relabel_configs:
-    - action: labelmap_all
-      regex: '"'
-      replacement: ''
     - target_label: platform
       replacement: "docker-compose"
     - target_label: operator
@@ -39,9 +36,6 @@ scrape_configs:
       action: keep
 
     relabel_configs:
-    - action: labelmap_all
-      regex: '"'
-      replacement: ''
     - target_label: platform
       replacement: "docker-compose"
     - target_label: operator
@@ -64,9 +58,6 @@ scrape_configs:
       action: keep
 
     relabel_configs:
-    - action: labelmap_all
-      regex: '"'
-      replacement: ''
     - target_label: platform
       replacement: "docker-compose"
     - target_label: operator
