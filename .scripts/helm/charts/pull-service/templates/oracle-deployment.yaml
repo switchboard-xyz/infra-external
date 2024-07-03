@@ -202,9 +202,6 @@ spec:
           containerPort: {{ $config.port }}
           protocol: TCP
         {{ end }}
-        - name: metrics
-          containerPort: {{ $values.metricsPort }}
-          protocol: TCP
 
         # SGX ORACLE
         resources:

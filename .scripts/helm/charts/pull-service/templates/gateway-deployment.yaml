@@ -184,14 +184,6 @@ spec:
         - name: web
           containerPort: {{ $values.components.gateway.port }}
           protocol: TCP
-        - name: metrics
-          containerPort: {{ $values.metricsPort }}
-          protocol: TCP
-        # - name: liveness-port
-          # containerPort: {{ $.Values.metricsPort }}
-          # protocol: TCP
-
-
 
         resources:
           limits:
