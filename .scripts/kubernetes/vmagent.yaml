@@ -18,7 +18,7 @@ config:
         - role: pod
 
       metric_relabel_configs:
-      - source_labels: [__meta_kubernetes_pod_annotaion_app]
+      - source_labels: [__meta_kubernetes_pod_label_app]
         regex: "oracle-oracle"
         action: keep
 
@@ -46,7 +46,7 @@ config:
         - role: pod
 
       metric_relabel_configs:
-      - source_labels: [__meta_kubernetes_pod_annotaion_app]
+      - source_labels: [__meta_kubernetes_pod_label_app]
         regex: "guardian-oracle"
         action: keep
 
@@ -74,7 +74,7 @@ config:
         - role: pod
 
       metric_relabel_configs:
-      - source_labels: [__meta_kubernetes_pod_annotaion_app]
+      - source_labels: [__meta_kubernetes_pod_label_app]
         regex: "gateway-oracle"
         action: keep
 
