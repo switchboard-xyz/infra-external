@@ -17,12 +17,11 @@ config:
       kubernetes_sd_configs:
         - role: pod
 
-      metric_relabel_configs:
+      relabel_configs:
+
       - source_labels: [__meta_kubernetes_pod_label_app]
         regex: "oracle-oracle"
         action: keep
-
-      relabel_configs:
 
       - source_labels: [__address__]
         action: replace
@@ -45,12 +44,11 @@ config:
       kubernetes_sd_configs:
         - role: pod
 
-      metric_relabel_configs:
+      relabel_configs:
+
       - source_labels: [__meta_kubernetes_pod_label_app]
         regex: "guardian-oracle"
         action: keep
-
-      relabel_configs:
 
       - source_labels: [__address__]
         action: replace
@@ -73,12 +71,11 @@ config:
       kubernetes_sd_configs:
         - role: pod
 
-      metric_relabel_configs:
+      relabel_configs:
+
       - source_labels: [__meta_kubernetes_pod_label_app]
         regex: "gateway-oracle"
         action: keep
-
-      relabel_configs:
 
       - source_labels: [__address__]
         action: replace
