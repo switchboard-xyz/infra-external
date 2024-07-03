@@ -1,15 +1,7 @@
 remoteWriteUrls:
   - "https://remote-write.switchboard.xyz/api/v1/write"
 
-envFrom:
-  - configMapRef:
-      name: vmagent-env
-
-config:
-  global:
-    scrape_interval: 60s
-    scrape_timeout: 20s
-
+extraScrapeConfigs:
   remote_write:
     write_relabel_configs:
       - source_labels: [instance]
@@ -42,6 +34,16 @@ config:
       - source_labels: [push_queue]
         regex: '"'
         replacement: ''
+
+
+envFrom:
+  - configMapRef:
+      name: vmagent-env
+
+config:
+  global:
+    scrape_interval: 60s
+    scrape_timeout: 20s
 
   scrape_configs:
     - job_name: "switchboard-pull-oracle"
