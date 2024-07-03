@@ -22,6 +22,13 @@ config:
         action: keep
 
       relabel_configs:
+
+      - source_labels: [__address__]
+        action: replace
+        regex: ([^:]+):.*
+        replacement: $1:9090 # port you want to use
+        target_label: __address__
+
       - target_label: operator
         replacement: "%{CLUSTER_DOMAIN}"
       - target_label: cluster
