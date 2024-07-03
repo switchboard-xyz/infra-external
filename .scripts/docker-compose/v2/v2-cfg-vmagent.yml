@@ -7,13 +7,15 @@ scrape_configs:
 
     static_configs:
       - targets:
-        - "mainnet-oracle:9090/metrics"
+        - "v2-oracle:9090/metrics"
 
     metric_relabel_configs:
     - if: '{__name__=~"^switchboard_.*$|^up$"}'
       action: keep
 
     relabel_configs:
+    - target_label: platform
+      replacement: "docker-compose"
     - target_label: operator
       replacement: "%{CLUSTER_DOMAIN}"
     - target_label: cluster
@@ -22,3 +24,33 @@ scrape_configs:
       replacement: "%{PUSH_ORACLE}"
     - target_label: push_queue
       replacement: "%{PUSH_QUEUE}"
+    - source_labels: [operator]
+      target_label: operator
+      action: replace_all
+      regex: '"'
+      replacement: ''
+    - source_labels: [cluster]
+      target_label: cluster
+      action: replace_all
+      regex: '"'
+      replacement: ''
+    - source_labels: [push_oracle]
+      target_label: push_oracle
+      action: replace_all
+      regex: '"'
+      replacement: ''
+    - source_labels: [push_queue]
+      target_label: push_queue
+      action: replace_all
+      regex: '"'
+      replacement: ''
+    - source_labels: [job]
+      target_label: job
+      action: replace_all
+      regex: '"'
+      replacement: ''
+    - source_labels: [instance]
+      target_label: instance
+      action: replace_all
+      regex: '"'
+      replacement: ''
