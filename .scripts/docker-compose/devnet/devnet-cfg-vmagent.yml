@@ -24,6 +24,46 @@ scrape_configs:
       replacement: "%{PULL_ORACLE}"
     - target_label: pull_queue
       replacement: "%{PULL_QUEUE}"
+    - source_labels: [operator]
+      target_label: operator
+      action: replace_all
+      regex: '"'
+      replacement: ''
+    - source_labels: [cluster]
+      target_label: cluster
+      action: replace_all
+      regex: '"'
+      replacement: ''
+    - source_labels: [pull_oracle]
+      target_label: pull_oracle
+      action: replace_all
+      regex: '"'
+      replacement: ''
+    - source_labels: [pull_queue]
+      target_label: pull_queue
+      action: replace_all
+      regex: '"'
+      replacement: ''
+    - source_labels: [guardian_oracle]
+      target_label: guardian_oracle
+      action: replace_all
+      regex: '"'
+      replacement: ''
+    - source_labels: [guardian_queue]
+      target_label: guardian_queue
+      action: replace_all
+      regex: '"'
+      replacement: ''
+    - source_labels: [job]
+      target_label: job
+      action: replace_all
+      regex: '"'
+      replacement: ''
+    - source_labels: [instance]
+      target_label: instance
+      action: replace_all
+      regex: '"'
+      replacement: ''
 
   - job_name: "switchboard-pull-guardian"
 
@@ -46,6 +86,46 @@ scrape_configs:
       replacement: "%{GUARDIAN_ORACLE}"
     - target_label: guardian_queue
       replacement: "%{GUARDIAN_QUEUE}"
+    - source_labels: [operator]
+      target_label: operator
+      action: replace_all
+      regex: '"'
+      replacement: ''
+    - source_labels: [cluster]
+      target_label: cluster
+      action: replace_all
+      regex: '"'
+      replacement: ''
+    - source_labels: [pull_oracle]
+      target_label: pull_oracle
+      action: replace_all
+      regex: '"'
+      replacement: ''
+    - source_labels: [pull_queue]
+      target_label: pull_queue
+      action: replace_all
+      regex: '"'
+      replacement: ''
+    - source_labels: [guardian_oracle]
+      target_label: guardian_oracle
+      action: replace_all
+      regex: '"'
+      replacement: ''
+    - source_labels: [guardian_queue]
+      target_label: guardian_queue
+      action: replace_all
+      regex: '"'
+      replacement: ''
+    - source_labels: [job]
+      target_label: job
+      action: replace_all
+      regex: '"'
+      replacement: ''
+    - source_labels: [instance]
+      target_label: instance
+      action: replace_all
+      regex: '"'
+      replacement: ''
 
   - job_name: "switchboard-pull-gateway"
 
@@ -72,3 +152,43 @@ scrape_configs:
       replacement: "%{GUARDIAN_ORACLE}"
     - target_label: guardian_queue
       replacement: "%{GUARDIAN_QUEUE}"
+    - source_labels: [operator]
+      target_label: operator
+      action: replace_all
+      regex: '"'
+      replacement: ''
+    - source_labels: [cluster]
+      target_label: cluster
+      action: replace_all
+      regex: '"'
+      replacement: ''
+    - source_labels: [pull_oracle]
+      target_label: pull_oracle
+      action: replace_all
+      regex: '"'
+      replacement: ''
+    - source_labels: [pull_queue]
+      target_label: pull_queue
+      action: replace_all
+      regex: '"'
+      replacement: ''
+    - source_labels: [guardian_oracle]
+      target_label: guardian_oracle
+      action: replace_all
+      regex: '"'
+      replacement: ''
+    - source_labels: [guardian_queue]
+      target_label: guardian_queue
+      action: replace_all
+      regex: '"'
+      replacement: ''
+    - source_labels: [job]
+      target_label: job
+      action: replace_all
+      regex: '"'
+      replacement: ''
+    - source_labels: [instance]
+      target_label: instance
+      action: replace_all
+      regex: '"'
+      replacement: ''
