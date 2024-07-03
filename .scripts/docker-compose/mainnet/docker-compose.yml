@@ -1,0 +1,86 @@
+##########
+### !!! - DO NOT CHANGE ANYTHING IN THIS FILE - !!!
+##########
+
+include:
+  - ../common/networks.yml
+  - ../common/webserver.yml
+
+secrets:
+  mainnet_payer_secret:
+    file: ../../../data/mainnet_payer.json
+
+services:
+  # BEGIN ORACLE
+  mainnet-oracle:
+    extends:
+      file: ../common/oracle.yml
+      service: oracle
+    image: ${DOCKER_IMAGE:-docker.io/switchboardlabs/pull-oracle:stable}
+    volumes:
+      - ../../../data/mainnet_protected_files/:/data/protected_files/
+    networks:
+      - mainnet
+    environment:
+      PAYER_SECRET_FILEPATH: /run/secrets/mainnet_payer_secret
+    secrets:
+      - mainnet_payer_secret
+    env_file:
+      - ../../../cfg/00-common-vars.cfg
+      - ./mainnet.env
+      - ../../../cfg/00-mainnet-vars.cfg
+  # END ORACLE
+
+  # BEGIN GUARDIAN
+  mainnet-guardian:
+    extends:
+      file: ../common/guardian.yml
+      service: guardian
+    image: ${DOCKER_IMAGE:-docker.io/switchboardlabs/pull-oracle:stable}
+    volumes:
+      - ../../../data/mainnet_protected_files/:/data/protected_files/
+    networks:
+      - mainnet
+    environment:
+      PAYER_SECRET_FILEPATH: /run/secrets/mainnet_payer_secret
+    secrets:
+      - mainnet_payer_secret
+    env_file:
+      - ../../../cfg/00-common-vars.cfg
+      - ./mainnet.env
+      - ../../../cfg/00-mainnet-vars.cfg
+  # END GUARDIAN
+
+  # BEGIN GATEWAY
+  mainnet-gateway:
+    extends:
+      file: ../common/gateway.yml
+      service: gateway
+    image: ${DOCKER_IMAGE:-docker.io/switchboardlabs/pull-oracle:stable}
+    volumes:
+      - ../../../data/mainnet_protected_files/:/data/protected_files/
+    networks:
+      - mainnet
+    environment:
+      PAYER_SECRET_FILEPATH: /run/secrets/mainnet_payer_secret
+    secrets:
+      - mainnet_payer_secret
+    env_file:
+      - ../../../cfg/00-common-vars.cfg
+      - ./mainnet.env
+      - ../../../cfg/00-mainnet-vars.cfg
+  # END GATEWAY
+
+  # BEGIN VMAGENT
+  mainnet-vmagent:
+    extends:
+      file: ../common/vmagent.yml
+      service: vmagent
+    networks:
+      - mainnet
+    volumes:
+      - ../../../data/mainnet-vmagent-data:/vmagentdata
+      - ./mainnet-cfg-vmagent.yml:/etc/prometheus/cfg-vmagent.yml:ro
+    env_file:
+      - ../../../cfg/00-mainnet-vars.cfg
+  # END VMAGENT

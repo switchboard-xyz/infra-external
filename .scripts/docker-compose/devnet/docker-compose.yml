@@ -1,0 +1,86 @@
+##########
+### !!! - DO NOT CHANGE ANYTHING IN THIS FILE - !!!
+##########
+
+include:
+  - ../common/networks.yml
+  - ../common/webserver.yml
+
+secrets:
+  devnet_payer_secret:
+    file: ../../../data/devnet_payer.json
+
+services:
+  # BEGIN ORACLE
+  devnet-oracle:
+    extends:
+      file: ../common/oracle.yml
+      service: oracle
+    image: ${DOCKER_IMAGE:-docker.io/switchboardlabs/pull-oracle:devnet}
+    volumes:
+      - ../../../data/devnet_protected_files/:/data/protected_files/
+    networks:
+      - devnet
+    environment:
+      PAYER_SECRET_FILEPATH: /run/secrets/devnet_payer_secret
+    secrets:
+      - devnet_payer_secret
+    env_file:
+      - ../../../cfg/00-common-vars.cfg
+      - ./devnet.env
+      - ../../../cfg/00-devnet-vars.cfg
+  # END ORACLE
+
+  # BEGIN GUARDIAN
+  devnet-guardian:
+    extends:
+      file: ../common/guardian.yml
+      service: guardian
+    image: ${DOCKER_IMAGE:-docker.io/switchboardlabs/pull-oracle:devnet}
+    volumes:
+      - ../../../data/devnet_protected_files/:/data/protected_files/
+    networks:
+      - devnet
+    environment:
+      PAYER_SECRET_FILEPATH: /run/secrets/devnet_payer_secret
+    secrets:
+      - devnet_payer_secret
+    env_file:
+      - ../../../cfg/00-common-vars.cfg
+      - ./devnet.env
+      - ../../../cfg/00-devnet-vars.cfg
+  # END GUARDIAN
+
+  # BEGIN GATEWAY
+  devnet-gateway:
+    extends:
+      file: ../common/gateway.yml
+      service: gateway
+    image: ${DOCKER_IMAGE:-docker.io/switchboardlabs/pull-oracle:devnet}
+    volumes:
+      - ../../../data/devnet_protected_files/:/data/protected_files/
+    networks:
+      - devnet
+    environment:
+      PAYER_SECRET_FILEPATH: /run/secrets/devnet_payer_secret
+    secrets:
+      - devnet_payer_secret
+    env_file:
+      - ../../../cfg/00-common-vars.cfg
+      - ./devnet.env
+      - ../../../cfg/00-devnet-vars.cfg
+  # END GATEWAY
+
+  # BEGIN VMAGENT
+  devnet-vmagent:
+    extends:
+      file: ../common/vmagent.yml
+      service: vmagent
+    networks:
+      - devnet
+    volumes:
+      - ../../../data/devnet-vmagent-data:/vmagentdata
+      - ./devnet-cfg-vmagent.yml:/etc/prometheus/cfg-vmagent.yml:ro
+    env_file:
+      - ../../../cfg/00-devnet-vars.cfg
+  # END VMAGENT
