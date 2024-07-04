@@ -44,9 +44,11 @@ set -u
 
 if [[ "${PAYER_SECRET_KEY}" != "" ]]; then
   # delete pre-existing secret
+  set +e
   kubectl \
     -n "${NAMESPACE}" \
     delete secret payer-secret >/dev/null 2>&1
+  set -e
 
   # re-create secret
   kubectl \

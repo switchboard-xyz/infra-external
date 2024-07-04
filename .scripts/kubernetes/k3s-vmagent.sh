@@ -42,7 +42,9 @@ set +u
 load_vars "${tmp_helm_file}" >/dev/null 2>&1
 set -u
 
+set +e
 kubectl delete configmap -n "${VMAGENT_NS}" vmagent-env >/dev/null 2>&1
+set -e
 
 kubectl create configmap \
   -n "${VMAGENT_NS}" \

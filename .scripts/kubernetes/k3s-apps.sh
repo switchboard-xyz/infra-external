@@ -2,11 +2,11 @@
 set -u -e
 
 if [[ "$(type -p helm)" == "" ]]; then
-	curl https://baltocdn.com/helm/signing.asc | gpg --dearmor | sudo tee /usr/share/keyrings/helm.gpg >/dev/null
-	sudo apt-get install apt-transport-https --yes
-	echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/helm.gpg] https://baltocdn.com/helm/stable/debian/ all main" | sudo tee /etc/apt/sources.list.d/helm-stable-debian.list
-	sudo apt-get update
-	sudo apt-get install -y helm
+  curl https://baltocdn.com/helm/signing.asc | gpg --dearmor | sudo tee /usr/share/keyrings/helm.gpg >/dev/null
+  sudo apt-get install apt-transport-https --yes
+  echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/helm.gpg] https://baltocdn.com/helm/stable/debian/ all main" | sudo tee /etc/apt/sources.list.d/helm-stable-debian.list
+  sudo apt-get update
+  sudo apt-get install -y helm
 fi
 
 helm repo add jetstack https://charts.jetstack.io
@@ -15,19 +15,19 @@ helm repo update
 # if needed, update the version below to the latest one at the chart page:
 # https://artifacthub.io/packages/helm/cert-manager/cert-manager
 helm upgrade -i cert-manager \
-	--version v1.14.4 \
-	--create-namespace \
-	--namespace cert-manager \
-	--set installCRDs=true \
-	--set global.leaderElection.namespace=cert-manager \
-	jetstack/cert-manager
+  --version v1.14.4 \
+  --create-namespace \
+  --namespace cert-manager \
+  --set installCRDs=true \
+  --set global.leaderElection.namespace=cert-manager \
+  jetstack/cert-manager
 
 # import vars
 source ../../../cfg/00-common-vars.cfg
 
 if [[ "${EMAIL}" == "YOUR@EMAIL.IS.NEEDED.HERE" || "${EMAIL}" == "" ]]; then
-	echo "INVALID EMAIL - Please fill out correctly all details in \$REPO/cfg/00-common-vars.cfg"
-	exit 1
+  echo "INVALID EMAIL - Please fill out correctly all details in \$REPO/cfg/00-common-vars.cfg"
+  exit 1
 fi
 
 cat <<-EOF |
@@ -69,7 +69,7 @@ cat <<-EOF |
 	          ingress:
 	            ingressClassName: nginx
 EOF
-	kubectl apply -f -
+  kubectl apply -f -
 
 sleep 5s
 
@@ -77,37 +77,37 @@ helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
 helm repo update
 
 helm upgrade -i ingress-nginx ingress-nginx/ingress-nginx \
-	--namespace ingress-nginx \
-	--create-namespace \
-	--timeout 600s
+  --namespace ingress-nginx \
+  --create-namespace \
+  --timeout 600s
 
 helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
 helm repo update
 
 if [[ "${IP4}" == "0.0.0.0" || "${IP4}" == "" ]]; then
-	echo "INVALID IPv4 - Please fill out correctly all details in \$REPO/cfg/00-common-vars.cfg"
-	exit 1
+  echo "INVALID IPv4 - Please fill out correctly all details in \$REPO/cfg/00-common-vars.cfg"
+  exit 1
 fi
 
 if [[ "${IP6}" == "0000::0000" || "${IP6}" == "" ]]; then
-	helm upgrade -i ingress-nginx ingress-nginx/ingress-nginx \
-		--namespace ingress-nginx \
-		--create-namespace \
-		--timeout 600s \
-		--set controller.kind=DaemonSet \
-		--set controller.hostNetwork=true \
-		--set controller.hostPort.enabled=true \
-		--set controller.service.externalIPs[0]=${IP4}
+  helm upgrade -i ingress-nginx ingress-nginx/ingress-nginx \
+    --namespace ingress-nginx \
+    --create-namespace \
+    --timeout 600s \
+    --set controller.kind=DaemonSet \
+    --set controller.hostNetwork=true \
+    --set controller.hostPort.enabled=true \
+    --set controller.service.externalIPs[0]=${IP4}
 else
-	helm upgrade -i ingress-nginx ingress-nginx/ingress-nginx \
-		--namespace ingress-nginx \
-		--create-namespace \
-		--timeout 600s \
-		--set controller.kind=DaemonSet \
-		--set controller.hostNetwork=true \
-		--set controller.hostPort.enabled=true \
-		--set controller.service.externalIPs[0]=${IP4} \
-		--set controller.service.externalIPs[1]="${IP6}"
+  helm upgrade -i ingress-nginx ingress-nginx/ingress-nginx \
+    --namespace ingress-nginx \
+    --create-namespace \
+    --timeout 600s \
+    --set controller.kind=DaemonSet \
+    --set controller.hostNetwork=true \
+    --set controller.hostPort.enabled=true \
+    --set controller.service.externalIPs[0]=${IP4} \
+    --set controller.service.externalIPs[1]="${IP6}"
 fi
 
 sleep 5s
@@ -118,24 +118,22 @@ helm repo add nfd https://kubernetes-sigs.github.io/node-feature-discovery/chart
 helm repo update
 
 helm upgrade --install \
-	--create-namespace --namespace node-feature-discovery \
-	--version 0.15.1 nfd \
-	nfd/node-feature-discovery
+  --create-namespace --namespace node-feature-discovery \
+  --version 0.15.1 nfd \
+  nfd/node-feature-discovery
 
 helm upgrade --install \
-	--create-namespace --namespace sgx \
-	--version v0.29.0 device-plugin-operator \
-	intel/intel-device-plugins-operator
+  --create-namespace --namespace sgx \
+  --version v0.29.0 device-plugin-operator \
+  intel/intel-device-plugins-operator
 
-sleep 5s
+sleep 45s
 
 helm upgrade --install \
-	--create-namespace --namespace sgx \
-	--version v0.29.0 sgx-device-plugin \
-	--set nodeFeatureRule=true \
-	intel/intel-device-plugins-sgx
-
-sleep 5s
+  --create-namespace --namespace sgx \
+  --version v0.29.0 sgx-device-plugin \
+  --set nodeFeatureRule=true \
+  intel/intel-device-plugins-sgx
 
 echo "======"
 echo "This step is complete, please proceed with the next step."
