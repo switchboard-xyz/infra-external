@@ -14,6 +14,7 @@ services:
   v2-oracle:
     # dev-RC_06_30_24_23_12
     image: ${DOCKER_IMAGE:-docker.io/switchboardlabs/pull-oracle:v2-on-v3}
+    container_name: v2-oracle
     volumes:
       - ../../../data/deprecated_v2_protected_files/:/data/protected_files/
     networks:
@@ -55,6 +56,7 @@ services:
     extends:
       file: ../common/vmagent.yml
       service: vmagent
+    container_name: v2-vmagent
     networks:
       - v2
     volumes:

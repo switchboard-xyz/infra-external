@@ -2,6 +2,7 @@ services:
   # BEGIN SHARED MAIN WEBSERVER
   webserver:
     image: caddy
+    container_name: switchboard-webserver
     ports:
       # HTTP
       - target: 80
