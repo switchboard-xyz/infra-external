@@ -58,10 +58,27 @@ if [[ "${PAYER_SECRET_KEY}" != "" ]]; then
     payer-secret
 fi
 
+export ORACLE_DOCKER_IMAGE=""
+export GUARDIAN_DOCKER_IMAGE=""
+export GATEWAY_DOCKER_IMAGE=""
+
+if [[ "${cluster}" == "devnet" ]]; then
+  ORACLE_DOCKER_IMAGE="docker.io/switchboardlabs/pull-oracle:devnet"
+  GUARDIAN_DOCKER_IMAGE="docker.io/switchboardlabs/pull-oracle:devnet"
+  GATEWAY_DOCKER_IMAGE="docker.io/switchboardlabs/pull-oracle:devnet"
+else
+  ORACLE_DOCKER_IMAGE="docker.io/switchboardlabs/pull-oracle:stable"
+  GUARDIAN_DOCKER_IMAGE="docker.io/switchboardlabs/pull-oracle:stable"
+  GATEWAY_DOCKER_IMAGE="docker.io/switchboardlabs/pull-oracle:stable"
+fi
+
 helm upgrade -i "sb-oracle-${NETWORK}" \
   -n "${NAMESPACE}" --create-namespace \
   -f "${helm_default_values_file}" \
   -f "${tmp_helm_file}" \
+  --set components.oracle.image="${ORACLE_DOCKER_IMAGE}" \
+  --set components.guardian.image="${GUARDIAN_DOCKER_IMAGE}" \
+  --set components.gateway.image="${GATEWAY_DOCKER_IMAGE}" \
   "${helm_chart_dir}"
 
 rm "${tmp_helm_file}"
