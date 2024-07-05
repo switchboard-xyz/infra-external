@@ -4,6 +4,7 @@
 
 include:
   - ../common/networks.yml
+  - ../common/watchtower.yml
 
 secrets:
   deprecated_v2_payer_secret:
@@ -28,6 +29,10 @@ services:
     devices:
       - /dev/sgx:/dev/sgx
     restart: unless-stopped
+    labels:
+      com.centurylinklabs.watchtower.enable: true
+      com.centurylinklabs.watchtower.lifecycle.pre-update: "sleep $((74 + RANDOM % 46))" # minimum 74s - max 120s
+      com.centurylinklabs.watchtower.lifecycle.pre-update-timeout: "121" # default is 120s
     logging:
       driver: "local"
       options:
