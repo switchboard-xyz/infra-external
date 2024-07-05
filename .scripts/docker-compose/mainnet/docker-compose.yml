@@ -5,7 +5,6 @@
 include:
   - ../common/networks.yml
   - ../common/webserver.yml
-  - ../common/watchtower.yml
 
 secrets:
   mainnet_payer_secret:

@@ -4,7 +4,6 @@
 
 include:
   - ../common/networks.yml
-  - ../common/watchtower.yml
 
 secrets:
   deprecated_v2_payer_secret:
