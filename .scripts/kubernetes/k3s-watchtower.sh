@@ -2,7 +2,7 @@
 set -u -e
 
 #helm repo add keel https://kfirfer.github.io/charts/
-helm repo add keel https://charts.keel.sh 
+helm repo add keel https://charts.keel.sh
 helm repo update
 
 WATCHTOWER_NS="watchtower"
@@ -12,9 +12,7 @@ fi
 
 helm upgrade -i "watchtower" \
   -n "${WATCHTOWER_NS}" \
-  --set debug="trutrue" \
-  --set image.repository="eldios/keel" \
-  --set image.tag="latest" \
+  --set debug="false" \
   --set helmProvider.enabled="false" \
   --set polling.defaultSchedule="@every $((74 + RANDOM % 46))s" \
   keel/keel
