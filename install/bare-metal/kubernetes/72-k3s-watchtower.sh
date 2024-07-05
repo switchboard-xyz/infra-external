@@ -1,0 +1,1 @@
+../../../.scripts/kubernetes/k3s-watchtower.sh
