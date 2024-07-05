@@ -14,7 +14,7 @@ metadata:
     #keel.sh/policy: "force"
     keel.sh/trigger: "poll"                     # enable active repository checking (webhooks and GCR would still work)
     keel.sh/match-tag: "true"                   # only makes a difference when used with 'force' policy, will only update if tag matches :dev->:dev, :prod->:prod 
-    keel.sh/pollSchedule: "@every 1m"
+    #keel.sh/pollSchedule: "@every 1m"
 spec:
   replicas: 1
   selector:
