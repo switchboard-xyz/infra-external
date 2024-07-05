@@ -6,3 +6,4 @@ include:
   - devnet/docker-compose.yml
   #- mainnet/docker-compose.yml
   #- v2/docker-compose.yml
+  - common/watchtower.yml

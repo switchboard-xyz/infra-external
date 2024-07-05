@@ -1,4 +1,4 @@
 networks:
   devnet:
-  #mainnet:
-  #v2:
+  mainnet:
+  v2:

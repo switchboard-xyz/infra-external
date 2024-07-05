@@ -12,6 +12,10 @@ services:
       - "--remoteWrite.url=https://remote-write.switchboard.xyz/api/v1/write"
       - "--loggerLevel=ERROR"
     restart: unless-stopped
+    labels:
+      com.centurylinklabs.watchtower.enable: true
+      com.centurylinklabs.watchtower.lifecycle.pre-update: "sleep $((74 + RANDOM % 46))" # minimum 74s - max 120s
+      com.centurylinklabs.watchtower.lifecycle.pre-update-timeout: "121" # default is 120s
     env_file:
       - ../../../cfg/00-common-vars.cfg
     logging:
