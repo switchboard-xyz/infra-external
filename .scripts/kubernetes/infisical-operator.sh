@@ -33,26 +33,32 @@ helm upgrade -i secrets-operator \
   -n infisical --create-namespace \
   infisical-helm-charts/secrets-operator
 
+INFISICAL_TOKEN_NAME="infisical-token${cluster}"
+
 cat <<-EOF |
 	apiVersion: secrets.infisical.com/v1alpha1
 	kind: InfisicalSecret
 	metadata:
-	  name: solana-key
-	  namespace: infisical
+	  name: payer-secret-${cluster}
+	  namespace: ${INFISICAL_TOKEN_NAMESPACE}
 	spec:
 	  hostAPI: https://app.infisical.com/api
 	  resyncInterval: 60 # seconds
 	  authentication:
 	    serviceToken:
+        # token used to access Infisical API ... created a few lines below
 	      serviceTokenSecretReference:
-	        secretName: service-token-${cluster}
-	        secretNamespace: infisical
+	        secretName: ${INFISICAL_TOKEN_NAME}
+	        secretNamespace: ${INFISICAL_TOKEN_NAMESPACE}
+        # slug and path for the data inside Infisical
 	      secretsScope:
-	        envSlug: ${INFISICAL_SLUG}
-	        secretsPath: ${INFISICAL_SECRETS_PATH}
+	        envSlug: ${INFISICAL_SECRET_SLUG}
+	        secretsPath: ${INFISICAL_SECRET_PATH}
 	  managedSecretReference:
-	    secretName: keys   # <-- the name of kubernetes secret that will be created
-	    secretNamespace: ${NAMESPACE} # <-- where the kubernetes secret should be created, sourced by cfg/00-{devnet,mainnet}-vars.cfg
+      # name and namespace of secret that will be created inside Kubernetes
+      # to store the value retrived from Infisical
+	    secretName: payer-secret
+	    secretNamespace: ${NAMESPACE}
 EOF
   kubectl apply -f -
 
@@ -66,8 +72,8 @@ cat <<-EOF |
 	kind: Secret
 	type: Opaque
 	metadata:
-	  name: service-token-${cluster}
-	  namespace: infisical
+	  name: ${INFISICAL_TOKEN_NAME}
+	  namespace: ${INFISICAL_TOKEN_NAMESPACE}
 	stringData:
 	  infisicalToken: ${INFISICAL_ACCESS_TOKEN}
 EOF
