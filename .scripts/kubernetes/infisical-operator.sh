@@ -33,7 +33,7 @@ helm upgrade -i secrets-operator \
   -n infisical --create-namespace \
   infisical-helm-charts/secrets-operator
 
-INFISICAL_TOKEN_NAME="infisical-token${cluster}"
+INFISICAL_TOKEN_NAME="infisical-token-${cluster}"
 
 cat <<-EOF |
 	apiVersion: secrets.infisical.com/v1alpha1
