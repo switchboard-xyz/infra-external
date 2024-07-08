@@ -40,7 +40,6 @@ cp "${helm_values_file}" "${tmp_helm_file}"
 source ../../../.scripts/var/_load_vars.sh
 set +u
 load_vars "${tmp_helm_file}" >/dev/null 2>&1
-set -u
 
 if [[ "${PAYER_SECRET_KEY}" != "" ]]; then
   # delete pre-existing secret
@@ -57,6 +56,7 @@ if [[ "${PAYER_SECRET_KEY}" != "" ]]; then
     --from-file="${PAYER_SECRET_KEY}=../../../data/${cluster}_payer.json" \
     payer-secret
 fi
+set -u
 
 export ORACLE_DOCKER_IMAGE=""
 export GUARDIAN_DOCKER_IMAGE=""
