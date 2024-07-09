@@ -73,7 +73,7 @@ echo "Creating new Oracle/Guardian permission request on Solana for:"
 echo "  -> Solana cluster: ${cluster}"
 echo "  -> queueKey: ${queueKey}"
 
-if [[ "${register_guardian}" == "y" || "${register_guardian}" == "Y" ]]; then
+if [[ "${register_oracle}" == "y" || "${register_oracle}" == "Y" ]]; then
   echo " "
   sb solana on-demand oracle create \
     --queue "${queueKey}" \
