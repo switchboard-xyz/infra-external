@@ -3,3 +3,4 @@ cb16a8ef9e91beb91a576efa63de76e73cc01adb:scripts/install/docker/mainnet/common.e
 cb16a8ef9e91beb91a576efa63de76e73cc01adb:scripts/install/docker/mainnet/common.env:generic-api-key:23
 d15816afb3cac3594a3dd9c474bf7ca7ab2cedad:scripts/install/docker/00-vars.env:generic-api-key:33
 d15816afb3cac3594a3dd9c474bf7ca7ab2cedad:scripts/install/docker/00-vars.env:generic-api-key:34
+e08a5bfb3b945560db82a64b85a12f3c98bfb972:.scripts/sb/oracle-prepare-request.sh:generic-api-key:21
