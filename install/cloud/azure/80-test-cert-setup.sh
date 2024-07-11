@@ -1,0 +1,1 @@
+../../../.scripts/kubernetes/test-cert-setup.sh

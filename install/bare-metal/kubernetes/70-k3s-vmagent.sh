@@ -1,1 +1,0 @@
-../../../.scripts/kubernetes/k3s-vmagent.sh
