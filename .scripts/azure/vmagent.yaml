@@ -1,0 +1,206 @@
+remoteWriteUrls:
+  - "https://remote-write.switchboard.xyz/api/v1/write"
+
+envFrom:
+  - configMapRef:
+      name: vmagent-env
+
+config:
+  global:
+    scrape_interval: 60s
+    scrape_timeout: 20s
+
+  scrape_configs:
+    - job_name: "switchboard-pull-oracle"
+
+      metrics_path: /metrics
+      kubernetes_sd_configs:
+        - role: pod
+
+      metric_relabel_configs:
+      - if: '{__name__=~"^switchboard_.*$|^up$"}'
+        action: keep
+
+      relabel_configs:
+      - source_labels: [__meta_kubernetes_pod_label_app]
+        regex: "oracle-oracle"
+        action: keep
+      - source_labels: [__address__]
+        action: replace
+        regex: ([^:]+):.*
+        replacement: $1:9090
+        target_label: __address__
+      - target_label: platform
+        replacement: "kubernetes"
+      - target_label: operator
+        replacement: "%{CLUSTER_DOMAIN}"
+      - target_label: cluster
+        replacement: "%{NETWORK}"
+      - target_label: pull_oracle
+        replacement: "%{PULL_ORACLE}"
+      - target_label: pull_queue
+        replacement: "%{PULL_QUEUE}"
+      - source_labels: [operator]
+        target_label: operator
+        action: replace_all
+        regex: '"'
+        replacement: ''
+      - source_labels: [cluster]
+        target_label: cluster
+        action: replace_all
+        regex: '"'
+        replacement: ''
+      - source_labels: [pull_oracle]
+        target_label: pull_oracle
+        action: replace_all
+        regex: '"'
+        replacement: ''
+      - source_labels: [pull_queue]
+        target_label: pull_queue
+        action: replace_all
+        regex: '"'
+        replacement: ''
+      - source_labels: [job]
+        target_label: job
+        action: replace_all
+        regex: '"'
+        replacement: ''
+      - source_labels: [instance]
+        target_label: instance
+        action: replace_all
+        regex: '"'
+        replacement: ''
+
+    - job_name: "switchboard-pull-guardian"
+
+      metrics_path: /metrics
+      kubernetes_sd_configs:
+        - role: pod
+
+      metric_relabel_configs:
+      - if: '{__name__=~"^switchboard_.*$|^up$"}'
+        action: keep
+
+      relabel_configs:
+      - source_labels: [__meta_kubernetes_pod_label_app]
+        regex: "guardian-oracle"
+        action: keep
+      - source_labels: [__address__]
+        action: replace
+        regex: ([^:]+):.*
+        replacement: $1:9090
+        target_label: __address__
+      - target_label: platform
+        replacement: "kubernetes"
+      - target_label: operator
+        replacement: "%{CLUSTER_DOMAIN}"
+      - target_label: cluster
+        replacement: "%{NETWORK}"
+      - target_label: guardian_oracle
+        replacement: "%{GUARDIAN_ORACLE}"
+      - target_label: guardian_queue
+        replacement: "%{GUARDIAN_QUEUE}"
+      - source_labels: [operator]
+        target_label: operator
+        action: replace_all
+        regex: '"'
+        replacement: ''
+      - source_labels: [cluster]
+        target_label: cluster
+        action: replace_all
+        regex: '"'
+        replacement: ''
+      - source_labels: [guardian_oracle]
+        target_label: guardian_oracle
+        action: replace_all
+        regex: '"'
+        replacement: ''
+      - source_labels: [guardian_queue]
+        target_label: guardian_queue
+        action: replace_all
+        regex: '"'
+        replacement: ''
+      - source_labels: [job]
+        target_label: job
+        action: replace_all
+        regex: '"'
+        replacement: ''
+      - source_labels: [instance]
+        target_label: instance
+        action: replace_all
+        regex: '"'
+        replacement: ''
+
+    - job_name: "switchboard-pull-gateway"
+
+      metrics_path: /metrics
+      kubernetes_sd_configs:
+        - role: pod
+
+      metric_relabel_configs:
+      - if: '{__name__=~"^switchboard_.*$|^up$"}'
+        action: keep
+
+      relabel_configs:
+      - source_labels: [__meta_kubernetes_pod_label_app]
+        regex: "gateway-oracle"
+        action: keep
+      - source_labels: [__address__]
+        action: replace
+        regex: ([^:]+):.*
+        replacement: $1:9090
+        target_label: __address__
+      - target_label: platform
+        replacement: "kubernetes"
+      - target_label: operator
+        replacement: "%{CLUSTER_DOMAIN}"
+      - target_label: cluster
+        replacement: "%{NETWORK}"
+      - target_label: pull_oracle
+        replacement: "%{PULL_ORACLE}"
+      - target_label: pull_queue
+        replacement: "%{PULL_QUEUE}"
+      - target_label: guardian_oracle
+        replacement: "%{GUARDIAN_ORACLE}"
+      - target_label: guardian_queue
+        replacement: "%{GUARDIAN_QUEUE}"
+      - source_labels: [operator]
+        target_label: operator
+        action: replace_all
+        regex: '"'
+        replacement: ''
+      - source_labels: [cluster]
+        target_label: cluster
+        action: replace_all
+        regex: '"'
+        replacement: ''
+      - source_labels: [pull_oracle]
+        target_label: pull_oracle
+        action: replace_all
+        regex: '"'
+        replacement: ''
+      - source_labels: [pull_queue]
+        target_label: pull_queue
+        action: replace_all
+        regex: '"'
+        replacement: ''
+      - source_labels: [guardian_oracle]
+        target_label: guardian_oracle
+        action: replace_all
+        regex: '"'
+        replacement: ''
+      - source_labels: [guardian_queue]
+        target_label: guardian_queue
+        action: replace_all
+        regex: '"'
+        replacement: ''
+      - source_labels: [job]
+        target_label: job
+        action: replace_all
+        regex: '"'
+        replacement: ''
+      - source_labels: [instance]
+        target_label: instance
+        action: replace_all
+        regex: '"'
+        replacement: ''

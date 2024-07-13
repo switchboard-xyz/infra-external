@@ -2,32 +2,16 @@
 set -u -e
 
 cluster="${1:-devnet}"
-platform="$(echo ${2:-bare-metal} | tr '[:upper:]' '[:lower:]')"
 
 if [[ "${cluster}" == "mainnet-beta" ]]; then
   cluster="mainnet"
 fi
 
-if [[ "${cluster}" != "v2" &&
-  "${cluster}" != "devnet" &&
+if [[ "${cluster}" != "devnet" &&
   "${cluster}" != "mainnet" &&
   "${cluster}" != "mainnet-beta" ]]; then
   echo "Only valid cluster values are 'devnet' and 'mainnet'/'mainnet-beta'."
-  echo "syntax: $0 [<cluster>] [<platform>]"
   exit 1
-fi
-
-if [[ "${platform}" != "bare-metal" &&
-  "${platform}" != "azure" ]]; then
-  echo "Only valid 'platform' values are 'bare-metal' (default) and 'azure'."
-  echo "syntax: $0 [<cluster>] [<platform>]"
-  exit 1
-fi
-
-ingressClass="nginx"
-annotations=""
-if [[ "${platform}" == "azure" ]]; then
-  ingressClass="azure-application-gateway"
 fi
 
 cfg_dir="../../../cfg"
@@ -39,9 +23,7 @@ source "${cfg_common_file}"
 source "${cfg_cluster_file}"
 
 if [[ "$(kubectl get ns | grep -e '^'${NAMESPACE}'\W')" == "" ]]; then
-  echo "KUBECTL: creating namespace ${NAMESPACE}"
-  kubectl create namespace "${NAMESPACE}" >/dev/null
-  echo "KUBECTL: namespace ${NAMESPACE} created"
+  kubectl create namespace "${NAMESPACE}"
 fi
 
 TMP_FILE="./testcert.yml"
@@ -54,10 +36,8 @@ cat >"${TMP_FILE}" <<-EOF
 	  name: nginx
 	  annotations:
 	    cert-manager.io/cluster-issuer: letsencrypt-staging-http
-	    acme.cert-manager.io/http01-edit-in-place: "true"
-	    cert-manager.io/issue-temporary-certificate: "true"
 	spec:
-	  ingressClassName: ${ingressClass}
+	  ingressClassName: nginx
 	  tls:
 	  - hosts:
 	    - ${CLUSTER_DOMAIN}
@@ -105,10 +85,7 @@ cat >"${TMP_FILE}" <<-EOF
 	          ports:
 	            - containerPort: 80
 EOF
-
-echo "KUBECTL: Creating Test Ingress + Staging Cert"
-kubectl apply -f "${TMP_FILE}" -n "${NAMESPACE}" >/dev/null
-echo "KUBECTL: Test Ingress + Staging Cert done"
+kubectl apply -f "${TMP_FILE}" -n "${NAMESPACE}"
 
 echo "======"
 echo " "
@@ -119,3 +96,6 @@ echo "If that's the case, everything worked correctly."
 echo "If you get a certificate from 'Kubernetes Local Issuer',"
 echo "give it a few more minutes and try from a different browser (for caching reasons)."
 echo " "
+echo "======"
+echo "This step is complete, please proceed with the next step."
+echo "======"
