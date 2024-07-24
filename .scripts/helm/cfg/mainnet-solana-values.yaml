@@ -2,7 +2,7 @@ chain: "solana"
 cluster: "__NETWORK__"
 networkId: "__NETWORK__"
 
-heartbeatInterval: "30"
+heartbeatInterval: "180"
 
 image: "__DOCKER_IMAGE__"
 namespace: "__NAMESPACE__"
