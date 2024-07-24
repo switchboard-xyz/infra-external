@@ -1,17 +1,122 @@
-# ####################################################
-# USE THIS FILE FOR ANY DEFAULT VALUES FOR ALL ORACLES
-# ####################################################
+chain: ""
+cluster: ""
+networkId: ""
+namespace: "default"
+
+computeUnitLimit: ""
+computeUnitPrice: ""
+heartbeatInterval: ""
+
+payerSecret: ""
+payerSecretKey: ""
+infisical:
+  secret:
+    key: ""
+    path: ""
+    slug: ""
+  token:
+    namespace: ""
+
+rpcUrl: ""
+solanaMainnetRpc: ""
+
+debug: ""
+verbose: ""
+
+components:
+
+    oracle:
+      image: "docker.io/switchboardlabs/oracle:stable"
+      queue: ""
+      key: ""
+      host: ""
+      port: 8081
+      ingress: ""
+      command: ""
+      metrics:
+        exporter: "prometheus"
+        port: 9090
+        path: "/metrics"
+      resources:
+        limits:
+          cpu: "3000m"
+          memory: "8000Mi"
+          sgx:
+            epc: "64Mi"
+            enclave: 1
+            provision: 1
+        requests:
+          cpu: "1500m"
+          memory: "4000Mi"
+          sgx:
+            epc: "64Mi"
+            enclave: 1
+            provision: 1
+
+    guardian:
+      image: "docker.io/switchboardlabs/guardian:stable"
+      queue: ""
+      key: ""
+      host: ""
+      port: 8083
+      ingress: ""
+      command: ""
+      metrics:
+        exporter: "prometheus"
+        port: 9090
+        path: "/metrics"
+      resources:
+        limits:
+          cpu: "3000m"
+          memory: "8000Mi"
+          sgx:
+            epc: "64Mi"
+            enclave: 1
+            provision: 1
+        requests:
+          cpu: "1500m"
+          memory: "4000Mi"
+          sgx:
+            epc: "64Mi"
+            enclave: 1
+            provision: 1
+
+    gateway:
+      image: "docker.io/switchboardlabs/gateway:stable"
+      host: ""
+      port: 8082
+      ingress: ""
+      command: ""
+      metrics:
+        exporter: "prometheus"
+        port: 9090
+        path: "/metrics"
+      resources:
+        limits:
+          cpu: "3000m"
+          memory: "8000Mi"
+          sgx:
+            epc: "64Mi"
+            enclave: 1
+            provision: 1
+        requests:
+          cpu: "1500m"
+          memory: "4000Mi"
+          sgx:
+            epc: "64Mi"
+            enclave: 1
+            provision: 1
+
+
+
+### OLD STUFF
+
 attestationProgramId: ""
 
 azureSecretName: ""
 azureSecretPath: ""
 azureVaultUrl: ""
 
-chain: ""
-cluster: ""
-computeUnitLimit: ""
-computeUnitPrice: ""
-debug: ""
 dockerKey: ""
 dockerUser: ""
 evmChainId: ""
@@ -21,61 +126,26 @@ gcpConfigBucket: ""
 googleApplicationCredentials: ""
 googlePayerSecretPath: ""
 
-heartbeatInterval: "15"
 
 host: "x.y.z"
 
-infisicalSecretKey: ""
-infisicalSecretPath: "/"
-infisicalSecretSlug: "dev"
-infisicalTokenNamespace: "default"
 
 ipfsApiUrl: "ipfs.infura.io"
 ipfsKey: ""
 ipfsSecret: ""
 ipfsUrl: "https://ipfs.infura.io:5001"
 
-metricsExporter: "prometheus"
-metricsPort: 9090
 
-namespace: "default"
-networkId: ""
 
-payerSecret: ""
-payerSecretKey: ""
 
 pushModel: "true"
 pvcName: "function-manager-pvc"
-rpcUrl: ""
 
 saveResultComputeUnits: 300000
 
 serviceAccountJson: "bnVsbA==" #base64 encoded json
 serviceAccountName: ""
-solanaMainnetRpc: ""
 
-verbose: ""
-
-components:
-    key: ""
-    queue: ""
-    type: "oracle"
-    oracle:
-      image: "docker.io/switchboardlabs/pull-oracle:stable"
-      queue: ""
-      key: ""
-      host: ""
-      port: 8081
-    gateway:
-      image: "docker.io/switchboardlabs/pull-oracle:stable"
-      host: ""
-      port: 8082
-    guardian:
-      image: "docker.io/switchboardlabs/pull-oracle:stable"
-      queue: ""
-      key: ""
-      host: ""
-      port: 8083
 
 appType: "oracle"
 azureClientID: ""

@@ -31,7 +31,7 @@ spec:
       dnsPolicy: ClusterFirst
       serviceAccountName: {{ $.Values.serviceAccount }}
       containers:
-      - image: "{{ $.Values.components.oracle.image }}"
+      - image: {{ $.Values.components.guardian.image | quote }}
         env:
         -
           name: LIST_CONFIG_AND_EXIT
