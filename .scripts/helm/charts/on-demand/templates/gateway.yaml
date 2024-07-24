@@ -1,25 +1,23 @@
-{{- $values := .Values -}}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ $values.cluster }}-pull-gateway
+  name: {{ $values.cluster }}-gateway
   namespace: {{ $.Values.namespace }}
   labels:
     chain: {{ $.Values.chain }}
-    app: gateway-oracle
-    should_scrape: scrape
+    app: gateway
   annotations:
     keel.sh/approvals: "0"
     keel.sh/policy: "regexp:^(devnet|stable)$" # update policy (available: patch, minor, major, all, force)
-    #keel.sh/policy: "force"
     keel.sh/trigger: "poll"                     # enable active repository checking (webhooks and GCR would still work)
     keel.sh/match-tag: "true"                   # only makes a difference when used with 'force' policy, will only update if tag matches :dev->:dev, :prod->:prod 
+    #keel.sh/policy: "force"
     #keel.sh/pollSchedule: "@every 1m"
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: gateway-oracle
+      app: gateway
   strategy:
     rollingUpdate:
       maxSurge: 1
@@ -28,8 +26,7 @@ spec:
     metadata:
       labels:
         chain: {{ $.Values.chain }}
-        app: gateway-oracle
-        should_scrape: scrape
+        app: gateway
     spec:
       dnsPolicy: ClusterFirst
       containers:
@@ -233,3 +230,17 @@ spec:
       - name: dev-sgx-provision
         hostPath:
           path: /dev/sgx/provision
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: gateway
+  namespace: {{ $.Values.namespace }}
+spec:
+  selector:
+    app: gateway
+  ports:
+    - protocol: TCP
+      port: {{ $.Values.components.gateway.port }}
+      targetPort: {{ $.Values.components.gateway.port }}
+      name: gateway-svc
