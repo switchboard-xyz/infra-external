@@ -61,16 +61,18 @@ spec:
           value: {{ $.Values.heartbeatInterval | quote }}
         - name: ENABLE_PULL_ORACLE
           value: "1"
-        - name: GUARDIAN_PORT
-          value: {{ $.Values.components.guardian.port | quote }}
-        - name: GATEWAY_PORT
-          value: {{ $.Values.components.gateway.port | quote }}
         - name: ORACLE_PORT
           value: {{ $.Values.components.oracle.port | quote }}
-        - name: GATEWAY_INGRESS
-          value: {{ $.Values.components.gateway.ingress.url | quote }}
         - name: ORACLE_INGRESS
           value: {{ $.Values.components.oracle.ingress.url | quote }}
+        - name: GUARDIAN_PORT
+          value: {{ $.Values.components.guardian.port | quote }}
+        - name: GUARDIAN_INGRESS
+          value: {{ $.Values.components.guardian.ingress.url | quote }}
+        - name: GATEWAY_PORT
+          value: {{ $.Values.components.gateway.port | quote }}
+        - name: GATEWAY_INGRESS
+          value: {{ $.Values.components.gateway.ingress.url | quote }}
         - name: PULL_ORACLE
           value: {{ $.Values.components.oracle.key | quote }}
         - name: PULL_QUEUE

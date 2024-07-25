@@ -63,8 +63,12 @@ spec:
           value: "1"
         - name: ORACLE_PORT
           value: {{ $.Values.components.oracle.port | quote }}
+        - name: ORACLE_INGRESS
+          value: {{ $.Values.components.oracle.ingress.url | quote }}
         - name: GUARDIAN_PORT
           value: {{ $.Values.components.guardian.port | quote }}
+        - name: GUARDIAN_INGRESS
+          value: {{ $.Values.components.guardian.ingress.url | quote }}
         - name: GATEWAY_PORT
           value: {{ $.Values.components.gateway.port | quote }}
         - name: GATEWAY_INGRESS
