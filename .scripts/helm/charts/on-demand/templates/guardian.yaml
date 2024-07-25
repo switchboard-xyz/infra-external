@@ -1,0 +1,233 @@
+{{ if eq $.Values.components.guardian.enabled true }}
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: guardian
+  namespace: {{ $.Values.namespace | quote }}
+
+  labels:
+    chain: {{ $.Values.chain | quote }}
+    cluster: {{ $.Values.cluter | quote }}
+    app: guardian
+
+  annotations:
+    keel.sh/approvals: "0"
+    keel.sh/policy: "regexp:^(internal-)?(devnet|stable)$"  # update policy (available: patch, minor, major, all, force)
+    keel.sh/trigger: "poll"                                 # enable active repository checking (webhooks and GCR would still work)
+    keel.sh/match-tag: "true"                               # only makes a difference when used with 'force' policy, will only update if tag matches :dev->:dev, :prod->:prod
+    #keel.sh/policy: "force"
+    #keel.sh/pollSchedule: "@every 1m"
+
+spec:
+  replicas: 1
+
+  selector:
+    matchLabels:
+      app: guardian
+
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+
+  template:
+    metadata:
+      labels:
+        chain: {{ $.Values.chain | quote }}
+        cluster: {{ $.Values.cluster | quote }}
+        app: guardian
+
+    spec:
+      dnsPolicy: ClusterFirst # TODO: probably not needed.. to be removed
+
+      containers:
+      - image: {{ $.Values.components.guardian.image | quote }}
+        imagePullPolicy: Always #Always #IfNotPresent
+        name: guardian
+
+        ports:
+        - name: web
+          containerPort: {{ $.Values.components.guardian.port }}
+          protocol: TCP
+
+        env:
+        - name: CHAIN
+          value: {{ $.Values.chain | quote }}
+        - name: CLUSTER
+          value: {{ $.Values.cluster | quote }}
+        - name: NETWORK_ID
+          value: {{ $.Values.networkId | quote }}
+        - name: HEARTBEAT_INTERVAL
+          value: {{ $.Values.heartbeatInterval | quote }}
+        - name: ENABLE_GUARDIAN
+          value: "1"
+        - name: ORACLE_PORT
+          value: {{ $.Values.components.oracle.port | quote }}
+        - name: ORACLE_INGRESS
+          value: {{ $.Values.components.oracle.ingress.url | quote }}
+        - name: GUARDIAN_PORT
+          value: {{ $.Values.components.guardian.port | quote }}
+        - name: GUARDIAN_INGRESS
+          value: {{ $.Values.components.guardian.ingress.url | quote }}
+        - name: GATEWAY_PORT
+          value: {{ $.Values.components.gateway.port | quote }}
+        - name: GATEWAY_INGRESS
+          value: {{ $.Values.components.gateway.ingress.url | quote }}
+        - name: PULL_ORACLE
+          value: {{ $.Values.components.oracle.key | quote }}
+        - name: PULL_QUEUE
+          value: {{ $.Values.components.oracle.queue | quote }}
+        - name: GUARDIAN_ORACLE
+          value: {{ $.Values.components.guardian.key | quote }}
+        - name: GUARDIAN_QUEUE
+          value: {{ $.Values.components.guardian.queue | quote }}
+        - name: SOLANA_COMPUTE_UNIT_LIMIT
+          value: {{ $.Values.computeUnitLimit | quote }}
+        - name: SOLANA_COMPUTE_UNIT_PRICE
+          value: {{ $.Values.computeUnitPrice | quote }}
+        - name: RPC_URL
+          value: {{ $.Values.rpcUrl | quote }}
+        - name: WSS_RPC_URL
+          value: {{ $.Values.wssRpcUrl | quote }}
+        - name: TASK_RUNNER_SOLANA_RPC
+          value: {{ $.Values.solanaMainnetRpc | quote }}
+        - name: KEYPAIR_PATH
+          value: "/data/protected_files/keypair.bin"
+        - name: PAYER_SECRET
+          {{ if or (ne $.Values.payerSecretKey "") (ne $.Values.infisical.secret.key "") }}
+          valueFrom:
+            secretKeyRef:
+              {{ if $.Values.payerSecretKey }}
+              name: payer-secret
+              key: {{  $.Values.payerSecretKey | quote }}
+              {{ else if $.Values.infisical.secret.key }}
+              name: payer-secret
+              key: {{  $.Values.infisical.secret.key | quote }}
+              {{ end }}
+          {{ else }}
+          value: {{ $.Values.payerSecret | quote }}
+          {{ end }}
+        - name: JUPITER_SWAP_API_KEY
+          value: {{ $.Values.jupiterSwapApiKey | quote }}
+        # METRICS
+        - name: METRICS_EXPORTER
+          value: {{ $.Values.components.guardian.metrics.exporter | quote }}
+        - name: INFLUXDB_ENDPOINT
+          value: {{ $.Values.components.guardian.metrics.endpoint | quote }}
+        # LOGGING
+        - name: RUST_LOG
+          value: "info"
+        - name: RUST_BACKTRACE
+          value: "1"
+        # ALERTING
+        - name: VERBOSE
+          value: {{ $.Values.verbose | default "0" | quote }}
+        - name: DEBUG
+          value: {{ $.Values.debug | default "false" | quote }}
+        - name: LIST_CONFIG_AND_EXIT
+          value: {{ $.Values.list_config_and_exit | default "false" | quote }}
+
+
+        {{ if eq $.Values.components.guardian.command "shell" }}
+        command: [
+          "/bin/sh"
+        ]
+        args: [
+          "-c",
+          "while true; do ",
+          "echo '==> DEBUG MODE ENABLED VIA CFG <==';",
+          "sleep 5;",
+          "done;"
+        ]
+        {{ end }}
+
+        {{ if not $.Values.components.guardian.command }}
+        livenessProbe:
+          httpGet:
+            path: {{ $.Values.components.guardian.metrics.path }}
+            port: {{ $.Values.components.guardian.metrics.port }}
+          initialDelaySeconds: 60
+          failureThreshold: 10
+          periodSeconds: 10
+          timeoutSeconds: 10
+        {{ end }}
+
+        resources:
+          limits:
+            cpu: {{ $.Values.components.guardian.resources.limits.cpu }}
+            memory: {{ $.Values.components.guardian.resources.limits.memory }}
+            sgx.intel.com/epc: {{ $.Values.components.guardian.resources.limits.sgx.epc }}
+            sgx.intel.com/enclave: {{ $.Values.components.guardian.resources.limits.sgx.enclave }}
+            sgx.intel.com/provision: {{ $.Values.components.guardian.resources.limits.sgx.provision }}
+          requests:
+            cpu: {{ $.Values.components.guardian.resources.requests.cpu }}
+            memory: {{ $.Values.components.guardian.resources.requests.memory }}
+            sgx.intel.com/epc: {{ $.Values.components.guardian.resources.requests.sgx.epc }}
+            sgx.intel.com/enclave: {{ $.Values.components.guardian.resources.requests.sgx.enclave }}
+            sgx.intel.com/provision: {{ $.Values.components.guardian.resources.requests.sgx.provision }}
+
+        volumeMounts:
+        - mountPath: /dev/sgx/enclave
+          name: dev-sgx-enclave
+        - mountPath: /dev/sgx/provision
+          name: dev-sgx-provision
+        - mountPath: /data/protected_files
+          name: sealed-files
+
+      volumes:
+      - name: dev-sgx-enclave
+        hostPath:
+          path: /dev/sgx/enclave
+      - name: dev-sgx-provision
+        hostPath:
+          path: /dev/sgx/provision
+      - name: sealed-files
+        hostPath:
+          path: {{ $.Values.sgx_sealed_files | quote }}
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: guardian
+  namespace: {{ $.Values.namespace | quote }}
+spec:
+  selector:
+    app: guardian
+  ports:
+    - protocol: TCP
+      port: {{ $.Values.components.guardian.port }}
+      targetPort: {{ $.Values.components.guardian.port }}
+      name: guardian
+
+{{ if eq $.Values.components.guardian.ingress.enabled true }}
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: guardian
+  namespace: {{ $.Values.namespace | quote }}
+  annotations:
+    cert-manager.io/cluster-issuer: {{ $.Values.components.guardian.ingress.issuer | quote }}
+    nginx.ingress.kubernetes.io/use-regex: "true"
+    nginx.ingress.kubernetes.io/rewrite-target: /$1/$3
+spec:
+  ingressClassName: {{ $.Values.components.guardian.ingress.class | quote }}
+  tls:
+  - hosts:
+    - {{ $.Values.host | quote }}
+    secretName: ingress-guardian-tls
+  rules:
+  - host: {{ $.Values.host | quote }}
+    http:
+      paths:
+      - path: /{{ $.Values.cluster }}/(guardian)(/|$)(.*)
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: guardian
+            port:
+              number: {{ $.Values.components.guardian.port }}
+{{ end }} ## end Ingress IF
+{{ end }} ## end Guardian enable check
