@@ -32,7 +32,7 @@ if [[ "$(kubectl get ns | grep -e '^'${NAMESPACE}'\W')" == "" ]]; then
 fi
 
 helm_dir="../../../.scripts/helm/"
-helm_chart_dir="${helm_dir}/charts/pull-service/"
+helm_chart_dir="${helm_dir}/charts/on-demand/"
 helm_default_values_file="${helm_chart_dir}/values.yaml"
 helm_values_file="${helm_dir}/cfg/${cluster}-solana-values.yaml"
 tmp_helm_file="/tmp/helm_values.yaml"
@@ -67,13 +67,13 @@ export GUARDIAN_DOCKER_IMAGE=""
 export GATEWAY_DOCKER_IMAGE=""
 
 if [[ "${cluster}" == "devnet" ]]; then
-  ORACLE_DOCKER_IMAGE="docker.io/switchboardlabs/pull-oracle:devnet"
-  GUARDIAN_DOCKER_IMAGE="docker.io/switchboardlabs/pull-oracle:devnet"
-  GATEWAY_DOCKER_IMAGE="docker.io/switchboardlabs/pull-oracle:devnet"
+  ORACLE_DOCKER_IMAGE="docker.io/switchboardlabs/oracle:devnet"
+  GUARDIAN_DOCKER_IMAGE="docker.io/switchboardlabs/guardian:devnet"
+  GATEWAY_DOCKER_IMAGE="docker.io/switchboardlabs/gateway:devnet"
 else
-  ORACLE_DOCKER_IMAGE="docker.io/switchboardlabs/pull-oracle:stable"
-  GUARDIAN_DOCKER_IMAGE="docker.io/switchboardlabs/pull-oracle:stable"
-  GATEWAY_DOCKER_IMAGE="docker.io/switchboardlabs/pull-oracle:stable"
+  ORACLE_DOCKER_IMAGE="docker.io/switchboardlabs/oracle:stable"
+  GUARDIAN_DOCKER_IMAGE="docker.io/switchboardlabs/guardian:stable"
+  GATEWAY_DOCKER_IMAGE="docker.io/switchboardlabs/gateway:stable"
 fi
 
 echo "HELM: Installing Switchboard Oracle under namespace ${NAMESPACE}"

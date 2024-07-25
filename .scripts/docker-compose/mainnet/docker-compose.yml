@@ -16,7 +16,7 @@ services:
     extends:
       file: ../common/oracle.yml
       service: oracle
-    image: ${DOCKER_IMAGE:-docker.io/switchboardlabs/pull-oracle:stable}
+    image: ${ORACLE_DOCKER_IMAGE:-docker.io/switchboardlabs/oracle:stable}
     container_name: mainnet-oracle
     volumes:
       - ../../../data/mainnet_protected_files/:/data/protected_files/
@@ -37,7 +37,7 @@ services:
     extends:
       file: ../common/guardian.yml
       service: guardian
-    image: ${DOCKER_IMAGE:-docker.io/switchboardlabs/pull-oracle:stable}
+    image: ${GUARDIAN_DOCKER_IMAGE:-docker.io/switchboardlabs/guardian:stable}
     container_name: mainnet-guardian
     volumes:
       - ../../../data/mainnet_protected_files/:/data/protected_files/
@@ -58,7 +58,7 @@ services:
     extends:
       file: ../common/gateway.yml
       service: gateway
-    image: ${DOCKER_IMAGE:-docker.io/switchboardlabs/pull-oracle:stable}
+    image: ${GATEWAY_DOCKER_IMAGE:-docker.io/switchboardlabs/gateway:stable}
     container_name: mainnet-gateway
     volumes:
       - ../../../data/mainnet_protected_files/:/data/protected_files/
