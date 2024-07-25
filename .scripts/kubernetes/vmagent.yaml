@@ -23,7 +23,7 @@ config:
 
       relabel_configs:
       - source_labels: [__meta_kubernetes_pod_label_app]
-        regex: "oracle-oracle"
+        regex: "oracle"
         action: keep
       - source_labels: [__address__]
         action: replace
@@ -83,7 +83,7 @@ config:
 
       relabel_configs:
       - source_labels: [__meta_kubernetes_pod_label_app]
-        regex: "guardian-oracle"
+        regex: "guardian"
         action: keep
       - source_labels: [__address__]
         action: replace
@@ -143,7 +143,7 @@ config:
 
       relabel_configs:
       - source_labels: [__meta_kubernetes_pod_label_app]
-        regex: "gateway-oracle"
+        regex: "gateway"
         action: keep
       - source_labels: [__address__]
         action: replace
