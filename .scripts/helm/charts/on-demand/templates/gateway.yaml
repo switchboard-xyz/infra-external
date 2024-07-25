@@ -69,6 +69,14 @@ spec:
           value: {{ $.Values.components.gateway.port | quote }}
         - name: GATEWAY_INGRESS
           value: {{ $.Values.components.gateway.ingress.url | quote }}
+        - name: PULL_ORACLE
+          value: {{ $.Values.components.oracle.key | quote }}
+        - name: PULL_QUEUE
+          value: {{ $.Values.components.oracle.queue | quote }}
+        - name: GUARDIAN_ORACLE
+          value: {{ $.Values.components.guardian.key | quote }}
+        - name: GUARDIAN_QUEUE
+          value: {{ $.Values.components.guardian.queue | quote }}
         - name: SOLANA_COMPUTE_UNIT_LIMIT
           value: {{ $.Values.computeUnitLimit | quote }}
         - name: SOLANA_COMPUTE_UNIT_PRICE

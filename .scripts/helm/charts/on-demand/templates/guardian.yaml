@@ -71,6 +71,10 @@ spec:
           value: {{ $.Values.components.gateway.ingress.url | quote }}
         - name: GUARDIAN_INGRESS
           value: {{ $.Values.components.guardian.ingress.url | quote }}
+        - name: PULL_ORACLE
+          value: {{ $.Values.components.oracle.key | quote }}
+        - name: PULL_QUEUE
+          value: {{ $.Values.components.oracle.queue | quote }}
         - name: GUARDIAN_ORACLE
           value: {{ $.Values.components.guardian.key | quote }}
         - name: GUARDIAN_QUEUE
