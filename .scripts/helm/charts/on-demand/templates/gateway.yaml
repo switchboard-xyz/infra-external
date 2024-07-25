@@ -97,7 +97,7 @@ spec:
         - name: METRICS_EXPORTER
           value: {{ $.Values.components.gateway.metrics.exporter | quote }}
         - name: INFLUXDB_ENDPOINT
-          value: {{ $.Values.components.guardian.metrics.endpoint | quote }}
+          value: {{ $.Values.components.gateway.metrics.endpoint | quote }}
         # LOGGING
         - name: RUST_LOG
           value: "info"
