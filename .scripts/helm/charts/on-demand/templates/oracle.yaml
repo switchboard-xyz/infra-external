@@ -194,7 +194,7 @@ spec:
       targetPort: {{ $.Values.components.oracle.port }}
       name: oracle
 
-{{ if eq $.Values.components.oracle.enabled true }}
+{{ if eq $.Values.components.oracle.ingress.enabled true }}
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
