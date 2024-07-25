@@ -59,7 +59,7 @@ spec:
           value: {{ $.Values.networkId | quote }}
         - name: HEARTBEAT_INTERVAL
           value: {{ $.Values.heartbeatInterval | quote }}
-        - name: ENABLE_ORACLE
+        - name: ENABLE_PULL_ORACLE
           value: "1"
         - name: GUARDIAN_PORT
           value: {{ $.Values.components.guardian.port | quote }}
