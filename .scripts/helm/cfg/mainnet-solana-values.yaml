@@ -18,21 +18,26 @@ infisicalTokenNamespace: "__INFISICAL_TOKEN_NS__" # this is the namespace you de
 
 # You can get the keys below by running scripts/bootstrap.ts
 components:
-    gateway:
-      port: 8082
-    guardian:
-      queue: "__GUARDIAN_QUEUE__" # this is the variable GUARDIAN_QUEUE value from the bootstrap script
-      key: "__GUARDIAN_ORACLE__" # this is the variable GUARDIAN_ORACLE1 value from the bootstrap script
     oracle:
       queue: "__PULL_QUEUE__" # this is the variable QUEUE value from the bootstrap script
       key: "__PULL_ORACLE__" # this is the variable ORACLE1 value from the bootstrap script
+      ingress:
+        url: "__ORACLE_INGRESS__"
+    guardian:
+      queue: "__GUARDIAN_QUEUE__" # this is the variable GUARDIAN_QUEUE value from the bootstrap script
+      key: "__GUARDIAN_ORACLE__" # this is the variable GUARDIAN_ORACLE1 value from the bootstrap script
+      ingress:
+        url: "__GUARDIAN_INGRESS__"
+    gateway:
+      ingress:
+        url: "__GATEWAY_INGRESS__"
 
 # ADD YOUR CLUSTER INGRESS HOSTNAME HERE
 host: "__CLUSTER_DOMAIN__"
 
 # YOU SHOULD CHANGE THE LINE BELOW FOR A NON RATE LIMITED ONE
-#solanaMainnetRpc: "__SOLANA_MAINNET_RPC__"
+solanaMainnetRpc: "__SOLANA_MAINNET_RPC__"
 
 ## Change according to your preferred Solana cluster RPC
 rpcUrl: "__RPC_URL__"
-wssUrl: "__WSS_URL__"
+wssRpcUrl: "__WSS_RPC_URL__"

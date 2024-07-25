@@ -2,13 +2,16 @@ chain: ""
 cluster: ""
 networkId: ""
 namespace: "default"
+host: ""
 
-computeUnitLimit: ""
-computeUnitPrice: ""
-heartbeatInterval: ""
+computeUnitLimit: 300000
+computeUnitPrice: 1
+
+heartbeatInterval: 180
 
 payerSecret: ""
 payerSecretKey: ""
+
 infisical:
   secret:
     key: ""
@@ -17,11 +20,15 @@ infisical:
   token:
     namespace: ""
 
+sgx_sealed_files: "/data/protected_files"
+
 rpcUrl: ""
+wssRpcUrl: ""
 solanaMainnetRpc: ""
 
 debug: ""
 verbose: ""
+list_config_and_exit: ""
 
 components:
 
@@ -31,10 +38,15 @@ components:
       key: ""
       host: ""
       port: 8081
-      ingress: ""
+      ingress:
+        enabled: true
+        class: "nginx"
+        issuer: "letsencrypt-prod-http"
+        url: ""
       command: ""
       metrics:
         exporter: "prometheus"
+        endpoint: "remote-write.switchboard.xyz/write"
         port: 9090
         path: "/metrics"
       resources:
@@ -59,7 +71,11 @@ components:
       key: ""
       host: ""
       port: 8083
-      ingress: ""
+      ingress:
+        enabled: true
+        class: "nginx"
+        issuer: "letsencrypt-prod-http"
+        url: ""
       command: ""
       metrics:
         exporter: "prometheus"
@@ -85,7 +101,11 @@ components:
       image: "docker.io/switchboardlabs/gateway:stable"
       host: ""
       port: 8082
-      ingress: ""
+      ingress:
+        enabled: true
+        class: "nginx"
+        issuer: "letsencrypt-prod-http"
+        url: ""
       command: ""
       metrics:
         exporter: "prometheus"
@@ -106,80 +126,3 @@ components:
             epc: "64Mi"
             enclave: 1
             provision: 1
-
-
-
-### OLD STUFF
-
-attestationProgramId: ""
-
-azureSecretName: ""
-azureSecretPath: ""
-azureVaultUrl: ""
-
-dockerKey: ""
-dockerUser: ""
-evmChainId: ""
-feedRelayerEnabled: ""
-gcpConfigBucket: ""
-
-googleApplicationCredentials: ""
-googlePayerSecretPath: ""
-
-
-host: "x.y.z"
-
-
-ipfsApiUrl: "ipfs.infura.io"
-ipfsKey: ""
-ipfsSecret: ""
-ipfsUrl: "https://ipfs.infura.io:5001"
-
-
-
-
-pushModel: "true"
-pvcName: "function-manager-pvc"
-
-saveResultComputeUnits: 300000
-
-serviceAccountJson: "bnVsbA==" #base64 encoded json
-serviceAccountName: ""
-
-
-appType: "oracle"
-azureClientID: ""
-azureTenantID: ""
-
-sgx:
-  type: ""
-  memoryMiB: 0
-  cpu: 0
-
-txTelemetry:
-  pgHost: ""
-  pgUser: ""
-  pgDatabase: ""
-  pgPassword: ""
-
-influxdbEndpoint: "remote-write.switchboard.xyz/write"
-
-ingress:
-  enabled: false
-
-oracleKeys:
-  - name: idx-1
-    data: ""
-    queue: ""
-    queueAddress: ""
-    payerSecret: ""
-    oracleQueueKey: ""
-    oracleAuthority: ""
-    solanaOracleQueueKey: ""
-    sasQueue: ""
-    dockerUser: ""
-    dockerKey: ""
-    ipfsUrl: "https://ipfs.infura.io:5001"
-    ipfsKey: "XXX"
-    ipfsSecret: "XXX"
-    attestationQueue: ""

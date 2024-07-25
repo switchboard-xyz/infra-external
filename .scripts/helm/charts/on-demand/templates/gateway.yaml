@@ -47,7 +47,7 @@ spec:
 
         ports:
         - name: web
-          containerPort: {{ $values.components.gateway.port }}
+          containerPort: {{ $.Values.components.gateway.port }}
           protocol: TCP
 
         env:
@@ -64,7 +64,19 @@ spec:
         - name: GATEWAY_PORT
           value: {{ $.Values.components.gateway.port | quote }}
         - name: GATEWAY_INGRESS
-          value: {{ $.Values.components.gateway.ingress | quote }}
+          value: {{ $.Values.components.gateway.ingress.url | quote }}
+        - name: SOLANA_COMPUTE_UNIT_LIMIT
+          value: {{ $.Values.computeUnitLimit }}
+        - name: SOLANA_COMPUTE_UNIT_PRICE
+          value: {{ $.Values.computeUnitPrice }}
+        - name: RPC_URL
+          value: {{ $.Values.rpcUrl }}
+        - name: WSS_RPC_URL
+          value: {{ $.Values.wssRpcUrl }}
+        - name: TASK_RUNNER_SOLANA_RPC
+          value: {{ $.Values.solanaMainnetRpc }}
+        - name: KEYPAIR_PATH
+          value: "/data/protected_files/keypair.bin"
         - name: PAYER_SECRET
           {{ if or (ne $.Values.payerSecretKey "") (ne $.Values.infisical.secret.key "") }}
           valueFrom:
@@ -84,6 +96,8 @@ spec:
         # METRICS
         - name: METRICS_EXPORTER
           value: {{ $.Values.components.gateway.metrics.exporter }}
+        - name: INFLUXDB_ENDPOINT
+          value: {{ $.Values.components.guardian.metrics.endpoint }}
         # LOGGING
         - name: RUST_LOG
           value: "info"
@@ -94,6 +108,8 @@ spec:
           value: {{ $.Values.verbose | default "0" | quote }}
         - name: DEBUG
           value: {{ $.Values.debug | default "false" | quote }}
+        - name: LIST_CONFIG_AND_EXIT
+          value: {{ $.Values.list_config_and_exit | default "false" | quote }}
 
 
         {{ if eq $.Values.components.gateway.command "shell" }}
@@ -139,16 +155,20 @@ spec:
           name: dev-sgx-enclave
         - mountPath: /dev/sgx/provision
           name: dev-sgx-provision
+        - mountPath: /data/protected_files
+          name: sealed-files
 
       volumes:
-      - name: shared-data
-        emptyDir: {}
       - name: dev-sgx-enclave
         hostPath:
           path: /dev/sgx/enclave
       - name: dev-sgx-provision
         hostPath:
           path: /dev/sgx/provision
+      - name: sealed-files
+        hostPath:
+          path: {{ $.Values.sgx_sealed_files | quote }}
+
 ---
 apiVersion: v1
 kind: Service
@@ -163,3 +183,33 @@ spec:
       port: {{ $.Values.components.gateway.port }}
       targetPort: {{ $.Values.components.gateway.port }}
       name: gateway
+
+{{ if eq $.Values.components.oracle.enabled true }}
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: gateway
+  namespace: {{ $.Values.namespace }}
+  annotations:
+    cert-manager.io/cluster-issuer: {{ $.Values.components.gateway.ingress.issuer | quote }}
+    nginx.ingress.kubernetes.io/use-regex: "true"
+    nginx.ingress.kubernetes.io/rewrite-target: /$1/$3
+spec:
+  ingressClassName: {{ $.Values.components.gateway.ingress.class | quote }}
+  tls:
+  - hosts:
+    - {{ $.Values.host }}
+    secretName: ingress-gateway-tls
+  rules:
+  - host: {{ $.Values.host }}
+    http:
+      paths:
+      - path: /{{ $.Values.cluster }}/(gateway)(/|$)(.*)
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: gateway
+            port:
+              number: {{ $.Values.components.gateway.port }}
+{{ end }}

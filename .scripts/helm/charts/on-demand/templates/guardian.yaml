@@ -1,214 +1,158 @@
 apiVersion: apps/v1
 kind: Deployment
+
 metadata:
-  name: {{ $values.cluster }}-guardian
-  namespace: {{ $values.namespace }}
+  name: guardian
+  namespace: {{ $.Values.namespace }}
+
   labels:
-    chain: {{ $values.chain }}
+    chain: {{ $.Values.chain }}
+    cluster: {{ $.Values.cluter }}
     app: guardian
+
   annotations:
     keel.sh/approvals: "0"
-    keel.sh/policy: "regexp:^(devnet|stable)$" # update policy (available: patch, minor, major, all, force)
+    keel.sh/policy: "regexp:^(internal-)?(devnet|stable)$"  # update policy (available: patch, minor, major, all, force)
     keel.sh/trigger: "poll"                     # enable active repository checking (webhooks and GCR would still work)
     keel.sh/match-tag: "true"                   # only makes a difference when used with 'force' policy, will only update if tag matches :dev->:dev, :prod->:prod 
     #keel.sh/policy: "force"
     #keel.sh/pollSchedule: "@every 1m"
+
 spec:
   replicas: 1
+
   selector:
     matchLabels:
       app: guardian
+
   strategy:
     rollingUpdate:
       maxSurge: 1
       maxUnavailable: 0
+
   template:
     metadata:
       labels:
         chain: {{ $.Values.chain }}
+        cluster: {{ $.Values.cluster }}
         app: guardian
+
     spec:
-      dnsPolicy: ClusterFirst
-      serviceAccountName: {{ $.Values.serviceAccount }}
+      dnsPolicy: ClusterFirst # TODO: probably not needed.. to be removed
+
       containers:
       - image: {{ $.Values.components.guardian.image | quote }}
-        env:
-        -
-          name: LIST_CONFIG_AND_EXIT
-          value: "false"
-        -
-          name: CHAIN
-          value: {{ $values.chain | quote }}
-        -
-          name: CLUSTER
-          value: {{ $values.cluster }}
-        -
-          name: NETWORK_ID
-          value: {{ $values.networkId }}
-        -
-          name: HEARTBEAT_INTERVAL
-          value: {{ $values.heartbeatInterval | default "30" | quote }}
-        -
-          name: KEYPAIR_PATH
-          value: "/data/protected_files/keypair.bin"
-        -
-          name: ORACLE_PORT
-          value: "8081"
-        -
-          name: GATEWAY_PORT
-          value: "8082"
-        -
-          name: GUARDIAN_PORT
-          value: "8083"
-        -
-          name: ENABLE_PUSH_MODEL
-          value: "0"
-        -
-          name: ENABLE_GATEWAY
-          value: "0"
-        -
-          name: ENABLE_PUSH_ORACLE
-          value: "0"
-        -
-          name: ENABLE_PULL_ORACLE
-          value: "0"
-        -
-          name: ENABLE_GUARDIAN
-          value: "1"
-        -
-          name: SOLANA_SAVE_RESULT_COMPUTE_UNITS
-          value: "300000"
-        -
-          name: SOLANA_COMPUTE_UNIT_PRICE
-          value: "1"
-        -
-          name: GUARDIAN_ORACLE
-          value: "{{ $.Values.components.guardian.key }}"
-        -
-          name: GUARDIAN_QUEUE
-          value: "{{ $.Values.components.guardian.queue }}"
-        -
-          name: GUARDIAN_INGRESS
-          value: "{{ $.Values.components.guardian.ingress }}"
-        -
-          name: INFLUXDB_ENDPOINT
-          value: "{{ $.Values.influxdbEndpoint }}"
-        -
-          name: RPC_URL
-          value: {{ $values.rpcUrl }}
-        -
-          name: WSS_URL
-          value: {{ $values.wssUrl }}
-        -
-          name: WSS_RPC_URL
-          value: {{ $values.wssUrl }}
-        -
-          name: BACKUP_RPC_URL_1
-          value: {{ $values.backupRpc1  }}
-        -
-          name: BACKUP_RPC_URL_2
-          value: {{ $values.backupRpc2  }}
-        -
-          name: TELEMETRY_FEED_RESULT_PUSH_INTERVAL_MS
-          value: {{ $values.telemetryFeedResultPushIntervalMs | default "5000" | quote }}
-        -
-          name: TELEMETRY_FEED_RESULT_PUSH_URL
-          value: {{ $values.telemetryFeedResultPushUrl }}
-        -
-          name: TASK_RUNNER_SOLANA_RPC
-          value: {{ $values.solanaMainnetRpc }}
-        -
-          name: JUPITER_SWAP_API_KEY
-          value: {{ $values.jupiterSwapApiKey | default "3a3b41bc06d49f9c89a8550ff84072be" }}
-        -
-          name: IPFS_URL
-          value: {{ $values.ipfsApiUrl | quote }}
-        -
-          name: IPFS_SECRET
-          value: {{ $values.ipfsSecret | quote }}
-        -
-          name: IPFS_KEY
-          value: {{ $values.ipfsKey | quote }}
-        # SOLANA
-        -
-          name: ORACLE_AUTHORITY
-          value: {{ $values.components.authority }}
+        imagePullPolicy: Always #Always #IfNotPresent
+        name: guardian
 
+        ports:
+        - name: web
+          containerPort: {{ $.Values.components.guardian.port }}
+          protocol: TCP
+
+        env:
+        - name: CHAIN
+          value: {{ $.Values.chain | quote }}
+        - name: CLUSTER
+          value: {{ $.Values.cluster | quote }}
+        - name: NETWORK_ID
+          value: {{ $.Values.networkId | quote }}
+        - name: HEARTBEAT_INTERVAL
+          value: {{ $.Values.heartbeatInterval | quote }}
+        - name: ENABLE_GUARDIAN
+          value: "1"
+        - name: GUARDIAN_PORT
+          value: {{ $.Values.components.guardian.port | quote }}
+        - name: GUARDIAN_INGRESS
+          value: {{ $.Values.components.guardian.ingress.url | quote }}
+        - name: GUARDIAN_ORACLE
+          value: {{ $.Values.components.guardian.key | quote }}
+        - name: GUARDIAN_QUEUE
+          value: {{ $.Values.components.guardian.queue | quote }}
+        - name: SOLANA_COMPUTE_UNIT_LIMIT
+          value: {{ $.Values.computeUnitLimit }}
+        - name: SOLANA_COMPUTE_UNIT_PRICE
+          value: {{ $.Values.computeUnitPrice }}
+        - name: RPC_URL
+          value: {{ $.Values.rpcUrl }}
+        - name: WSS_RPC_URL
+          value: {{ $.Values.wssRpcUrl }}
+        - name: TASK_RUNNER_SOLANA_RPC
+          value: {{ $.Values.solanaMainnetRpc }}
+        - name: KEYPAIR_PATH
+          value: "/data/protected_files/keypair.bin"
+        - name: PAYER_SECRET
+          {{ if or (ne $.Values.payerSecretKey "") (ne $.Values.infisical.secret.key "") }}
+          valueFrom:
+            secretKeyRef:
+              {{ if $.Values.payerSecretKey }}
+              name: payer-secret
+              key: {{  $.Values.payerSecretKey | quote }}
+              {{ else if $.Values.infisical.secret.key }}
+              name: payer-secret
+              key: {{  $.Values.infisical.secret.key | quote }}
+              {{ end }}
+          {{ else }}
+          value: {{ $.Values.payerSecret }}
+          {{ end }}
+        - name: JUPITER_SWAP_API_KEY
+          value: {{ $.Values.jupiterSwapApiKey | quote }}
         # METRICS
-        -
-          name: METRICS_EXPORTER
-          value: {{ $values.metricsExporter }}
+        - name: METRICS_EXPORTER
+          value: {{ $.Values.components.guardian.metrics.exporter }}
+        - name: INFLUXDB_ENDPOINT
+          value: {{ $.Values.components.guardian.metrics.endpoint }}
         # LOGGING
         - name: RUST_LOG
           value: "info"
         - name: RUST_BACKTRACE
           value: "1"
         # ALERTING
-        -
-          name: VERBOSE
-          value: {{ $values.verbose | default "0" | quote }}
-        -
-          name: DEBUG
-          value: {{ $values.debug | default "false" | quote }}
-        -
-          name: PAGERDUTY_EVENT_KEY
-          value: {{ $values.pagerdutyEventKey }}
-        -
-          name: PAYER_SECRET
-          {{ if or (ne $values.payerSecretKey "") (ne $values.infisicalSecretKey "") }}
-          valueFrom:
-            secretKeyRef:
-              {{ if $values.payerSecretKey }}
-              name: payer-secret
-              key: {{  $values.payerSecretKey | quote }}
-              {{ else if $values.infisicalSecretKey }}
-              name: payer-secret
-              key: {{  $values.infisicalSecretKey | quote }}
-              {{ end }}
-          {{ else }}
-          value: {{ $values.payerSecret }}
-          {{ end }}
+        - name: VERBOSE
+          value: {{ $.Values.verbose | default "0" | quote }}
+        - name: DEBUG
+          value: {{ $.Values.debug | default "false" | quote }}
+        - name: LIST_CONFIG_AND_EXIT
+          value: {{ $.Values.list_config_and_exit | default "false" | quote }}
 
-      # IMAGE / RESOURCES
-        imagePullPolicy: Always #Always #IfNotPresent
-        name: {{ $values.chain }}-oracle
 
-        {{ if eq $values.command "shell" }}
-        command: ["/bin/sh"]
-        args: ["-c", "while true; do echo hello; sleep 10;done"]
+        {{ if eq $.Values.components.guardian.command "shell" }}
+        command: [
+          "/bin/sh"
+        ]
+        args: [
+          "-c",
+          "while true; do ",
+          "echo '==> DEBUG MODE ENABLED VIA CFG <==';",
+          "sleep 5;",
+          "done;"
+        ]
         {{ end }}
 
-        ports:
-        {{ if ne $component "push" }}
-        - name: web
-          containerPort: {{ $config.port }}
-          protocol: TCP
-        {{ end }}
-
-        # SGX ORACLE
-        resources:
-          limits:
-            cpu: 1000m
-            memory: 3000Mi
-            sgx.intel.com/epc: 16Mi
-            sgx.intel.com/enclave: 1
-            sgx.intel.com/provision: 1
-          requests:
-            cpu: 1000m
-            memory: 3000Mi
-            sgx.intel.com/epc: 16Mi
-            sgx.intel.com/enclave: 1
-            sgx.intel.com/provision: 1
-        {{ if not $values.command  }}
+        {{ if not $.Values.components.guardian.command }}
         livenessProbe:
           httpGet:
-            path: /metrics
-            port: {{ $values.metricsPort }}
+            path: {{ $.Values.components.guardian.metrics.path }}
+            port: {{ $.Values.components.guardian.metrics.port }}
           initialDelaySeconds: 60
           failureThreshold: 10
           periodSeconds: 10
           timeoutSeconds: 10
-          {{ end }}
+        {{ end }}
+
+        resources:
+          limits:
+            cpu: {{ $.Values.components.guardian.resources.limits.cpu}}
+            memory: {{ $.Values.components.guardian.resources.limits.memory}}
+            sgx.intel.com/epc: {{ $.Values.components.guardian.resources.limits.sgx.epc}}
+            sgx.intel.com/enclave: {{ $.Values.components.guardian.resources.limits.sgx.enclave}}
+            sgx.intel.com/provision: {{ $.Values.components.guardian.resources.limits.sgx.provision}}
+          requests:
+            cpu: {{ $.Values.components.guardian.resources.requests.cpu}}
+            memory: {{ $.Values.components.guardian.resources.requests.memory}}
+            sgx.intel.com/epc: {{ $.Values.components.guardian.resources.requests.sgx.epc}}
+            sgx.intel.com/enclave: {{ $.Values.components.guardian.resources.requests.sgx.enclave}}
+            sgx.intel.com/provision: {{ $.Values.components.guardian.resources.requests.sgx.provision}}
 
         volumeMounts:
         - mountPath: /dev/sgx/enclave
@@ -219,8 +163,6 @@ spec:
           name: sealed-files
 
       volumes:
-      - name: shared-data
-        emptyDir: {}
       - name: dev-sgx-enclave
         hostPath:
           path: /dev/sgx/enclave
@@ -229,7 +171,8 @@ spec:
           path: /dev/sgx/provision
       - name: sealed-files
         hostPath:
-          path: /data/protected_files
+          path: {{ $.Values.sgx_sealed_files | quote }}
+
 ---
 apiVersion: v1
 kind: Service
@@ -243,4 +186,34 @@ spec:
     - protocol: TCP
       port: {{ $.Values.components.guardian.port }}
       targetPort: {{ $.Values.components.guardian.port }}
-      name: guardian-svc
+      name: guardian
+
+{{ if eq $.Values.components.guardian.enabled true }}
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: guardian
+  namespace: {{ $.Values.namespace }}
+  annotations:
+    cert-manager.io/cluster-issuer: {{ $.Values.components.guardian.ingress.issuer | quote }}
+    nginx.ingress.kubernetes.io/use-regex: "true"
+    nginx.ingress.kubernetes.io/rewrite-target: /$1/$3
+spec:
+  ingressClassName: {{ $.Values.components.guardian.ingress.class | quote }}
+  tls:
+  - hosts:
+    - {{ $.Values.host }}
+    secretName: ingress-guardian-tls
+  rules:
+  - host: {{ $.Values.host }}
+    http:
+      paths:
+      - path: /{{ $.Values.cluster }}/(guardian)(/|$)(.*)
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: guardian
+            port:
+              number: {{ $.Values.components.guardian.port }}
+{{ end }}
