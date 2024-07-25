@@ -62,7 +62,7 @@ spec:
         - name: ENABLE_GUARDIAN
           value: "1"
         - name: GUARDIAN_PORT
-          value: {{ $.Values.components.guardian.port | quote }}
+          value: {{ $.Values.components.guardian.port }}
         - name: GUARDIAN_INGRESS
           value: {{ $.Values.components.guardian.ingress.url | quote }}
         - name: GUARDIAN_ORACLE

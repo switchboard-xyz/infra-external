@@ -62,7 +62,7 @@ spec:
         - name: ENABLE_ORACLE
           value: "1"
         - name: ORACLE_PORT
-          value: {{ $.Values.components.oracle.port | quote }}
+          value: {{ $.Values.components.oracle.port }}
         - name: ORACLE_INGRESS
           value: {{ $.Values.components.oracle.ingress.url | quote }}
         - name: PULL_ORACLE

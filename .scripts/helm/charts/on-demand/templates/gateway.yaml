@@ -62,7 +62,7 @@ spec:
         - name: ENABLE_GATEWAY
           value: "1"
         - name: GATEWAY_PORT
-          value: {{ $.Values.components.gateway.port | quote }}
+          value: {{ $.Values.components.gateway.port }}
         - name: GATEWAY_INGRESS
           value: {{ $.Values.components.gateway.ingress.url | quote }}
         - name: SOLANA_COMPUTE_UNIT_LIMIT
