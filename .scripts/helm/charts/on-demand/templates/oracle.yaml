@@ -67,6 +67,8 @@ spec:
           value: {{ $.Values.components.gateway.port | quote }}
         - name: ORACLE_PORT
           value: {{ $.Values.components.oracle.port | quote }}
+        - name: GATEWAY_INGRESS
+          value: {{ $.Values.components.gateway.ingress.url | quote }}
         - name: ORACLE_INGRESS
           value: {{ $.Values.components.oracle.ingress.url | quote }}
         - name: PULL_ORACLE

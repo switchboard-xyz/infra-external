@@ -67,6 +67,8 @@ spec:
           value: {{ $.Values.components.guardian.port | quote }}
         - name: GATEWAY_PORT
           value: {{ $.Values.components.gateway.port | quote }}
+        - name: GATEWAY_INGRESS
+          value: {{ $.Values.components.gateway.ingress.url | quote }}
         - name: GUARDIAN_INGRESS
           value: {{ $.Values.components.guardian.ingress.url | quote }}
         - name: GUARDIAN_ORACLE
