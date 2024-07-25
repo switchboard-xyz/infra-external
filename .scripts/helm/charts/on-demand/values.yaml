@@ -27,6 +27,7 @@ list_config_and_exit: ""
 components:
 
     oracle:
+      enabled: true
       image: "docker.io/switchboardlabs/oracle:stable"
       queue: ""
       key: ""
@@ -59,6 +60,7 @@ components:
             provision: 1
 
     guardian:
+      enabled: true
       image: "docker.io/switchboardlabs/guardian:stable"
       queue: ""
       key: ""
@@ -91,6 +93,7 @@ components:
             provision: 1
 
     gateway:
+      enabled: true
       image: "docker.io/switchboardlabs/gateway:stable"
       port: 8082
       ingress:

@@ -1,3 +1,4 @@
+{{ if eq $.Values.components.guardian.enabled true }}
 apiVersion: apps/v1
 kind: Deployment
 
@@ -228,4 +229,5 @@ spec:
             name: guardian
             port:
               number: {{ $.Values.components.guardian.port }}
-{{ end }}
+{{ end }} ## end Ingress IF
+{{ end }} ## end Guardian enable check

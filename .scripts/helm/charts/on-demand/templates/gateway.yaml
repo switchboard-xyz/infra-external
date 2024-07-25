@@ -1,3 +1,4 @@
+{{ if eq $.Values.components.gateway.enabled true }}
 apiVersion: apps/v1
 kind: Deployment
 
@@ -228,4 +229,5 @@ spec:
             name: gateway
             port:
               number: {{ $.Values.components.gateway.port }}
-{{ end }}
+{{ end }} ## end Ingress IF
+{{ end }} ## end Gateway enable check

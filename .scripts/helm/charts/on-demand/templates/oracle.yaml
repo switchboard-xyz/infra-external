@@ -1,3 +1,4 @@
+{{ if eq $.Values.components.oracle.enabled true }}
 apiVersion: apps/v1
 kind: Deployment
 
@@ -228,4 +229,5 @@ spec:
             name: oracle
             port:
               number: {{ $.Values.components.oracle.port }}
-{{ end }}
+{{ end }} ## end Ingress IF
+{{ end }} ## end Oracle enable check
