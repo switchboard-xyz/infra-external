@@ -12,14 +12,6 @@ heartbeatInterval: 180
 payerSecret: ""
 payerSecretKey: ""
 
-infisical:
-  secret:
-    key: ""
-    path: ""
-    slug: ""
-  token:
-    namespace: ""
-
 sgx_sealed_files: "/data/protected_files"
 
 rpcUrl: ""

@@ -7,14 +7,6 @@ host: "__CLUSTER_DOMAIN__"
 
 payerSecretKey: "__PAYER_SECRET_KEY__"
 
-infisical:
-  secret:
-    key: "__INFISICAL_SECRET_KEY__"
-    path: "__INFISICAL_SECRET_PATH__"
-    slug: "__INFISICAL_SECRET_SLUG__"
-  token:
-    namespace: "__INFISICAL_TOKEN_NS__"
-
 components:
     oracle:
       image: "__ORACLE_DOCKER_IMAGE__"
