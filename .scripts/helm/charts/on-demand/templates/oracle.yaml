@@ -58,11 +58,11 @@ spec:
         - name: NETWORK_ID
           value: {{ $.Values.networkId | quote }}
         - name: HEARTBEAT_INTERVAL
-          value: {{ $.Values.heartbeatInterval }}
+          value: {{ $.Values.heartbeatInterval | quote }}
         - name: ENABLE_ORACLE
           value: "1"
         - name: ORACLE_PORT
-          value: {{ $.Values.components.oracle.port }}
+          value: {{ $.Values.components.oracle.port | quote }}
         - name: ORACLE_INGRESS
           value: {{ $.Values.components.oracle.ingress.url | quote }}
         - name: PULL_ORACLE
@@ -70,9 +70,9 @@ spec:
         - name: PULL_QUEUE
           value: {{ $.Values.components.oracle.queue | quote }}
         - name: SOLANA_COMPUTE_UNIT_LIMIT
-          value: {{ $.Values.computeUnitLimit }}
+          value: {{ $.Values.computeUnitLimit | quote }}
         - name: SOLANA_COMPUTE_UNIT_PRICE
-          value: {{ $.Values.computeUnitPrice }}
+          value: {{ $.Values.computeUnitPrice | quote }}
         - name: RPC_URL
           value: {{ $.Values.rpcUrl | quote }}
         - name: WSS_RPC_URL

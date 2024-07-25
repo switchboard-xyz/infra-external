@@ -58,17 +58,17 @@ spec:
         - name: NETWORK_ID
           value: {{ $.Values.networkId | quote }}
         - name: HEARTBEAT_INTERVAL
-          value: {{ $.Values.heartbeatInterval }}
+          value: {{ $.Values.heartbeatInterval | quote }}
         - name: ENABLE_GATEWAY
           value: "1"
         - name: GATEWAY_PORT
-          value: {{ $.Values.components.gateway.port }}
+          value: {{ $.Values.components.gateway.port | quote }}
         - name: GATEWAY_INGRESS
           value: {{ $.Values.components.gateway.ingress.url | quote }}
         - name: SOLANA_COMPUTE_UNIT_LIMIT
-          value: {{ $.Values.computeUnitLimit }}
+          value: {{ $.Values.computeUnitLimit | quote }}
         - name: SOLANA_COMPUTE_UNIT_PRICE
-          value: {{ $.Values.computeUnitPrice }}
+          value: {{ $.Values.computeUnitPrice | quote }}
         - name: RPC_URL
           value: {{ $.Values.rpcUrl | quote }}
         - name: WSS_RPC_URL
