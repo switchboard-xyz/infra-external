@@ -217,7 +217,7 @@ spec:
   tls:
   - hosts:
     - {{ $.Values.host | quote }}
-    secretName: ingress-guardian-tls
+    secretName: ingress-tls
   rules:
   - host: {{ $.Values.host | quote }}
     http:
