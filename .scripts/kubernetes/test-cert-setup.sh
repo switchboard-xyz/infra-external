@@ -25,10 +25,6 @@ if [[ "${platform}" != "bare-metal" &&
 fi
 
 ingressClass="nginx"
-annotations=""
-if [[ "${platform}" == "azure" ]]; then
-  ingressClass="azure-application-gateway"
-fi
 
 cfg_dir="../../../cfg"
 cfg_common_file="${cfg_dir}/00-common-vars.cfg"
@@ -56,6 +52,7 @@ cat >"${TMP_FILE}" <<-EOF
 	    cert-manager.io/cluster-issuer: letsencrypt-staging-http
 	    acme.cert-manager.io/http01-edit-in-place: "true"
 	    cert-manager.io/issue-temporary-certificate: "true"
+	    kubernetes.io/ingress.class: ${ingressClass}
 	spec:
 	  ingressClassName: ${ingressClass}
 	  tls:

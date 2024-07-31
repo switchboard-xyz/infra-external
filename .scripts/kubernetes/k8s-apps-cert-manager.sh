@@ -10,9 +10,6 @@ if [[ "${platform}" != "bare-metal" &&
 fi
 
 ingressClass="nginx"
-if [[ "${platform}" == "azure" ]]; then
-  ingressClass="azure-application-gateway"
-fi
 
 # import vars
 source ../../../cfg/00-common-vars.cfg
@@ -36,10 +33,10 @@ echo "HELM: jetstack repo added"
 # https://artifacthub.io/packages/helm/cert-manager/cert-manager
 echo "HELM: installing cert-manager in your cluster"
 helm upgrade -i cert-manager \
-  --version v1.14.4 \
+  --version v1.15.1 \
   --create-namespace \
   --namespace cert-manager \
-  --set installCRDs=true \
+  --set crds.enabled=true \
   --set global.leaderElection.namespace=cert-manager \
   jetstack/cert-manager >/dev/null
 echo "HELM: cert-manager installed"
@@ -68,6 +65,7 @@ cat <<-EOF |
 	      - http01:
 	          ingress:
 	            ingressClassName: ${ingressClass}
+	            serviceType: ClusterIP
 	---
 	apiVersion: cert-manager.io/v1
 	kind: ClusterIssuer
@@ -83,6 +81,7 @@ cat <<-EOF |
 	      - http01:
 	          ingress:
 	            ingressClassName: ${ingressClass}
+	            serviceType: ClusterIP
 EOF
   kubectl apply -f - >/dev/null
 echo "KUBECTL: CertIssuer configuration created"

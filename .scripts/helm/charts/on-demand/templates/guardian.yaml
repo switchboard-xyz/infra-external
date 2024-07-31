@@ -95,15 +95,12 @@ spec:
         - name: KEYPAIR_PATH
           value: "/data/protected_files/keypair.bin"
         - name: PAYER_SECRET
-          {{ if or (ne $.Values.payerSecretKey "") (ne $.Values.infisical.secret.key "") }}
+          {{ if or (ne $.Values.payerSecretKey "") }}
           valueFrom:
             secretKeyRef:
               {{ if $.Values.payerSecretKey }}
               name: payer-secret
               key: {{  $.Values.payerSecretKey | quote }}
-              {{ else if $.Values.infisical.secret.key }}
-              name: payer-secret
-              key: {{  $.Values.infisical.secret.key | quote }}
               {{ end }}
           {{ else }}
           value: {{ $.Values.payerSecret | quote }}
