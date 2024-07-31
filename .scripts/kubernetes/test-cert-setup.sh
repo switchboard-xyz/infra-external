@@ -2,7 +2,6 @@
 set -u -e
 
 cluster="${1:-devnet}"
-platform="$(echo ${2:-bare-metal} | tr '[:upper:]' '[:lower:]')"
 
 if [[ "${cluster}" == "mainnet-beta" ]]; then
   cluster="mainnet"
@@ -13,14 +12,7 @@ if [[ "${cluster}" != "v2" &&
   "${cluster}" != "mainnet" &&
   "${cluster}" != "mainnet-beta" ]]; then
   echo "Only valid cluster values are 'devnet' and 'mainnet'/'mainnet-beta'."
-  echo "syntax: $0 [<cluster>] [<platform>]"
-  exit 1
-fi
-
-if [[ "${platform}" != "bare-metal" &&
-  "${platform}" != "azure" ]]; then
-  echo "Only valid 'platform' values are 'bare-metal' (default) and 'azure'."
-  echo "syntax: $0 [<cluster>] [<platform>]"
+  echo "syntax: $0 [<cluster>]"
   exit 1
 fi
 
