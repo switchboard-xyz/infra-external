@@ -14,6 +14,20 @@ if [[ "${cluster}" != "devnet" &&
   exit 1
 fi
 
+export ORACLE_DOCKER_IMAGE=""
+export GUARDIAN_DOCKER_IMAGE=""
+export GATEWAY_DOCKER_IMAGE=""
+
+if [[ "${cluster}" == "devnet" ]]; then
+  ORACLE_DOCKER_IMAGE="docker.io/switchboardlabs/oracle:devnet"
+  GUARDIAN_DOCKER_IMAGE="docker.io/switchboardlabs/guardian:devnet"
+  GATEWAY_DOCKER_IMAGE="docker.io/switchboardlabs/gateway:devnet"
+else
+  ORACLE_DOCKER_IMAGE="docker.io/switchboardlabs/oracle:stable"
+  GUARDIAN_DOCKER_IMAGE="docker.io/switchboardlabs/guardian:stable"
+  GATEWAY_DOCKER_IMAGE="docker.io/switchboardlabs/gateway:stable"
+fi
+
 cfg_dir="../../../cfg"
 cfg_common_file="${cfg_dir}/00-common-vars.cfg"
 cfg_cluster_file="${cfg_dir}/00-${cluster}-vars.cfg"
@@ -61,20 +75,6 @@ if [[ "${PAYER_SECRET_KEY}" != "" ]]; then
   echo "KUBECTL: secret ${NAMESPACE}/payer-secret created"
 fi
 set -u
-
-export ORACLE_DOCKER_IMAGE=""
-export GUARDIAN_DOCKER_IMAGE=""
-export GATEWAY_DOCKER_IMAGE=""
-
-if [[ "${cluster}" == "devnet" ]]; then
-  ORACLE_DOCKER_IMAGE="docker.io/switchboardlabs/oracle:devnet"
-  GUARDIAN_DOCKER_IMAGE="docker.io/switchboardlabs/guardian:devnet"
-  GATEWAY_DOCKER_IMAGE="docker.io/switchboardlabs/gateway:devnet"
-else
-  ORACLE_DOCKER_IMAGE="docker.io/switchboardlabs/oracle:stable"
-  GUARDIAN_DOCKER_IMAGE="docker.io/switchboardlabs/guardian:stable"
-  GATEWAY_DOCKER_IMAGE="docker.io/switchboardlabs/gateway:stable"
-fi
 
 echo "HELM: Installing Switchboard Oracle under namespace ${NAMESPACE}"
 helm upgrade -i "sb-oracle-${NETWORK}" \
