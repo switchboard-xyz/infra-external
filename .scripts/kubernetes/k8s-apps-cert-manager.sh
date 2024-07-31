@@ -1,14 +1,6 @@
 #!/usr/bin/env bash
 set -u -e
 
-platform="$(echo ${1:-bare-metal} | tr '[:upper:]' '[:lower:]')"
-if [[ "${platform}" != "bare-metal" &&
-  "${platform}" != "azure" ]]; then
-  echo "Only valid 'platform' values are 'bare-metal' (default) and 'azure'."
-  echo "syntax: $0 [<platform>]"
-  exit 1
-fi
-
 ingressClass="nginx"
 
 # import vars
