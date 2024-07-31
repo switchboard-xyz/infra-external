@@ -3,14 +3,15 @@ cluster="${1:-devnet}"
 PAYER_FILE="/data/${cluster}_payer.json"
 
 if [[ "${cluster}" == "mainnet" ]]; then
-	cluster="mainnet-beta"
+  cluster="mainnet-beta"
 fi
 
-if [[ "${cluster}" != "devnet" &&
-	"${cluster}" != "mainnet" &&
-	"${cluster}" != "mainnet-beta" ]]; then
-	echo "Only valid cluster values are 'devnet' and 'mainnet'/'mainnet-beta'."
-	exit 1
+if [[ "${cluster}" != "v2" &&
+  "${cluster}" != "devnet" &&
+  "${cluster}" != "mainnet" &&
+  "${cluster}" != "mainnet-beta" ]]; then
+  echo "Only valid cluster values are 'devnet' and 'mainnet'/'mainnet-beta'."
+  exit 1
 fi
 
 echo " "
@@ -23,7 +24,7 @@ echo "==================================================="
 echo " "
 echo "Installing deps.. usually about 1-2 minutes."
 apt-get update >/dev/null 2>&1 &&
-	apt-get install -y ca-certificates >/dev/null 2>&1
+  apt-get install -y ca-certificates >/dev/null 2>&1
 
 solana-keygen new --force --word-count 24 -o "${PAYER_FILE}"
 
@@ -39,9 +40,9 @@ echo "==================================================="
 
 # only on devnet
 if [[ "${cluster}" == "devnet" ]]; then
-	echo " "
-	echo "Requesting self-funding of 5 SOL on devnet:"
-	solana airdrop 5 -u "${cluster}" -k "${PAYER_FILE}"
+  echo " "
+  echo "Requesting self-funding of 5 SOL on devnet:"
+  solana airdrop 5 -u "${cluster}" -k "${PAYER_FILE}"
 fi
 
 echo " "

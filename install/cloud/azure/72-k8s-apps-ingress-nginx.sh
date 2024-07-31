@@ -1,0 +1,1 @@
+../../../.scripts/kubernetes/k8s-apps-ingress-nginx.sh

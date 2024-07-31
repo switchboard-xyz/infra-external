@@ -40,7 +40,9 @@ echo "===="
 echo " "
 
 if [[ "$(kubectl get ns | grep -e '^'${NAMESPACE}'\W')" == "" ]]; then
+  echo "KUBECTL: creating Namespace ${NAMESPACE}"
   kubectl create namespace "${NAMESPACE}"
+  echo "KUBECTL: Namespace ${NAMESPACE} created"
 fi
 
 helm_dir="../../../.scripts/helm/"
@@ -55,7 +57,21 @@ source ../../../.scripts/var/_load_vars.sh
 set +u
 load_vars "${tmp_helm_file}" >/dev/null 2>&1
 
+echo "HELM: Installing Switchboard Oracle under namespace ${NAMESPACE}"
+helm upgrade -i "sb-oracle-${NETWORK}" \
+  -n "${NAMESPACE}" --create-namespace \
+  -f "${helm_default_values_file}" \
+  -f "${tmp_helm_file}" \
+  --set components.oracle.image="${ORACLE_DOCKER_IMAGE}" \
+  --set components.guardian.image="${GUARDIAN_DOCKER_IMAGE}" \
+  --set components.gateway.image="${GATEWAY_DOCKER_IMAGE}" \
+  "${helm_chart_dir}" >/dev/null
+echo "HELM: Switchboard Oracle installed under namespace ${NAMESPACE}"
+
+rm "${tmp_helm_file}"
+
 if [[ "${PAYER_SECRET_KEY}" != "" ]]; then
+  echo "KUBECTL: creating secret ${NAMESPACE}/payer-secret"
   # delete pre-existing secret
   set +e
   kubectl \
@@ -68,17 +84,7 @@ if [[ "${PAYER_SECRET_KEY}" != "" ]]; then
     -n "${NAMESPACE}" \
     create secret generic \
     --from-file="${PAYER_SECRET_KEY}=../../../data/${cluster}_payer.json" \
-    payer-secret
+    payer-secret >/dev/null
+  echo "KUBECTL: secret ${NAMESPACE}/payer-secret created"
 fi
 set -u
-
-helm upgrade -i "sb-oracle-${NETWORK}" \
-  -n "${NAMESPACE}" --create-namespace \
-  -f "${helm_default_values_file}" \
-  -f "${tmp_helm_file}" \
-  --set components.oracle.image="${ORACLE_DOCKER_IMAGE}" \
-  --set components.guardian.image="${GUARDIAN_DOCKER_IMAGE}" \
-  --set components.gateway.image="${GATEWAY_DOCKER_IMAGE}" \
-  "${helm_chart_dir}"
-
-rm "${tmp_helm_file}"

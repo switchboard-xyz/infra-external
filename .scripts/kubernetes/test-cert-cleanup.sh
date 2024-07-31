@@ -25,14 +25,10 @@ source "${cfg_cluster_file}"
 TMP_FILE="./testcert.yml"
 
 echo " "
-echo "======"
-echo "This step will delete the tmp file and resources created in the previous step."
-echo "======"
+echo "KUBECTL: deleting tmp file and resources created in the previous step."
 echo " "
 
-kubectl delete -n "${NAMESPACE}" -f "${TMP_FILE}" && rm -f "${TMP_FILE}"
+kubectl delete -n "${NAMESPACE}" -f "${TMP_FILE}" >/dev/null &&
+  rm -f "${TMP_FILE}"
 
 echo " "
-echo "======"
-echo "This step is complete, please proceed with the next step."
-echo "======"
