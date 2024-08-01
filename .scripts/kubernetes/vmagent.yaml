@@ -16,6 +16,8 @@ config:
       metrics_path: /metrics
       kubernetes_sd_configs:
         - role: pod
+          namespaces:
+            own_namespace: true
 
       metric_relabel_configs:
       - if: '{__name__=~"^switchboard_.*$|^up$"}'
@@ -76,6 +78,8 @@ config:
       metrics_path: /metrics
       kubernetes_sd_configs:
         - role: pod
+          namespaces:
+            own_namespace: true
 
       metric_relabel_configs:
       - if: '{__name__=~"^switchboard_.*$|^up$"}'
@@ -136,6 +140,8 @@ config:
       metrics_path: /metrics
       kubernetes_sd_configs:
         - role: pod
+          namespaces:
+            own_namespace: true
 
       metric_relabel_configs:
       - if: '{__name__=~"^switchboard_.*$|^up$"}'

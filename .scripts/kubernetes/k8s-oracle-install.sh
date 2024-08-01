@@ -14,6 +14,8 @@ if [[ "${cluster}" != "devnet" &&
   exit 1
 fi
 
+export GUARDIAN_ENABLED="true"
+
 export ORACLE_DOCKER_IMAGE=""
 export GUARDIAN_DOCKER_IMAGE=""
 export GATEWAY_DOCKER_IMAGE=""
@@ -65,6 +67,7 @@ helm upgrade -i "sb-oracle-${NETWORK}" \
   --set components.oracle.image="${ORACLE_DOCKER_IMAGE}" \
   --set components.guardian.image="${GUARDIAN_DOCKER_IMAGE}" \
   --set components.gateway.image="${GATEWAY_DOCKER_IMAGE}" \
+  --set components.guardian.enabled="${GUARDIAN_ENABLED}" \
   "${helm_chart_dir}" >/dev/null
 echo "HELM: Switchboard Oracle installed under namespace ${NAMESPACE}"
 

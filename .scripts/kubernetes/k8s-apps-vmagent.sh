@@ -27,12 +27,11 @@ helm repo add vm https://victoriametrics.github.io/helm-charts/ >/dev/null
 helm repo update >/dev/null
 echo "HELM: VictoriaMetrics repo added"
 
-VMAGENT_NS="vmagent-${cluster}"
-echo "KUBECTL: creating namespace ${VMAGENT_NS}"
-if [[ "$(kubectl get ns | grep -e '^'${VMAGENT_NS}'\W')" == "" ]]; then
-  kubectl create namespace "${VMAGENT_NS}" >/dev/null
+if [[ "$(kubectl get ns | grep -e '^'${NAMESPACE}'\W')" == "" ]]; then
+  echo "KUBECTL: creating namespace ${NAMESPACE}"
+  kubectl create namespace "${NAMESPACE}" >/dev/null
+  echo "KUBECTL: namespace ${NAMESPACE} created"
 fi
-echo "KUBECTL: namespace ${VMAGENT_NS} created"
 
 tmp_helm_file="/tmp/helm_values.yaml"
 
@@ -46,13 +45,13 @@ set +u
 load_vars "${tmp_helm_file}" >/dev/null 2>&1
 set -u
 
-echo "KUBECTL: creating ConfigMap ${VMAGENT_NS}/vmagent-env (remove and recreate if exists)"
+echo "KUBECTL: creating ConfigMap ${NAMESPACE}/vmagent-env (remove and recreate if exists)"
 set +e
-kubectl delete configmap -n "${VMAGENT_NS}" vmagent-env >/dev/null 2>&1
+kubectl delete configmap -n "${NAMESPACE}" vmagent-env >/dev/null 2>&1
 set -e
 
 kubectl create configmap \
-  -n "${VMAGENT_NS}" \
+  -n "${NAMESPACE}" \
   --from-env-file="${tmp_helm_file}" \
   vmagent-env >/dev/null
 echo "KUBECTL: creation completed"
@@ -61,7 +60,7 @@ rm "${tmp_helm_file}"
 
 echo "HELM: installing VictoriaMetrics Agent in your cluster"
 helm upgrade -i "vmagent-${cluster}" \
-  -n "${VMAGENT_NS}" \
+  -n "${NAMESPACE}" \
   -f "../../../.scripts/kubernetes/vmagent.yaml" \
   vm/victoria-metrics-agent >/dev/null
 echo "HELM: VictoriaMetrics Agent installed"
