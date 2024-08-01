@@ -61,6 +61,7 @@ rm "${tmp_helm_file}"
 echo "HELM: installing VictoriaMetrics Agent in your cluster"
 helm upgrade -i "vmagent-${cluster}" \
   -n "${NAMESPACE}" \
+  --set "rbac.namespaced=true" \
   -f "../../../.scripts/kubernetes/vmagent.yaml" \
   vm/victoria-metrics-agent >/dev/null
 echo "HELM: VictoriaMetrics Agent installed"
