@@ -64,6 +64,7 @@ helm upgrade -i "sb-oracle-${NETWORK}" \
   -n "${NAMESPACE}" --create-namespace \
   -f "${helm_default_values_file}" \
   -f "${tmp_helm_file}" \
+  --set components.docker_image_tag="${DOCKER_IMAGE_TAG}" \
   --set components.oracle.image="${ORACLE_DOCKER_IMAGE}" \
   --set components.guardian.image="${GUARDIAN_DOCKER_IMAGE}" \
   --set components.gateway.image="${GATEWAY_DOCKER_IMAGE}" \

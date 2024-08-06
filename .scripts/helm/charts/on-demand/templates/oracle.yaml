@@ -42,7 +42,7 @@ spec:
       dnsPolicy: ClusterFirst # TODO: probably not needed.. to be removed
 
       containers:
-      - image: {{ $.Values.components.oracle.image | quote }}
+      - image: {{ printf "%s:%s" $.Values.components.oracle.image $.Values.components.docker_image_tag | quote }}
         imagePullPolicy: Always #Always #IfNotPresent
         name: oracle
 
@@ -53,7 +53,7 @@ spec:
 
         env:
         - name: DOCKER_IMAGE_TAG
-          value: {{ $.Values.components.oracle.image | quote }}
+          value: {{ $.Values.components.docker_image_tag | quote }}
         - name: CHAIN
           value: {{ $.Values.chain | quote }}
         - name: CLUSTER
