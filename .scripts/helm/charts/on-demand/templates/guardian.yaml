@@ -42,7 +42,7 @@ spec:
       dnsPolicy: ClusterFirst # TODO: probably not needed.. to be removed
 
       containers:
-      - image: {{ $.Values.components.guardian.image | quote }}
+      - image: {{ printf "%s:%s" $.Values.components.guardian.image $.Values.components.docker_image_tag | quote }}
         imagePullPolicy: Always #Always #IfNotPresent
         name: guardian
 
@@ -53,7 +53,7 @@ spec:
 
         env:
         - name: DOCKER_IMAGE_TAG
-          value: {{ $.Values.components.guardian.image | quote }}
+          value: {{ $.Values.components.docker_image_tag | quote }}
         - name: CHAIN
           value: {{ $.Values.chain | quote }}
         - name: CLUSTER
