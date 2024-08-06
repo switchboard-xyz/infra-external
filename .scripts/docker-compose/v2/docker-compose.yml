@@ -45,7 +45,6 @@ services:
       PAYER_SECRET_FILEPATH: /run/secrets/deprecated_v2_payer_secret
       PAYER_KEY: ""
       ORACLE_AUTHORITY: ""
-      DOCKER_IMAGE_TAG: ${ORACLE_DOCKER_IMAGE:-docker.io/switchboardlabs/pull-oracle:v2-on-v3}
     privileged: true
     stdin_open: true
     tty: true
