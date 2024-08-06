@@ -24,6 +24,7 @@ services:
       - devnet
     environment:
       PAYER_SECRET_FILEPATH: /run/secrets/devnet_payer_secret
+      DOCKER_IMAGE_TAG: ${ORACLE_DOCKER_IMAGE:-docker.io/switchboardlabs/oracle:devnet}
     secrets:
       - devnet_payer_secret
     env_file:
@@ -45,6 +46,7 @@ services:
       - devnet
     environment:
       PAYER_SECRET_FILEPATH: /run/secrets/devnet_payer_secret
+      DOCKER_IMAGE_TAG: ${GUARDIAN_DOCKER_IMAGE:-docker.io/switchboardlabs/guardian:devnet}
     secrets:
       - devnet_payer_secret
     env_file:
@@ -66,6 +68,7 @@ services:
       - devnet
     environment:
       PAYER_SECRET_FILEPATH: /run/secrets/devnet_payer_secret
+      DOCKER_IMAGE_TAG: ${GATEWAY_DOCKER_IMAGE:-docker.io/switchboardlabs/gateway:devnet}
     secrets:
       - devnet_payer_secret
     env_file:

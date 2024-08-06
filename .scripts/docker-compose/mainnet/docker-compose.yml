@@ -24,6 +24,7 @@ services:
       - mainnet
     environment:
       PAYER_SECRET_FILEPATH: /run/secrets/mainnet_payer_secret
+      DOCKER_IMAGE_TAG: ${GUARDIAN_DOCKER_IMAGE:-docker.io/switchboardlabs/oracle:stable}
     secrets:
       - mainnet_payer_secret
     env_file:
@@ -45,6 +46,7 @@ services:
       - mainnet
     environment:
       PAYER_SECRET_FILEPATH: /run/secrets/mainnet_payer_secret
+      DOCKER_IMAGE_TAG: ${GUARDIAN_DOCKER_IMAGE:-docker.io/switchboardlabs/guardian:stable}
     secrets:
       - mainnet_payer_secret
     env_file:
@@ -66,6 +68,7 @@ services:
       - mainnet
     environment:
       PAYER_SECRET_FILEPATH: /run/secrets/mainnet_payer_secret
+      DOCKER_IMAGE_TAG: ${GUARDIAN_DOCKER_IMAGE:-docker.io/switchboardlabs/gateway:stable}
     secrets:
       - mainnet_payer_secret
     env_file:
