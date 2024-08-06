@@ -16,7 +16,7 @@ services:
     extends:
       file: ../common/oracle.yml
       service: oracle
-    image: ${ORACLE_DOCKER_IMAGE:-docker.io/switchboardlabs/oracle:devnet}
+    image: ${ORACLE_DOCKER_IMAGE}:${DEVNET_DOCKER_IMAGE_TAG}
     container_name: devnet-oracle
     volumes:
       - ../../../data/devnet_protected_files/:/data/protected_files/
@@ -37,7 +37,7 @@ services:
     extends:
       file: ../common/guardian.yml
       service: guardian
-    image: ${GUARDIAN_DOCKER_IMAGE:-docker.io/switchboardlabs/guardian:devnet}
+    image: ${GUARDIAN_DOCKER_IMAGE}:${DEVNET_DOCKER_IMAGE_TAG}
     container_name: devnet-guardian
     volumes:
       - ../../../data/devnet_protected_files/:/data/protected_files/
@@ -58,7 +58,7 @@ services:
     extends:
       file: ../common/gateway.yml
       service: gateway
-    image: ${GATEWAY_DOCKER_IMAGE:-docker.io/switchboardlabs/gateway:devnet}
+    image: ${GATEWAY_DOCKER_IMAGE}:${DEVNET_DOCKER_IMAGE_TAG}
     container_name: devnet-gateway
     volumes:
       - ../../../data/devnet_protected_files/:/data/protected_files/

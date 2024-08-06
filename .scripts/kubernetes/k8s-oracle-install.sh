@@ -16,19 +16,13 @@ fi
 
 export GUARDIAN_ENABLED="true"
 
-export ORACLE_DOCKER_IMAGE=""
-export GUARDIAN_DOCKER_IMAGE=""
-export GATEWAY_DOCKER_IMAGE=""
-
-if [[ "${cluster}" == "devnet" ]]; then
-  ORACLE_DOCKER_IMAGE="docker.io/switchboardlabs/oracle:devnet"
-  GUARDIAN_DOCKER_IMAGE="docker.io/switchboardlabs/guardian:devnet"
-  GATEWAY_DOCKER_IMAGE="docker.io/switchboardlabs/gateway:devnet"
-else
-  ORACLE_DOCKER_IMAGE="docker.io/switchboardlabs/oracle:stable"
-  GUARDIAN_DOCKER_IMAGE="docker.io/switchboardlabs/guardian:stable"
-  GATEWAY_DOCKER_IMAGE="docker.io/switchboardlabs/gateway:stable"
-fi
+# defaults - these variables can be changed via `cfg/` files
+export DEVNET_DOCKER_IMAGE_TAG="devnet"
+export MAINNET_DOCKER_IMAGE_TAG="stable"
+export V2_DOCKER_IMAGE_TAG="v2-on-v3"
+export ORACLE_DOCKER_IMAGE="docker.io/switchboardlabs/oracle"
+export GUARDIAN_DOCKER_IMAGE="docker.io/switchboardlabs/guardian"
+export GATEWAY_DOCKER_IMAGE="docker.io/switchboardlabs/gateway"
 
 cfg_dir="../../../cfg"
 cfg_common_file="${cfg_dir}/00-common-vars.cfg"
