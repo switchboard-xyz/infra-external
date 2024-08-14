@@ -94,8 +94,6 @@ spec:
           value: {{ $.Values.wssRpcUrl | quote }}
         - name: TASK_RUNNER_SOLANA_RPC
           value: {{ $.Values.solanaMainnetRpc | quote }}
-        - name: KEYPAIR_PATH
-          value: "/data/protected_files/keypair.bin"
         - name: PAYER_SECRET
           {{ if or (ne $.Values.payerSecretKey "") }}
           valueFrom:
