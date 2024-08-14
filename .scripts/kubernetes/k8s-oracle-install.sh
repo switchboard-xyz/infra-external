@@ -63,6 +63,7 @@ helm upgrade -i "sb-oracle-${NETWORK}" \
   --set components.guardian.image="${GUARDIAN_DOCKER_IMAGE}" \
   --set components.gateway.image="${GATEWAY_DOCKER_IMAGE}" \
   --set components.guardian.enabled="${GUARDIAN_ENABLED}" \
+  --set "../../../data/${cluster}_protected_files" \
   "${helm_chart_dir}" >/dev/null
 echo "HELM: Switchboard Oracle installed under namespace ${NAMESPACE}"
 

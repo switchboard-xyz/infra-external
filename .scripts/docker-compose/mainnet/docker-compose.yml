@@ -39,8 +39,6 @@ services:
       service: guardian
     image: ${GUARDIAN_DOCKER_IMAGE}:${MAINNET_DOCKER_IMAGE_TAG}
     container_name: mainnet-guardian
-    volumes:
-      - ../../../data/mainnet_protected_files/:/data/protected_files/
     networks:
       - mainnet
     environment:
@@ -60,8 +58,6 @@ services:
       service: gateway
     image: ${GATEWAY_DOCKER_IMAGE}:${MAINNET_DOCKER_IMAGE_TAG}
     container_name: mainnet-gateway
-    volumes:
-      - ../../../data/mainnet_protected_files/:/data/protected_files/
     networks:
       - mainnet
     environment:

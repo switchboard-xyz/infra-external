@@ -39,8 +39,6 @@ services:
       service: guardian
     image: ${GUARDIAN_DOCKER_IMAGE}:${DEVNET_DOCKER_IMAGE_TAG}
     container_name: devnet-guardian
-    volumes:
-      - ../../../data/devnet_protected_files/:/data/protected_files/
     networks:
       - devnet
     environment:
@@ -60,8 +58,6 @@ services:
       service: gateway
     image: ${GATEWAY_DOCKER_IMAGE}:${DEVNET_DOCKER_IMAGE_TAG}
     container_name: devnet-gateway
-    volumes:
-      - ../../../data/devnet_protected_files/:/data/protected_files/
     networks:
       - devnet
     environment:
