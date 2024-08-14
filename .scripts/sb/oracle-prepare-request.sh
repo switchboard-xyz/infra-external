@@ -1,5 +1,5 @@
 cluster="${1:-devnet}"
-price="${2:-10000}"
+priorityFee="${2:-10000}"
 
 PAYER_FILE="/data/${cluster}_payer.json"
 
@@ -78,7 +78,7 @@ if [[ "${register_oracle}" == "y" || "${register_oracle}" == "Y" ]]; then
   sb solana on-demand oracle create \
     --queue "${queueKey}" \
     --cluster "${cluster}" \
-    --price "${price}" \
+    --priorityFee "${priorityFee}" \
     --keypair "${PAYER_FILE}"
 fi
 
@@ -86,7 +86,7 @@ if [[ "${register_guardian}" == "y" || "${register_guardian}" == "Y" ]]; then
   echo " "
   sb solana on-demand guardian create \
     --cluster "${cluster}" \
-    --price "${price}" \
+    --priorityFee "${priorityFee}" \
     --keypair "${PAYER_FILE}"
 fi
 
