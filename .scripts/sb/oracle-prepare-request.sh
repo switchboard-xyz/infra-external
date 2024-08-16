@@ -39,7 +39,7 @@ if [[ "$(type -p sb)" == "" ]]; then
   echo " "
   echo "Installing Switchboard CLI now... please wait."
   echo "This step usually takes about 2 minutes."
-  npm i -g "@switchboard-xyz/cli@3.5.6" >/dev/null 2>&1
+  npm i -g "@switchboard-xyz/cli@3.5.8" >/dev/null 2>&1
 fi
 
 echo " "
