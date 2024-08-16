@@ -24,7 +24,7 @@ export ORACLE_DOCKER_IMAGE="docker.io/switchboardlabs/oracle"
 export GUARDIAN_DOCKER_IMAGE="docker.io/switchboardlabs/guardian"
 export GATEWAY_DOCKER_IMAGE="docker.io/switchboardlabs/gateway"
 
-repo_dir="../../.."
+repo_dir="$(readlink -f ../../..)"
 
 cfg_dir="${repo_dir}/cfg"
 cfg_common_file="${cfg_dir}/00-common-vars.cfg"
@@ -51,7 +51,7 @@ tmp_helm_file="/tmp/helm_values.yaml"
 
 cp "${helm_values_file}" "${tmp_helm_file}"
 
-source ../../../.scripts/var/_load_vars.sh
+source "${repo_dir}"/.scripts/var/_load_vars.sh
 set +u
 load_vars "${tmp_helm_file}" >/dev/null 2>&1
 
