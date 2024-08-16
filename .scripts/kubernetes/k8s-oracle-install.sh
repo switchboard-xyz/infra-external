@@ -24,7 +24,9 @@ export ORACLE_DOCKER_IMAGE="docker.io/switchboardlabs/oracle"
 export GUARDIAN_DOCKER_IMAGE="docker.io/switchboardlabs/guardian"
 export GATEWAY_DOCKER_IMAGE="docker.io/switchboardlabs/gateway"
 
-cfg_dir="../../../cfg"
+repo_dir="../../.."
+
+cfg_dir="${repo_dir}/cfg"
 cfg_common_file="${cfg_dir}/00-common-vars.cfg"
 cfg_cluster_file="${cfg_dir}/00-${cluster}-vars.cfg"
 
@@ -41,7 +43,7 @@ if [[ "$(kubectl get ns | grep -e '^'${NAMESPACE}'\W')" == "" ]]; then
   echo "KUBECTL: Namespace ${NAMESPACE} created"
 fi
 
-helm_dir="../../../.scripts/helm/"
+helm_dir="${repo_dir}/.scripts/helm/"
 helm_chart_dir="${helm_dir}/charts/on-demand/"
 helm_default_values_file="${helm_chart_dir}/values.yaml"
 helm_values_file="${helm_dir}/cfg/${cluster}-solana-values.yaml"
@@ -53,6 +55,11 @@ source ../../../.scripts/var/_load_vars.sh
 set +u
 load_vars "${tmp_helm_file}" >/dev/null 2>&1
 
+sgx_data_dir="${repo_dir}/data/${cluster}_protected_files"
+if [ ! -d "${repo_dir}" ]; then
+  mkdir "${repo_dir}"
+fi
+
 echo "HELM: Installing Switchboard Oracle under namespace ${NAMESPACE}"
 helm upgrade -i "sb-oracle-${NETWORK}" \
   -n "${NAMESPACE}" --create-namespace \
@@ -63,7 +70,7 @@ helm upgrade -i "sb-oracle-${NETWORK}" \
   --set components.guardian.image="${GUARDIAN_DOCKER_IMAGE}" \
   --set components.gateway.image="${GATEWAY_DOCKER_IMAGE}" \
   --set components.guardian.enabled="${GUARDIAN_ENABLED}" \
-  --set "../../../data/${cluster}_protected_files" \
+  --set sgx_sealed_files="${sgx_data_dir}" \
   "${helm_chart_dir}" >/dev/null
 echo "HELM: Switchboard Oracle installed under namespace ${NAMESPACE}"
 
