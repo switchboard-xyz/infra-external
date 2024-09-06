@@ -47,14 +47,14 @@ components:
     resources:
       limits:
         cpu: "3000m"
-        memory: "8000Mi"
+        memory: "12000Mi"
         sgx:
           epc: "64Mi"
           enclave: 1
           provision: 1
       requests:
         cpu: "1500m"
-        memory: "4000Mi"
+        memory: "8000Mi"
         sgx:
           epc: "64Mi"
           enclave: 1
@@ -80,14 +80,14 @@ components:
     resources:
       limits:
         cpu: "3000m"
-        memory: "8000Mi"
+        memory: "4000Mi"
         sgx:
           epc: "64Mi"
           enclave: 1
           provision: 1
       requests:
         cpu: "1500m"
-        memory: "4000Mi"
+        memory: "2000Mi"
         sgx:
           epc: "64Mi"
           enclave: 1
@@ -111,14 +111,14 @@ components:
     resources:
       limits:
         cpu: "3000m"
-        memory: "8000Mi"
+        memory: "12000Mi"
         sgx:
           epc: "64Mi"
           enclave: 1
           provision: 1
       requests:
         cpu: "1500m"
-        memory: "4000Mi"
+        memory: "8000Mi"
         sgx:
           epc: "64Mi"
           enclave: 1
