@@ -6,3 +6,6 @@ d15816afb3cac3594a3dd9c474bf7ca7ab2cedad:scripts/install/docker/00-vars.env:gene
 e08a5bfb3b945560db82a64b85a12f3c98bfb972:.scripts/sb/oracle-prepare-request.sh:generic-api-key:21
 edac83d6599c561a51a84a9646c8ede3a4b8f62c:.scripts/helm/cfg/devnet-solana-values.yaml:generic-api-key:41
 edac83d6599c561a51a84a9646c8ede3a4b8f62c:.scripts/helm/cfg/mainnet-solana-values.yaml:generic-api-key:41
+fab5f2cf7a47cf204f098dedb565f4de0e0eb944:.scripts/sb/oracle-prepare-request.sh:generic-api-key:19
+fab5f2cf7a47cf204f098dedb565f4de0e0eb944:.scripts/sb/oracle-check-perms.sh:generic-api-key:13
+fab5f2cf7a47cf204f098dedb565f4de0e0eb944:.scripts/sb/oracle-check-perms.sh:generic-api-key:14
