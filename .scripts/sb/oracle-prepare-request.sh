@@ -16,7 +16,7 @@ fi
 
 queueKey=""
 if [[ "${cluster}" == "devnet" ]]; then
-  queueKey="FfD96yeXs4cxZshoPPSKhSPgVQxLAJUT3gefgh84m1Di"
+  queueKey="EYiAmGSdsQTuCw413V5BzaruWuCCSDgTPtBGvLkXHbe7"
 elif [[ "${cluster}" == "mainnet-beta" ]]; then
   queueKey="A43DyUGA7s8eXPxqEjJY6EBu1KKbNgfxF8h17VAHn13w"
 fi
