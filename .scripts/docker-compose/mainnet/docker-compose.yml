@@ -30,6 +30,14 @@ services:
       - ../../../cfg/00-common-vars.cfg
       - ./mainnet.env
       - ../../../cfg/00-mainnet-vars.cfg
+    deploy:
+      resources:
+        limits:
+          cpus: '3'
+          memory: 12000M
+        reservations:
+          cpus: '1.5'
+          memory: 8000M
   # END ORACLE
 
   # BEGIN GUARDIAN
@@ -49,6 +57,14 @@ services:
       - ../../../cfg/00-common-vars.cfg
       - ./mainnet.env
       - ../../../cfg/00-mainnet-vars.cfg
+    deploy:
+      resources:
+        limits:
+          cpus: '3'
+          memory: 4000M
+        reservations:
+          cpus: '1.5'
+          memory: 2000M
   # END GUARDIAN
 
   # BEGIN GATEWAY
@@ -68,6 +84,14 @@ services:
       - ../../../cfg/00-common-vars.cfg
       - ./mainnet.env
       - ../../../cfg/00-mainnet-vars.cfg
+    deploy:
+      resources:
+        limits:
+          cpus: '3'
+          memory: 12000M
+        reservations:
+          cpus: '1.5'
+          memory: 8000M
   # END GATEWAY
 
   # BEGIN VMAGENT
