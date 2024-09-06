@@ -16,7 +16,7 @@ sleep 3
 set -e
 
 export use_docker="${1:-''}"
-export image="docker.io/library/node:22-bookworm"
+export image="docker.io/switchboardlabs/sb-utils:3.5.8"
 
 if [[ "${use_docker}" != "--docker" ]]; then
 	set +e

@@ -10,8 +10,8 @@ fi
 queueKey=""
 guardianQueueKey=""
 if [[ "${cluster}" == "devnet" ]]; then
-	queueKey="FfD96yeXs4cxZshoPPSKhSPgVQxLAJUT3gefgh84m1Di"
-	guardianQueueKey="Did69tHXs3NTTomR4ZBzttKjB6W3dssavL8uafVbJ1Q"
+	queueKey="EYiAmGSdsQTuCw413V5BzaruWuCCSDgTPtBGvLkXHbe7"
+	guardianQueueKey="BeZ4tU4HNe2fGQGUzJmNS2UU2TcZdMUUgnCH6RPg4Dpi"
 elif [[ "${cluster}" == "mainnet-beta" || "${cluster}" == "mainnet" ]]; then
 	queueKey="A43DyUGA7s8eXPxqEjJY6EBu1KKbNgfxF8h17VAHn13w"
 	guardianQueueKey="B7WgdyAgzK7yGoxfsBaNnY6d41bTybTzEh4ZuQosnvLK"
@@ -23,13 +23,6 @@ echo "=  YOU ARE NOW IN A TEMPORARY CONTAINER. PLEASE   ="
 echo "=  FOLLOW THE INSTRUCTIONS BELOW AND THE DOCS.    ="
 echo "==================================================="
 echo " "
-
-if [[ -z "$(which sb)" ]]; then
-	echo " "
-	echo "Installing Switchboard CLI now... please wait."
-	echo "This step usually takes about 2 minutes."
-	npm i -g "@switchboard-xyz/cli@3.5.2" >/dev/null 2>&1
-fi
 
 echo " "
 export register_guardian=""

@@ -14,7 +14,7 @@ pkill -15 "${CTR_NAME}"
 set -e
 
 export use_docker="${1:-''}"
-export image="docker.io/solanalabs/solana:stable"
+export image="docker.io/switchboardlabs/sb-utils:3.5.8"
 
 if [[ "${use_docker}" != "--docker" ]]; then
 	ctr i pull "${image}"
