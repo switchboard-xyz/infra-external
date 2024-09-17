@@ -7,3 +7,7 @@ sed -i 's?.*devnet/docker-compose.yml.*?  #- devnet/docker-compose.yml?g' docker
 sed -i 's?.*#*.*devnet:?  #devnet:?g' common/networks.yml
 
 sed -i 's?.*#*.*- devnet$?      #- devnet?g' common/webserver.yml
+
+echo " "
+echo "DEVNET environment - DISABLED"
+echo " "

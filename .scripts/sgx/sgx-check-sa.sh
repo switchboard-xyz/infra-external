@@ -1,4 +1,4 @@
-export use_docker="${1:-''}"
+export use_ctr="${1:-''}"
 
 export SGX_CHECK_IMAGE="docker.io/switchboardlabs/pull-oracle:stable"
 
@@ -8,8 +8,8 @@ if [[ ! -d "${DATA_DIR}" ]]; then
 	mkdir -p "$DATA_DIR" || (echo "error creating ${DATA_DIR}" && exit 1)
 fi
 
-if [[ "${use_docker}" != "--docker" ]]; then
-	ctr i pull "${SGX_CHECK_IMAGE}"
+if [[ "${use_ctr}" != "--ctr" ]]; then
+	ctr i pull "${SGX_CHECK_IMAGE}" 1>/dev/null
 	ctr run \
 		--privileged -t --rm --net-host \
 		--env ENABLE_GATEWAY=1 \
@@ -20,7 +20,7 @@ if [[ "${use_docker}" != "--docker" ]]; then
 		--mount src="${DATA_DIR}/",dst=/run/secrets/,options=rbind:rw \
 		"${SGX_CHECK_IMAGE}" test_sgx
 else
-	docker run \
+	docker run -q \
 		--privileged -it --rm --network host \
 		-e ENABLE_GATEWAY=1 \
 		-e LIST_CONFIG_AND_EXIT=true \
