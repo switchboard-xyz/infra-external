@@ -44,8 +44,8 @@ if [[ "${platform}" == "azure" ]]; then
       --set controller.service.externalTrafficPolicy=Local \
       --set controller.nodeSelector."kubernetes\.io/os"=linux \
       --set defaultBackend.nodeSelector."kubernetes\.io/os"=linux \
-      --set controller.service.annotations."service\.beta\.kubernetes\.io/azure-load-balancer-ipv4"="${IP4}"
-    >/dev/null
+      --set controller.service.annotations."service\.beta\.kubernetes\.io/azure-load-balancer-ipv4"="${IP4}" \
+      >/dev/null
   else
     helm upgrade -i ingress-nginx ingress-nginx/ingress-nginx \
       --namespace ingress-nginx \
@@ -56,8 +56,8 @@ if [[ "${platform}" == "azure" ]]; then
       --set controller.service.externalTrafficPolicy=Local \
       --set controller.nodeSelector."kubernetes\.io/os"=linux \
       --set defaultBackend.nodeSelector."kubernetes\.io/os"=linux \
-      --set controller.service.annotations."service\.beta\.kubernetes\.io/azure-load-balancer-ipv4"="${IP4}"
-    >/dev/null
+      --set controller.service.annotations."service\.beta\.kubernetes\.io/azure-load-balancer-ipv4"="${IP4}" \
+      >/dev/null
   fi
 else
   if [[ "${IP6}" == "0000::0000" || "${IP6}" == "" ]]; then
@@ -69,7 +69,8 @@ else
       --set controller.hostNetwork=true \
       --set controller.hostPort.enabled=true \
       --set controller.service.externalTrafficPolicy=Local \
-      --set controller.service.externalIPs[0]="${IP4}" >/dev/null
+      --set controller.service.externalIPs[0]="${IP4}" \
+      >/dev/null
   else
     helm upgrade -i ingress-nginx ingress-nginx/ingress-nginx \
       --namespace ingress-nginx \
@@ -80,7 +81,8 @@ else
       --set controller.hostPort.enabled=true \
       --set controller.service.externalTrafficPolicy=Local \
       --set controller.service.externalIPs[0]="${IP4}" \
-      --set controller.service.externalIPs[1]="${IP6}" >/dev/null
+      --set controller.service.externalIPs[1]="${IP6}" \
+      >/dev/null
   fi
 fi
 echo "HELM: ingress-nginx installed"
