@@ -6,4 +6,8 @@ sed -i 's?.*mainnet/docker-compose.yml.*?  #- mainnet/docker-compose.yml?g' dock
 
 sed -i 's?.*#*.*mainnet:?  #mainnet:?g' common/networks.yml
 
-sed -i 's?^.*#*.*- mainnet$?      #- mainnet?g' common/networks.yml
+sed -i 's?^.*#*.*- mainnet$?      #- mainnet?g' common/webserver.yml
+
+echo " "
+echo "MAINNET environment - DISABLED"
+echo " "
