@@ -13,10 +13,10 @@ set +e
 pkill -15 "${CTR_NAME}"
 set -e
 
-export use_docker="${1:-''}"
+export use_ctr="${1:-''}"
 export image="docker.io/switchboardlabs/sb-utils:3.5.8"
 
-if [[ "${use_docker}" != "--docker" ]]; then
+if [[ "${use_ctr}" == "--ctr" ]]; then
 	ctr i pull "${image}"
 	ctr run -t --net-host \
 		--rm --cwd "${script_ctr_dir}" \
@@ -24,7 +24,6 @@ if [[ "${use_docker}" != "--docker" ]]; then
 		--mount "type=bind,src=${script_host_dir}/${script_filename},dst=${script_ctr_dir}/${script_filename},options=rbind:rw" \
 		"${image}" "${CTR_NAME}" /bin/bash
 else
-
 	docker image pull "${image}"
 	docker run -ti --rm \
 		--workdir "${script_ctr_dir}" \

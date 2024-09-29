@@ -15,10 +15,10 @@ pkill -9 -f "${CTR_NAME}"
 sleep 3
 set -e
 
-export use_docker="${1:-''}"
+export use_ctr="${1:-''}"
 export image="docker.io/switchboardlabs/sb-utils:3.5.8"
 
-if [[ "${use_docker}" != "--docker" ]]; then
+if [[ "${use_ctr}" == "--ctr" ]]; then
 	set +e
 	ctr snapshot rm "${CTR_NAME}" >/dev/null 2>&1
 	ctr c rm "${CTR_NAME}" >/dev/null 2>&1
