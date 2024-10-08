@@ -1,3 +1,6 @@
+#!/usr/bin/env bash
+set -e
+
 export use_ctr="${1:-''}"
 
 export SGX_CHECK_IMAGE="docker.io/switchboardlabs/pull-oracle:stable"
