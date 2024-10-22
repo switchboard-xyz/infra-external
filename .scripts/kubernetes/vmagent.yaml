@@ -1,5 +1,5 @@
 remoteWrite:
-  - "https://remote-write.switchboard.xyz/api/v1/write"
+  - url: "https://remote-write.switchboard.xyz/api/v1/write"
 
 envFrom:
   - configMapRef:
