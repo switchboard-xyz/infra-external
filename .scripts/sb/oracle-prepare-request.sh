@@ -2,6 +2,12 @@ cluster="${1:-devnet}"
 priorityFee="${2:-10000}"
 
 PAYER_FILE="/data/${cluster}_payer.json"
+DEBUG="${DEBUG:-false}"
+
+STDERR_NULL=""
+if [[ "${DEBUG}" == "true" ]]; then
+  STDERR_NULL="2>/dev/null"
+fi
 
 if [[ "${cluster}" != "devnet" &&
   "${cluster}" != "mainnet" &&
@@ -81,7 +87,7 @@ if [[ "${register_oracle}" == "y" || "${register_oracle}" == "Y" ]]; then
     --cluster "${cluster}" \
     --priorityFee "${priorityFee}" \
     --keypair "${PAYER_FILE}" \
-  ) 2>/dev/null
+  ) "${STDERR_NULL}"
 fi
 
 if [[ "${register_guardian}" == "y" || "${register_guardian}" == "Y" ]]; then
@@ -91,7 +97,7 @@ if [[ "${register_guardian}" == "y" || "${register_guardian}" == "Y" ]]; then
     --cluster "${cluster}" \
     --priorityFee "${priorityFee}" \
     --keypair "${PAYER_FILE}" \
-  ) 2>/dev/null
+  ) "${STDERR_NULL}"
 fi
 
 echo " "
