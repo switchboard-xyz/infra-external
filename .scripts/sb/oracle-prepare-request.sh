@@ -6,7 +6,7 @@ DEBUG="${DEBUG:-false}"
 
 STDERR_NULL=""
 if [[ "${DEBUG}" == "true" ]]; then
-  STDERR_NULL="2>/dev/null"
+  STDERR_NULL=2>/dev/null
 fi
 
 if [[ "${cluster}" != "devnet" &&
