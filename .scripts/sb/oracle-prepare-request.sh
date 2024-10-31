@@ -4,11 +4,6 @@ priorityFee="${2:-10000}"
 PAYER_FILE="/data/${cluster}_payer.json"
 DEBUG="${DEBUG:-false}"
 
-STDERR_NULL=""
-if [[ "${DEBUG}" == "true" ]]; then
-  STDERR_NULL=2>/dev/null
-fi
-
 if [[ "${cluster}" != "devnet" &&
   "${cluster}" != "mainnet" &&
   "${cluster}" != "mainnet-beta" ]]; then
@@ -81,23 +76,42 @@ echo "  -> queueKey: ${queueKey}"
 
 if [[ "${register_oracle}" == "y" || "${register_oracle}" == "Y" ]]; then
   echo " "
-  ( \
-  sb solana on-demand oracle create \
-    --queue "${queueKey}" \
-    --cluster "${cluster}" \
-    --priorityFee "${priorityFee}" \
-    --keypair "${PAYER_FILE}" \
-  ) ${STDERR_NULL}
+  if [[ "${DEBUG}" == "true" ]]; then
+    ( \
+    sb solana on-demand oracle create \
+      --queue "${queueKey}" \
+      --cluster "${cluster}" \
+      --priorityFee "${priorityFee}" \
+      --keypair "${PAYER_FILE}" \
+    )
+  else
+    ( \
+    sb solana on-demand oracle create \
+      --queue "${queueKey}" \
+      --cluster "${cluster}" \
+      --priorityFee "${priorityFee}" \
+      --keypair "${PAYER_FILE}" \
+    ) 2>/dev/null
+  fi
 fi
 
 if [[ "${register_guardian}" == "y" || "${register_guardian}" == "Y" ]]; then
   echo " "
   ( \
-  sb solana on-demand guardian create \
-    --cluster "${cluster}" \
-    --priorityFee "${priorityFee}" \
-    --keypair "${PAYER_FILE}" \
-  ) ${STDERR_NULL}
+  if [[ "${DEBUG}" == "true" ]]; then
+    sb solana on-demand guardian create \
+      --cluster "${cluster}" \
+      --priorityFee "${priorityFee}" \
+      --keypair "${PAYER_FILE}" \
+    )
+  else
+    sb solana on-demand guardian create \
+      --cluster "${cluster}" \
+      --priorityFee "${priorityFee}" \
+      --keypair "${PAYER_FILE}" \
+    ) 2>/dev/null
+
+  fi
 fi
 
 echo " "
