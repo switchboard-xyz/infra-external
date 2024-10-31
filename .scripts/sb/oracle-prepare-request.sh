@@ -87,7 +87,7 @@ if [[ "${register_oracle}" == "y" || "${register_oracle}" == "Y" ]]; then
     --cluster "${cluster}" \
     --priorityFee "${priorityFee}" \
     --keypair "${PAYER_FILE}" \
-  ) "${STDERR_NULL}"
+  ) ${STDERR_NULL}
 fi
 
 if [[ "${register_guardian}" == "y" || "${register_guardian}" == "Y" ]]; then
@@ -97,7 +97,7 @@ if [[ "${register_guardian}" == "y" || "${register_guardian}" == "Y" ]]; then
     --cluster "${cluster}" \
     --priorityFee "${priorityFee}" \
     --keypair "${PAYER_FILE}" \
-  ) "${STDERR_NULL}"
+  ) ${STDERR_NULL}
 fi
 
 echo " "
