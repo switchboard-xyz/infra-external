@@ -7,4 +7,4 @@
 
 This repository is complementary to and used through our official docs.
 
-Our full documentation is now readable on [Switchboard GitBook](https://switchboard-labs.gitbook.io/switchboard-on-demand/)
+Our full documentation is readable at our [Switchboard Docs](https://docs.switchboard.xyz/docs/switchboard/running-switchboard-oracles) URL.
