@@ -16,7 +16,7 @@ echo "Setting up Microcode Update (MCU) now"
 echo " "
 mkdir /tmp/MCU
 git clone -q https://github.com/intel/Intel-Linux-Processor-Microcode-Data-Files.git /tmp/MCU/data >/dev/null
-cd /tmp/MCU/data && git checkout microcode-20240312 -q       # adjust according to latest tag
+cd /tmp/MCU/data && git checkout microcode-20241029 -q      # adjust according to latest tag
 rsync -qra /lib/firmware/intel-ucode/ /root/intel-ucode.old # backup old microcode
 
 rsync -qra /tmp/MCU/data/intel-ucode/ /lib/firmware/intel-ucode --delete
