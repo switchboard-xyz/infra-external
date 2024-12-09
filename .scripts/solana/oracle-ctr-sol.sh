@@ -14,7 +14,7 @@ pkill -15 "${CTR_NAME}"
 set -e
 
 export use_ctr="${1:-''}"
-export image="docker.io/switchboardlabs/sb-utils:3.5.8"
+export image="docker.io/switchboardlabs/sb-utils:3.5.9"
 
 if [[ "${use_ctr}" == "--ctr" ]]; then
 	ctr i pull "${image}"
