@@ -37,13 +37,18 @@ spec:
         chain: {{ $.Values.chain | quote }}
         cluster: {{ $.Values.cluster | quote }}
         app: gateway
+      annotations:
+        io.containerd.cri.runtime-handler: kata-qemu-snp
+        io.katacontainers.config.hypervisor.kernel_params: ' agent.guest_components_rest_api=all'
+
 
     spec:
+      runtimeClassName: kata-qemu-snp
       dnsPolicy: ClusterFirst # TODO: probably not needed.. to be removed
 
       containers:
       - image: {{ printf "%s:%s" $.Values.components.gateway.image $.Values.components.docker_image_tag | quote }}
-        imagePullPolicy: Always #Always #IfNotPresent
+        imagePullPolicy: IfNotPresent
         name: gateway
 
         ports:
@@ -52,6 +57,8 @@ spec:
           protocol: TCP
 
         env:
+        - name: ATTESTATION_URL
+          value: http://127.0.0.1:8006
         - name: DOCKER_IMAGE_TAG
           value: {{ $.Values.components.docker_image_tag | quote }}
         - name: CHAIN
@@ -132,10 +139,7 @@ spec:
         ]
         args: [
           "-c",
-          "while true; do ",
-          "echo '==> DEBUG MODE ENABLED VIA CFG <==';",
-          "sleep 5;",
-          "done;"
+          "while true; do echo '==> DEBUG MODE ENABLED VIA CFG <=='; sleep 5; done;"
         ]
         {{ end }}
 
@@ -154,31 +158,15 @@ spec:
           limits:
             cpu: {{ $.Values.components.gateway.resources.limits.cpu }}
             memory: {{ $.Values.components.gateway.resources.limits.memory }}
-            sgx.intel.com/epc: {{ $.Values.components.gateway.resources.limits.sgx.epc }}
-            sgx.intel.com/enclave: {{ $.Values.components.gateway.resources.limits.sgx.enclave }}
-            sgx.intel.com/provision: {{ $.Values.components.gateway.resources.limits.sgx.provision }}
           requests:
             cpu: {{ $.Values.components.gateway.resources.requests.cpu }}
             memory: {{ $.Values.components.gateway.resources.requests.memory }}
-            sgx.intel.com/epc: {{ $.Values.components.gateway.resources.requests.sgx.epc }}
-            sgx.intel.com/enclave: {{ $.Values.components.gateway.resources.requests.sgx.enclave }}
-            sgx.intel.com/provision: {{ $.Values.components.gateway.resources.requests.sgx.provision }}
 
         volumeMounts:
-        - mountPath: /dev/sgx/enclave
-          name: dev-sgx-enclave
-        - mountPath: /dev/sgx/provision
-          name: dev-sgx-provision
         - mountPath: /data/protected_files
           name: sealed-files
 
       volumes:
-      - name: dev-sgx-enclave
-        hostPath:
-          path: /dev/sgx/enclave
-      - name: dev-sgx-provision
-        hostPath:
-          path: /dev/sgx/provision
       - name: sealed-files
         hostPath:
           path: {{ $.Values.sgx_sealed_files | quote }}
