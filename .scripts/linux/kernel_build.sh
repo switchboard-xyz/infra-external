@@ -3,14 +3,12 @@ set -eux
 TMPDIR="$(mktemp -d)"
 
 echo "cloning AMD SNP kernel in tmp directory ${TMPDIR}"
-(
-  cd "${TMPDIR}" &&
-    git clone \
-      https://github.com/confidential-containers/linux \
-      --single-branch \
-      -b amd-snp-host-202402240000 &&
-    cd linux
-) >/dev/null 2>&1
+cd "${TMPDIR}" &&
+  git clone \
+    https://github.com/confidential-containers/linux \
+    --single-branch \
+    -b amd-snp-host-202402240000 &&
+  cd linux
 
 VER="-snp-host"
 DATE="$(date +%Y-%m-%d-%H-%M)"
