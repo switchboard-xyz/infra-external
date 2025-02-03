@@ -65,9 +65,11 @@ sleep_time=65
 echo "waiting ${sleep_time}s"
 sleep ${sleep_time}s
 
-wget 'http://launchpadlibrarian.net/743565987/imgcrypt_1.1.11-4_amd64.deb'
-dpkg -i imgcrypt_1.1.11-4_amd64.deb
-
 target_dir="$(dirname $(find /var/lib/rancher/k3s/data/ -iname containerd))"
-cp /usr/bin/ctd-decoder "${target_dir}/"
-cp /usr/bin/ctr-imgcrypt "${target_dir}/"
+TMPDIR="$(mktemp -d)"
+cd "${TMPDIR}" &&
+  wget 'http://launchpadlibrarian.net/743565987/imgcrypt_1.1.11-4_amd64.deb' &&
+  dpkg -i imgcrypt_1.1.11-4_amd64.deb &&
+  cp /usr/bin/ctd-decoder "${target_dir}/" &&
+  cp /usr/bin/ctr-imgcrypt "${target_dir}/" &&
+  cd && rm -rf "${TMPDIR}"
