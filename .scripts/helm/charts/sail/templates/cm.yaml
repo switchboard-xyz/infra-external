@@ -3,7 +3,7 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: sail
+  name: reporteer-config
   namespace: {{ .Release.Namespace }}
 data:
   server_port: {{ .Values.sail.pod.port | default 3000 | quote }}
