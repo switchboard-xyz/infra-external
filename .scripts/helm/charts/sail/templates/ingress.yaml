@@ -18,7 +18,7 @@ spec:
   tls:
   - hosts:
     - {{ $host | quote }}
-    secretName: {{ concat $host "-sail" | quote }}
+    secretName: "{{$host}}-sail"
   rules:
   - host: {{ $host | quote }}
     http:
