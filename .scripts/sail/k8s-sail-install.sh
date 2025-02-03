@@ -32,6 +32,9 @@ helm upgrade -i "sb-sail" \
   -n "${NAMESPACE}" --create-namespace \
   -f "${helm_values_file}" \
   --set sail.image="${SAIL_IMAGE}" \
+  --set ingress.enable="true" \
+  --set ingress.hosts[0]="${CLUSTER_DOMAIN}" \
+  --set ingress.tls.issuer="${letencrypt-prod-http}" \
   "${helm_chart_dir}" >/dev/null
 echo "HELM: Installed SAIL under namespace ${NAMESPACE}"
 set -u
