@@ -62,7 +62,7 @@ kubectl apply -k github.com/confidential-containers/operator/config/release?ref=
 kubectl apply -k github.com/confidential-containers/operator/config/samples/ccruntime/default?ref=v0.11.0
 
 sleep_time=65
-echo "waiting ${sleep_time}"
+echo "waiting ${sleep_time}s"
 sleep ${sleep_time}s
 
 wget 'http://launchpadlibrarian.net/743565987/imgcrypt_1.1.11-4_amd64.deb'
