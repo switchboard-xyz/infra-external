@@ -1,3 +1,6 @@
+sail:
+  image: switchboardlabs/reporteer:latest
+
 chain: ""
 cluster: ""
 networkId: ""

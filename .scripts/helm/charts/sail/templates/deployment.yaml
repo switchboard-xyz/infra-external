@@ -22,11 +22,12 @@ spec:
       runtimeClassName: kata-qemu-snp
       containers:
       - name: reporteer
-        image: switchboardlabs/reporteer:latest
+        image: {{ .Values.sail.image | quote }}
         imagePullPolicy: Always
         ports:
         - containerPort: 3000
           name: http
+        {{ if eq .Values.sail.image "switchboardlabs/reporteer:latest" }}
         env:
         - name: REPORTEER_SERVER_PORT
           valueFrom:
@@ -72,3 +73,4 @@ spec:
       securityContext:
         runAsNonRoot: true
         runAsUser: 10001
+        {{ end }}
