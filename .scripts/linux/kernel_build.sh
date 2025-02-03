@@ -18,12 +18,14 @@ DATE="$(date +%Y-%m-%d-%H-%M)"
 echo "building and installing kernel... this will take while"
 echo "Copying current config to new kernel"
 (
-  cp /boot/config-$(uname -r) .config
+  cd "${TMPDIR}"/linux &&
+    cp /boot/config-$(uname -r) .config
 ) >/dev/null 2>&1
 
 echo "Patching new kernel"
 (
-  ./scripts/config --set-str LOCALVERSION "$VER-$DATE" &&
+  cd "${TMPDIR}"/linux &&
+    ./scripts/config --set-str LOCALVERSION "$VER-$DATE" &&
     ./scripts/config --disable LOCALVERSION_AUTO &&
     ./scripts/config --enable DEBUG_INFO &&
     ./scripts/config --enable DEBUG_INFO_REDUCED &&
@@ -40,7 +42,8 @@ echo "Patching new kernel"
 
 echo "Building new kernel"
 (
-  yes "" | make olddefconfig &&
+  cd "${TMPDIR}"/linux &&
+    yes "" | make olddefconfig &&
     make -j$(nproc) LOCAL_VERSION="$VER-$DATE" &&
     make -j$(nproc) modules_install &&
     make -j$(nproc) install
