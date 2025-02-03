@@ -20,7 +20,7 @@ spec:
     - {{ $host | quote }}
     secretName: {{ concat $host "-sail" | quote }}
   rules:
-  - host: {{ .Values.ingress.host | quote} }
+  - host: {{ .Values.ingress.host | quote }}
     http:
       paths:
       - backend:
