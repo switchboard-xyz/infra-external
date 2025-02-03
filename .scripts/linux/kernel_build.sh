@@ -2,6 +2,12 @@
 set -eu
 TMPDIR="$(mktemp -d)"
 
+echo "Updating OS and installing needed tools"
+apt update &&
+  apt install -y \
+    build-essential libncurses-dev gawk flex bison openssl libssl-dev \
+    dkms libelf-dev libudev-dev libpci-dev libiberty-dev autoconf llvm
+
 echo "cloning AMD SNP kernel in tmp directory ${TMPDIR}"
 cd "${TMPDIR}" &&
   git clone \
