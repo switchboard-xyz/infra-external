@@ -3,7 +3,7 @@ sail:
   pod:
     port: 3000
   service:
-    port 80
+    port: 80
 
 replicas: 1
 
