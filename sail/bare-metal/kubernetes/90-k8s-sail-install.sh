@@ -1,1 +1,1 @@
-../../../.scripts/kubernetes/k8s-sail-install.sh
+../../../.scripts/sail/k8s-sail-install.sh

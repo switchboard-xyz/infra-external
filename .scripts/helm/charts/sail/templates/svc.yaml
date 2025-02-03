@@ -2,12 +2,14 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: reporteer
+  name: sail
+  namespace: {{ .Release.Namespace }}
 spec:
-  selector:
-    app: reporteer
-  ports:
-  - port: 80
-    targetPort: 3000
-    name: http
   type: ClusterIP
+  selector:
+    app: sail
+  ports:
+  - port: {{ .Values.sail.service.port | default 80 }}
+    targetPort: {{ .Values.sail.pod.port | default 3000 }}
+    name: http
+    protocol: TCP

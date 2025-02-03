@@ -1,28 +1,34 @@
+{{ if eq .Values.ingress.enabled true }}
+{{- $namespace := .Release.Namespace -}}
+{{- $tlsIssuer := .Values.ingress.tls.issuer }}
+{{- range $host := .Values.ingress.hosts }}
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   annotations:
     acme.cert-manager.io/http01-edit-in-place: "true"
-    cert-manager.io/cluster-issuer: letsencrypt-staging-http
+    cert-manager.io/cluster-issuer: {{ $tlsIssuer | quote }}
     cert-manager.io/issue-temporary-certificate: "true"
     kubernetes.io/ingress.class: nginx
   name: nginx
-  namespace: default
+  namespace: {{ .Release.Namespace }}
 spec:
-  ingressClassName: nginx
+  ingressClassName: {{ .Values.ingress.class | default "nginx" | quote }}
+  tls:
+  - hosts:
+    - {{ $host | quote }}
+    secretName: {{ concat $host "-sail" | quote }}
   rules:
-  - host: 141.95.35.110.xip.switchboard-oracles.xyz
+  - host: {{ .Values.ingress.host | quote} }
     http:
       paths:
       - backend:
           service:
-            name: reporteer
+            name: sail
             port:
-              number: 80
+              number: {{ .Values.sail.service.port | default 80 }}
         path: /
         pathType: Prefix
-  tls:
-  - hosts:
-    - 141.95.35.110.xip.switchboard-oracles.xyz
-    secretName: letsencrypt-prod-http
+{{- end }}
+{{ end }}
