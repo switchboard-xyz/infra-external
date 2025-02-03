@@ -10,11 +10,11 @@ metadata:
     acme.cert-manager.io/http01-edit-in-place: "true"
     cert-manager.io/cluster-issuer: {{ $tlsIssuer | quote }}
     cert-manager.io/issue-temporary-certificate: "true"
-    kubernetes.io/ingress.class: {{ .Values.ingress.class | default "nginx" | quote }}
+    kubernetes.io/ingress.class: {{ $.Values.ingress.class | default "nginx" | quote }}
   name: sail
   namespace: {{ $namespace }}
 spec:
-  ingressClassName: {{ .Values.ingress.class | default "nginx" | quote }}
+  ingressClassName: {{ $.Values.ingress.class | default "nginx" | quote }}
   tls:
   - hosts:
     - {{ $host | quote }}
@@ -27,7 +27,7 @@ spec:
           service:
             name: sail
             port:
-              number: {{ .Values.sail.service.port | default 80 }}
+              number: {{ $.Values.sail.service.port | default 80 }}
         path: /
         pathType: Prefix
 {{- end }}
