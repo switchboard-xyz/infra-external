@@ -1,0 +1,9 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: reporteer-config
+data:
+  server_port: "3000"
+  endpoint_url: "http://127.0.0.1:8006/derived_key"
+  log_level: "info"
