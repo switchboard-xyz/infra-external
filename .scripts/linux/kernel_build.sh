@@ -7,8 +7,8 @@ cd "${TMPDIR}" &&
   git clone \
     https://github.com/confidential-containers/linux \
     --single-branch \
-    -b amd-snp-host-202402240000 &&
-  cd linux
+    -b amd-snp-host-202402240000 \
+    "${TMPDIR}/linux"
 
 VER="-snp-host"
 DATE="$(date +%Y-%m-%d-%H-%M)"
