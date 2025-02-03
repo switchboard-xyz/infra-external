@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 set -eux
-TMPDIR="$(mktemp)"
+TMPDIR="$(mktemp -d)"
 
 echo "cloning AMD SNP kernel in tmp directory ${TMPDIR}"
 (
