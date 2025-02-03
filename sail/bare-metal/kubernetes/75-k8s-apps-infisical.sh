@@ -1,1 +1,0 @@
-../../../.scripts/kubernetes/k8s-apps-infisical.sh
