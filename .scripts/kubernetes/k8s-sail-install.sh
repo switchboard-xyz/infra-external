@@ -2,6 +2,7 @@
 set -u -e
 
 SAIL_IMAGE="${1:-switchboardlabs/reporteer:latest}"
+NAMESPACE="sail"
 
 repo_dir="$(readlink -f ../../..)"
 
@@ -24,12 +25,10 @@ helm_dir="${repo_dir}/.scripts/helm/"
 helm_chart_dir="${helm_dir}/charts/sail/"
 helm_values_file="${helm_chart_dir}/values.yaml"
 
-source "${repo_dir}"/.scripts/var/_load_vars.sh
 set +u
-load_vars "${tmp_helm_file}" >/dev/null 2>&1
 
 echo "HELM: Installing SAIL under namespace ${NAMESPACE}"
-helm upgrade -i "sb-sail-${NETWORK}" \
+helm upgrade -i "sb-sail" \
   -n "${NAMESPACE}" --create-namespace \
   -f "${helm_values_file}" \
   --set sail.image="${SAIL_IMAGE}" \
