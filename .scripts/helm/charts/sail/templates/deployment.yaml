@@ -29,16 +29,14 @@ spec:
         - containerPort: 3000
           name: http
         {{ if eq $.Values.sail.command "shell" }}
-        command: [
-          "/bin/sh"
-        ]
-        args: [
-          "-c",
-          "while true; do ",
-          "echo '==> DEBUG MODE ENABLED VIA CFG <==';",
-          "sleep 5;",
-          "done;"
-        ]
+        command:
+        - "/bin/sh"
+        args:
+        - "-c"
+        - "while true; do "
+        - "echo '==> DEBUG MODE ENABLED VIA CFG <=='; "
+        - "sleep 5; "
+        - "done; "
         {{ end }}
         resources:
           limits:
