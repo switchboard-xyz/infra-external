@@ -36,6 +36,18 @@ spec:
             cpu: {{ .Values.resources.requests.cpu }}
             memory: {{ .Values.resources.requests.memory }}
 {{ if eq .Values.sail.image "switchboardlabs/reporteer:latest" }}
+        {{ if eq $.Values.sail.command "shell" }}
+        command: [
+          "/bin/sh"
+        ]
+        args: [
+          "-c",
+          "while true; do ",
+          "echo '==> DEBUG MODE ENABLED VIA CFG <==';",
+          "sleep 5;",
+          "done;"
+        ]
+        {{ end }}
         env:
         - name: REPORTEER_SERVER_PORT
           valueFrom:

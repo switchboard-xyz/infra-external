@@ -4,6 +4,8 @@ sail:
     port: 3000
   service:
     port: 80
+  # enable the line below to enable debug behavior to shell in the container
+  # command: "shell"
 
 replicas: 1
 
