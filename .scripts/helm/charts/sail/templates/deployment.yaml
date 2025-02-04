@@ -28,14 +28,6 @@ spec:
         ports:
         - containerPort: 3000
           name: http
-        resources:
-          limits:
-            cpu: {{ .Values.resources.limits.cpu }}
-            memory: {{ .Values.resources.limits.memory }}
-          requests:
-            cpu: {{ .Values.resources.requests.cpu }}
-            memory: {{ .Values.resources.requests.memory }}
-{{ if eq .Values.sail.image "switchboardlabs/reporteer:latest" }}
         {{ if eq $.Values.sail.command "shell" }}
         command: [
           "/bin/sh"
@@ -48,6 +40,14 @@ spec:
           "done;"
         ]
         {{ end }}
+        resources:
+          limits:
+            cpu: {{ .Values.resources.limits.cpu }}
+            memory: {{ .Values.resources.limits.memory }}
+          requests:
+            cpu: {{ .Values.resources.requests.cpu }}
+            memory: {{ .Values.resources.requests.memory }}
+{{ if eq .Values.sail.image "switchboardlabs/reporteer:latest" }}
         env:
         - name: REPORTEER_SERVER_PORT
           valueFrom:
