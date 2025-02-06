@@ -58,7 +58,7 @@ kubectl label node "$(hostname -f)" node.kubernetes.io/worker=""
 
 # install CoCO
 mkdir /opt/snp && snphost fetch vcek der /opt/snp/
-mv /opt/snp/vcek.der /opt/snp/cert_chain.cert
+snphost /opt/snp/ /opt/snp/cert_chain.cert
 
 kubectl apply -k github.com/confidential-containers/operator/config/release?ref=v0.11.0
 
