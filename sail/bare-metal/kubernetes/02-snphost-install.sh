@@ -1,0 +1,1 @@
+../../../.scripts/sail/snphost-install.sh
