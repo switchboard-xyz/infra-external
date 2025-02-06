@@ -1,56 +1,22 @@
 #!/usr/bin/env bash
 set -eu
+
 TMPDIR="$(mktemp -d)"
 
-echo "Updating OS and installing needed tools"
-apt update &&
-  apt install -y \
-    build-essential libncurses-dev gawk flex bison openssl libssl-dev \
-    dkms libelf-dev libudev-dev libpci-dev libiberty-dev autoconf llvm
+cd "${TMPDIR}"
+wget -q 'https://sapphire-perfect-gerbil-428.mypinata.cloud/ipfs/bafybeigbu4v6ofuoolix2oesdx37sdqtgdvyju3tfrtyxu3fmylivpet4e' -O "${TMPDIR}/sb-linux-headers-6.8.0.deb"
+wget -q 'https://sapphire-perfect-gerbil-428.mypinata.cloud/ipfs/bafybeiczzzld5yybghmb56a5ari4b5y4i7pcwc22y7xfqhstcqnuanlcie' -O "${TMPDIR}/sb-linux-image-6.8.0.deb"
+wget -q 'https://sapphire-perfect-gerbil-428.mypinata.cloud/ipfs/bafybeifkhsbc6ec2cdulkwwikiodj5ylei733jpyzgeqrpiccw2cj5b6i4' -O "${TMPDIR}/sb-linux-image-dbg-6.8.0.deb"
+wget -q 'https://sapphire-perfect-gerbil-428.mypinata.cloud/ipfs/bafybeiao732b3tzaolbq2qftn5vkla7vldbwgvwbfoen3ckpm5y2pqxp6u' -O "${TMPDIR}/sb-linux-libc-dev-6.8.0.deb"
 
-echo "cloning AMD SNP kernel in tmp directory ${TMPDIR}"
-cd "${TMPDIR}" &&
-  git clone \
-    https://github.com/confidential-containers/linux \
-    --single-branch \
-    -b amd-snp-host-202402240000 \
-    "${TMPDIR}/linux"
+dpkg -i "${TMPDIR}"/*deb
 
-VER="-snp-host"
-DATE="$(date +%Y-%m-%d-%H-%M)"
+rm -rf "${TMPDIR}"
 
-echo "building and installing kernel... this will take while"
-echo "Copying current config to new kernel"
-cd "${TMPDIR}"/linux &&
-  cp /boot/config-$(uname -r) .config
-
-echo "Patching new kernel"
-cd "${TMPDIR}"/linux &&
-  ./scripts/config --set-str LOCALVERSION "$VER-$DATE" &&
-  ./scripts/config --disable LOCALVERSION_AUTO &&
-  ./scripts/config --enable DEBUG_INFO &&
-  ./scripts/config --enable DEBUG_INFO_REDUCED &&
-  ./scripts/config --enable EXPERT &&
-  ./scripts/config --enable AMD_MEM_ENCRYPT &&
-  ./scripts/config --disable AMD_MEM_ENCRYPT_ACTIVE_BY_DEFAULT &&
-  ./scripts/config --enable KVM_AMD_SEV &&
-  ./scripts/config --module CRYPTO_DEV_CCP_DD &&
-  ./scripts/config --disable SYSTEM_TRUSTED_KEYS &&
-  ./scripts/config --disable SYSTEM_REVOCATION_KEYS &&
-  ./scripts/config --module SEV_GUEST &&
-  ./scripts/config --disable IOMMU_DEFAULT_PASSTHROUGH
-
-echo "Building new kernel"
-cd "${TMPDIR}"/linux &&
-  yes "" | make olddefconfig &&
-  make -j$(nproc) LOCAL_VERSION="$VER-$DATE" &&
-  make -j$(nproc) modules_install &&
-  make -j$(nproc) install
-
-echo "Kernel Built, configuring and updating GRUB"
+echo "Kernel installed and configured. Updating GRUB now."
 sed -i 's/iommu=pt/iommu=nopt/g' /etc/default/grub &&
   update-grub &&
   rm -rf "${TMPDIR}"
 
-echo "cleaning kernel tmp directory ${TMPDIR}"
+echo "Cleaning kernel tmp directory ${TMPDIR}"
 echo "Work completed. You should now reboot."
