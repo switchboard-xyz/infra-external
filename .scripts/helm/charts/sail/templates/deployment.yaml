@@ -47,6 +47,8 @@ spec:
             memory: {{ .Values.resources.requests.memory }}
 {{ if eq .Values.sail.image "switchboardlabs/reporteer:latest" }}
         env:
+        - name: SEV_SNP_CACHE_PATH
+          value: "/tmp/certs"
         - name: REPORTEER_SERVER_PORT
           valueFrom:
             configMapKeyRef:
