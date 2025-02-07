@@ -1,8 +1,8 @@
 TMPDIR="$(mktemp -d)"
 
 cd "${TMPDIR}"
-wget -q 'https://sapphire-perfect-gerbil-428.mypinata.cloud/ipfs/bafybeiebhqp5ckhzqdumua5swmqihacsap7w7kz5cu7kbgd35bxsckp7sq' -O "${TMPDIR}/sb-sail-initrd"
-wget -q 'https://sapphire-perfect-gerbil-428.mypinata.cloud/ipfs/bafybeidpqahfmvugxxizufa6aabefrv53e7cr5dtfccmkbme7jsmlz3zvq' -O "${TMPDIR}/sb-sail-kernel"
+wget -q 'https://ipfs.io/ipfs/bafybeiebhqp5ckhzqdumua5swmqihacsap7w7kz5cu7kbgd35bxsckp7sq' -O "${TMPDIR}/sb-sail-initrd"
+wget -q 'https://ipfs.io/ipfs/bafybeidpqahfmvugxxizufa6aabefrv53e7cr5dtfccmkbme7jsmlz3zvq' -O "${TMPDIR}/sb-sail-kernel"
 
 sha256sum "${TMPDIR}/sb-sail-kernel"
 sha256sum "${TMPDIR}/sb-sail-initrd"
