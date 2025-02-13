@@ -54,7 +54,7 @@ systemctl daemon-reload
 systemctl enable --now containerd
 systemctl status containerd
 
-kubectl label node "$(hostname -f)" node.kubernetes.io/worker=""
+kubectl label node "$(hostname)" node.kubernetes.io/worker=""
 
 # install CoCO
 mkdir /opt/snp && snphost fetch vcek der /opt/snp/
