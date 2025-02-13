@@ -12,8 +12,6 @@ heartbeatInterval: 180
 payerSecret: ""
 payerSecretKey: ""
 
-sgx_sealed_files: "/data/protected_files"
-
 rpcUrl: ""
 wssRpcUrl: ""
 solanaMainnetRpc: ""
@@ -36,7 +34,7 @@ components:
     ingress:
       enabled: true
       class: "nginx"
-      issuer: "letsencrypt-prod-http"
+      issuer: "letsencrypt-production"
       url: ""
     command: ""
     metrics:
@@ -48,17 +46,9 @@ components:
       limits:
         cpu: "3000m"
         memory: "12000Mi"
-        sgx:
-          epc: "64Mi"
-          enclave: 1
-          provision: 1
       requests:
         cpu: "1500m"
         memory: "8000Mi"
-        sgx:
-          epc: "64Mi"
-          enclave: 1
-          provision: 1
 
   guardian:
     enabled: true
@@ -69,7 +59,7 @@ components:
     ingress:
       enabled: true
       class: "nginx"
-      issuer: "letsencrypt-prod-http"
+      issuer: "letsencrypt-production"
       url: ""
     command: ""
     metrics:
@@ -81,17 +71,9 @@ components:
       limits:
         cpu: "3000m"
         memory: "12000Mi"
-        sgx:
-          epc: "64Mi"
-          enclave: 1
-          provision: 1
       requests:
         cpu: "1500m"
         memory: "8000Mi"
-        sgx:
-          epc: "64Mi"
-          enclave: 1
-          provision: 1
 
   gateway:
     enabled: true
@@ -100,7 +82,7 @@ components:
     ingress:
       enabled: true
       class: "nginx"
-      issuer: "letsencrypt-prod-http"
+      issuer: "letsencrypt-production"
       url: ""
     command: ""
     metrics:
@@ -112,14 +94,6 @@ components:
       limits:
         cpu: "3000m"
         memory: "12000Mi"
-        sgx:
-          epc: "64Mi"
-          enclave: 1
-          provision: 1
       requests:
         cpu: "1500m"
         memory: "8000Mi"
-        sgx:
-          epc: "64Mi"
-          enclave: 1
-          provision: 1

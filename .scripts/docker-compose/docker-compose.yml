@@ -1,9 +1,0 @@
-# REMOVE THE # SIGN IN FRONT OF THE DEPLOYMENT
-# YOU WANT TO ENABLE
-# REMEMBER TO EDIT THE 00-vars.cfg FILE IN THE
-# RELATIVE DIRECTORY BEFORE CONTINUING
-include:
-  - devnet/docker-compose.yml
-  #- mainnet/docker-compose.yml
-  #- v2/docker-compose.yml
-  - common/watchtower.yml
