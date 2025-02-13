@@ -1,1 +1,0 @@
-../../../.scripts/docker-compose/cfg_enable_mainnet.sh

@@ -1,1 +1,0 @@
-../../../.scripts/helm/helm-install.sh

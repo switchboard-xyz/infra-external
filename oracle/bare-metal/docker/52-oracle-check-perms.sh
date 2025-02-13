@@ -1,1 +1,0 @@
-../../../.scripts/sb/oracle-check-perms.sh

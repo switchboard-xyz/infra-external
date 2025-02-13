@@ -1,1 +1,0 @@
-../../../.scripts/sb/oracle-prepare-request.sh

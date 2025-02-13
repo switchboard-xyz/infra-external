@@ -1,1 +1,0 @@
-../../../.scripts/docker-compose/cfg_disable_deprecated_v2.sh
