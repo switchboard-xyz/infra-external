@@ -2,10 +2,6 @@ victoria-metrics-agent:
   remoteWrite:
     - url: "https://remote-write.switchboard.xyz/api/v1/write"
 
-  envFrom:
-    - configMapRef:
-        name: vmagent-env
-
   config:
     global:
       scrape_interval: 30s
