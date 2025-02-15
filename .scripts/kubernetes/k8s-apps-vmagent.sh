@@ -72,9 +72,13 @@ helm_chart_dir="${helm_dir}/charts/sb-monitoring/"
 helm_values_file="${helm_chart_dir}/values.yaml"
 
 set +u
+echo "HELM: Adding prometheus-community repo"
+helm repo add prometheus-community https://prometheus-community.github.io/helm-charts >/dev/null
+helm repo update >/dev/null
+echo "HELM: prometheus-community repo added"
 
 echo "HELM: Installing switchboard-monitoring under namespace sb-monitoring"
-helm dependency build ${helm_chart_dir}
+helm dependency build ${helm_chart_dir} >/dev/null
 helm upgrade -i "sb-monitoring" \
   -n "sb-monitoring" --create-namespace \
   -f "${helm_values_file}" \
