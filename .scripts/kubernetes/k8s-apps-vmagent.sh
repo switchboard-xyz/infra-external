@@ -74,6 +74,7 @@ helm_values_file="${helm_chart_dir}/values.yaml"
 set +u
 
 echo "HELM: Installing switchboard-monitoring under namespace sb-monitoring"
+helm dependency build ${helm_chart_dir}
 helm upgrade -i "sb-monitoring" \
   -n "sb-monitoring" --create-namespace \
   -f "${helm_values_file}" \
