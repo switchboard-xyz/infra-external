@@ -65,3 +65,19 @@ helm upgrade -i "vmagent-${cluster}" \
   -f "../../../.scripts/kubernetes/vmagent.yaml" \
   vm/victoria-metrics-agent >/dev/null
 echo "HELM: VictoriaMetrics Agent installed"
+
+repo_dir="$(readlink -f ../../..)"
+helm_dir="${repo_dir}/.scripts/helm/"
+helm_chart_dir="${helm_dir}/charts/sb-monitoring/"
+helm_values_file="${helm_chart_dir}/values.yaml"
+
+set +u
+
+echo "HELM: Installing switchboard-monitoring under namespace sb-monitoring"
+helm upgrade -i "sb-monitoring" \
+  -n "sb-monitoring" --create-namespace \
+  -f "${helm_values_file}" \
+  --set victoria-metrics-agent.config.global.external_labels.operator="${CLUSTER_DOMAIN}" \
+  "${helm_chart_dir}" >/dev/null
+echo "HELM: Installed sb-monitoring under namespace sb-monitoring"
+set -u
