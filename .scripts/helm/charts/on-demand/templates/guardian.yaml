@@ -142,17 +142,6 @@ spec:
         ]
         {{ end }}
 
-        {{ if not $.Values.components.guardian.command }}
-        livenessProbe:
-          httpGet:
-            path: {{ $.Values.components.guardian.metrics.path }}
-            port: {{ $.Values.components.guardian.metrics.port }}
-          initialDelaySeconds: 60
-          failureThreshold: 10
-          periodSeconds: 10
-          timeoutSeconds: 10
-        {{ end }}
-
         resources:
           limits:
             cpu: {{ $.Values.components.guardian.resources.limits.cpu }}

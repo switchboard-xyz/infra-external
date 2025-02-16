@@ -144,17 +144,6 @@ spec:
         ]
         {{ end }}
 
-        {{ if not $.Values.components.oracle.command }}
-        livenessProbe:
-          httpGet:
-            path: {{ $.Values.components.oracle.metrics.path }}
-            port: {{ $.Values.components.oracle.metrics.port }}
-          initialDelaySeconds: 60
-          failureThreshold: 10
-          periodSeconds: 10
-          timeoutSeconds: 10
-        {{ end }}
-
         resources:
           limits:
             cpu: {{ $.Values.components.oracle.resources.limits.cpu }}

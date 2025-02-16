@@ -142,17 +142,6 @@ spec:
         ]
         {{ end }}
 
-        {{ if not $.Values.components.gateway.command }}
-        livenessProbe:
-          httpGet:
-            path: {{ $.Values.components.gateway.metrics.path }}
-            port: {{ $.Values.components.gateway.metrics.port }}
-          initialDelaySeconds: 60
-          failureThreshold: 10
-          periodSeconds: 10
-          timeoutSeconds: 10
-        {{ end }}
-
         resources:
           limits:
             cpu: {{ $.Values.components.gateway.resources.limits.cpu }}
