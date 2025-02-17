@@ -1,1 +1,0 @@
-../../../.scripts/sail/ctr-cleanup.sh

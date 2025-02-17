@@ -1,1 +1,0 @@
-../../../.scripts/sail/k8s-sail-install.sh

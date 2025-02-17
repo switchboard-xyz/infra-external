@@ -17,7 +17,7 @@ if [[ "${EMAIL}" == "YOUR@EMAIL.IS.NEEDED.HERE" || "${EMAIL}" == "" ]]; then
   exit 1
 fi
 
-if [[ "${IP4}" == "0.0.0.0" || "${IP4}" == "" ]]; then
+if [[ "${IPv4}" == "0.0.0.0" || "${IPv4}" == "" ]]; then
   echo "INVALID IPv4 - Please fill out correctly all details in \$REPO/cfg/00-common-vars.cfg"
   exit 1
 fi
@@ -34,7 +34,7 @@ echo "HELM: ingress-nginx repo added"
 
 echo "HELM: installing ingress-nginx in your cluster"
 if [[ "${platform}" == "azure" ]]; then
-  if [[ "${IP6}" == "0000::0000" || "${IP6}" == "" ]]; then
+  if [[ "${IPv6}" == "0000::0000" || "${IPv6}" == "" ]]; then
     helm upgrade -i ingress-nginx ingress-nginx/ingress-nginx \
       --namespace ingress-nginx \
       --create-namespace \
@@ -44,7 +44,7 @@ if [[ "${platform}" == "azure" ]]; then
       --set controller.service.externalTrafficPolicy=Local \
       --set controller.nodeSelector."kubernetes\.io/os"=linux \
       --set defaultBackend.nodeSelector."kubernetes\.io/os"=linux \
-      --set controller.service.annotations."service\.beta\.kubernetes\.io/azure-load-balancer-ipv4"="${IP4}" \
+      --set controller.service.annotations."service\.beta\.kubernetes\.io/azure-load-balancer-ipv4"="${IPv4}" \
       >/dev/null
   else
     helm upgrade -i ingress-nginx ingress-nginx/ingress-nginx \
@@ -56,11 +56,11 @@ if [[ "${platform}" == "azure" ]]; then
       --set controller.service.externalTrafficPolicy=Local \
       --set controller.nodeSelector."kubernetes\.io/os"=linux \
       --set defaultBackend.nodeSelector."kubernetes\.io/os"=linux \
-      --set controller.service.annotations."service\.beta\.kubernetes\.io/azure-load-balancer-ipv4"="${IP4}" \
+      --set controller.service.annotations."service\.beta\.kubernetes\.io/azure-load-balancer-ipv4"="${IPv4}" \
       >/dev/null
   fi
 else
-  if [[ "${IP6}" == "0000::0000" || "${IP6}" == "" ]]; then
+  if [[ "${IPv6}" == "0000::0000" || "${IPv6}" == "" ]]; then
     helm upgrade -i ingress-nginx ingress-nginx/ingress-nginx \
       --namespace ingress-nginx \
       --create-namespace \
@@ -69,7 +69,7 @@ else
       --set controller.hostNetwork=true \
       --set controller.hostPort.enabled=true \
       --set controller.service.externalTrafficPolicy=Local \
-      --set controller.service.externalIPs[0]="${IP4}" \
+      --set controller.service.externalIPs[0]="${IPv4}" \
       >/dev/null
   else
     helm upgrade -i ingress-nginx ingress-nginx/ingress-nginx \
@@ -80,8 +80,8 @@ else
       --set controller.hostNetwork=true \
       --set controller.hostPort.enabled=true \
       --set controller.service.externalTrafficPolicy=Local \
-      --set controller.service.externalIPs[0]="${IP4}" \
-      --set controller.service.externalIPs[1]="${IP6}" \
+      --set controller.service.externalIPs[0]="${IPv4}" \
+      --set controller.service.externalIPs[1]="${IPv6}" \
       >/dev/null
   fi
 fi

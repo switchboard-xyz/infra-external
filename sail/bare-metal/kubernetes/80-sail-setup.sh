@@ -1,1 +1,0 @@
-../../../.scripts/sail/sail-setup.sh
