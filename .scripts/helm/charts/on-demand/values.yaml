@@ -45,10 +45,10 @@ components:
     resources:
       limits:
         cpu: "3000m"
-        memory: "12000Mi"
+        memory: "4000Mi"
       requests:
         cpu: "1500m"
-        memory: "8000Mi"
+        memory: "2000Mi"
 
   guardian:
     enabled: true
@@ -70,10 +70,10 @@ components:
     resources:
       limits:
         cpu: "3000m"
-        memory: "12000Mi"
+        memory: "4000Mi"
       requests:
         cpu: "1500m"
-        memory: "8000Mi"
+        memory: "2000Mi"
 
   gateway:
     enabled: true
@@ -93,7 +93,7 @@ components:
     resources:
       limits:
         cpu: "3000m"
-        memory: "12000Mi"
+        memory: "4000Mi"
       requests:
         cpu: "1500m"
-        memory: "8000Mi"
+        memory: "2000Mi"
