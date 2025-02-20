@@ -1,1 +1,0 @@
-../../../.scripts/kubernetes/test-cert-cleanup.sh

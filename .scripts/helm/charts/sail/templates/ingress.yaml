@@ -1,0 +1,34 @@
+{{ if eq .Values.ingress.enabled true }}
+{{- $namespace := .Release.Namespace -}}
+{{- $tlsIssuer := .Values.ingress.tls.issuer }}
+{{- range $host := .Values.ingress.hosts }}
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    acme.cert-manager.io/http01-edit-in-place: "true"
+    cert-manager.io/cluster-issuer: {{ $tlsIssuer | quote }}
+    cert-manager.io/issue-temporary-certificate: "true"
+    kubernetes.io/ingress.class: {{ $.Values.ingress.class | default "nginx" | quote }}
+  name: sail
+  namespace: {{ $namespace }}
+spec:
+  ingressClassName: {{ $.Values.ingress.class | default "nginx" | quote }}
+  tls:
+  - hosts:
+    - {{ $host | quote }}
+    secretName: "{{$host}}-sail"
+  rules:
+  - host: {{ $host | quote }}
+    http:
+      paths:
+      - backend:
+          service:
+            name: sail
+            port:
+              number: {{ $.Values.sail.service.port | default 80 }}
+        path: /
+        pathType: Prefix
+{{- end }}
+{{ end }}

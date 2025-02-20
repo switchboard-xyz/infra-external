@@ -1,0 +1,26 @@
+sail:
+  image: switchboardlabs/reporteer:latest
+  pod:
+    port: 3000
+  service:
+    port: 80
+  # enable the line below to enable debug behavior to shell in the container
+  # command: "shell"
+
+replicas: 1
+
+ingress:
+  enabled: false
+  class: "nginx"
+  hosts:
+    - "localhost"
+  tls:
+    issuer: ""
+
+resources:
+  limits:
+    cpu: 3000m
+    memory: 8Gi
+  requests:
+    cpu: 2000m
+    memory: 4Gi

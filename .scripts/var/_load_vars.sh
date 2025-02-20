@@ -1,8 +1,8 @@
 function load_vars() {
   local tmp_helm_file="${1}"
   sed -E -i 's;(__|\$\{)EMAIL(\}|__);'"${EMAIL}"';g' "${tmp_helm_file}"
-  sed -E -i 's;(__|\$\{)IP4(\}|__);'"${IP4}"';g' "${tmp_helm_file}"
-  sed -E -i 's;(__|\$\{)IP6(\}|__);'"${IP6}"';g' "${tmp_helm_file}"
+  sed -E -i 's;(__|\$\{)IPv4(\}|__);'"${IPv4}"';g' "${tmp_helm_file}"
+  sed -E -i 's;(__|\$\{)IPv6(\}|__);'"${IPv6}"';g' "${tmp_helm_file}"
   sed -E -i 's;(__|\$\{)PAYER_SECRET_KEY(\}|__);'"${PAYER_SECRET_KEY}"';g' "${tmp_helm_file}"
   sed -E -i 's;(__|\$\{)INFISICAL_SECRET_KEY(\}|__);'"${INFISICAL_SECRET_KEY}"';g' "${tmp_helm_file}"
   sed -E -i 's;(__|\$\{)INFISICAL_SECRET_PATH(\}|__);'"${INFISICAL_SECRET_PATH}"';g' "${tmp_helm_file}"

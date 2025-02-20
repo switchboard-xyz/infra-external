@@ -41,7 +41,7 @@ cat >"${TMP_FILE}" <<-EOF
 	metadata:
 	  name: nginx
 	  annotations:
-	    cert-manager.io/cluster-issuer: letsencrypt-staging-http
+	    cert-manager.io/cluster-issuer: letsencrypt-staging
 	    acme.cert-manager.io/http01-edit-in-place: "true"
 	    cert-manager.io/issue-temporary-certificate: "true"
 	    kubernetes.io/ingress.class: ${ingressClass}
@@ -50,7 +50,7 @@ cat >"${TMP_FILE}" <<-EOF
 	  tls:
 	  - hosts:
 	    - ${CLUSTER_DOMAIN}
-	    secretName: letsencrypt-staging-http
+	    secretName: letsencrypt-staging
 	  rules:
 	    - host: ${CLUSTER_DOMAIN}
 	      http:

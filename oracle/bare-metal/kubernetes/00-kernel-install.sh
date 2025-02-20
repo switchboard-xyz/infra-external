@@ -1,0 +1,1 @@
+../../../.scripts/linux/kernel_build.sh

@@ -33,12 +33,16 @@ spec:
 
   template:
     metadata:
+      annotations:
+        io.katacontainers.config.hypervisor.kernel_params: " agent.guest_components_rest_api=all" # agent.aa_kbc_params=cc_kbc::http://141.95.35.110:31256"
+        io.containerd.cri.runtime-handler: kata-qemu-snp
       labels:
         chain: {{ $.Values.chain | quote }}
         cluster: {{ $.Values.cluster | quote }}
         app: oracle
 
     spec:
+      runtimeClassName: kata-qemu-snp
       dnsPolicy: ClusterFirst # TODO: probably not needed.. to be removed
 
       containers:
@@ -52,6 +56,8 @@ spec:
           protocol: TCP
 
         env:
+        - name: SEV_SNP_CACHE_PATH
+          value: "/tmp/certs"
         - name: DOCKER_IMAGE_TAG
           value: {{ $.Values.components.docker_image_tag | quote }}
         - name: CHAIN
@@ -134,10 +140,7 @@ spec:
         ]
         args: [
           "-c",
-          "while true; do ",
-          "echo '==> DEBUG MODE ENABLED VIA CFG <==';",
-          "sleep 5;",
-          "done;"
+          "while true; do echo '==> DEBUG MODE ENABLED VIA CFG <=='; sleep 5; done;"
         ]
         {{ end }}
 
@@ -156,34 +159,9 @@ spec:
           limits:
             cpu: {{ $.Values.components.oracle.resources.limits.cpu }}
             memory: {{ $.Values.components.oracle.resources.limits.memory }}
-            sgx.intel.com/epc: {{ $.Values.components.oracle.resources.limits.sgx.epc }}
-            sgx.intel.com/enclave: {{ $.Values.components.oracle.resources.limits.sgx.enclave }}
-            sgx.intel.com/provision: {{ $.Values.components.oracle.resources.limits.sgx.provision }}
           requests:
             cpu: {{ $.Values.components.oracle.resources.requests.cpu }}
             memory: {{ $.Values.components.oracle.resources.requests.memory }}
-            sgx.intel.com/epc: {{ $.Values.components.oracle.resources.requests.sgx.epc }}
-            sgx.intel.com/enclave: {{ $.Values.components.oracle.resources.requests.sgx.enclave }}
-            sgx.intel.com/provision: {{ $.Values.components.oracle.resources.requests.sgx.provision }}
-
-        volumeMounts:
-        - mountPath: /dev/sgx/enclave
-          name: dev-sgx-enclave
-        - mountPath: /dev/sgx/provision
-          name: dev-sgx-provision
-        - mountPath: /data/protected_files
-          name: sealed-files
-
-      volumes:
-      - name: dev-sgx-enclave
-        hostPath:
-          path: /dev/sgx/enclave
-      - name: dev-sgx-provision
-        hostPath:
-          path: /dev/sgx/provision
-      - name: sealed-files
-        hostPath:
-          path: {{ $.Values.sgx_sealed_files | quote }}
 
 ---
 apiVersion: v1

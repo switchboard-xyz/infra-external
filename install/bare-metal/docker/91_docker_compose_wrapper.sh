@@ -1,1 +1,0 @@
-../../../.scripts/docker-compose/docker_compose_wrapper.sh

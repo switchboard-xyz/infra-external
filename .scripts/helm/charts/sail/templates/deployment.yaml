@@ -1,0 +1,85 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sail
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: sail
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: sail
+  template:
+    metadata:
+      labels:
+        app: sail
+      annotations:
+        io.katacontainers.config.hypervisor.kernel_params: " agent.guest_components_rest_api=all" # agent.aa_kbc_params=cc_kbc::http://141.95.35.110:31256"
+        io.containerd.cri.runtime-handler: kata-qemu-snp
+    spec:
+      runtimeClassName: kata-qemu-snp
+      containers:
+      - name: sail
+        image: {{ .Values.sail.image | quote }}
+        imagePullPolicy: Always
+        ports:
+        - containerPort: {{ .Values.sail.pod.port | default 3000 }}
+          name: http
+        {{ if eq $.Values.sail.command "shell" }}
+        command:
+        - "/bin/sh"
+        args:
+        - "-c"
+        - "while true; do echo '==> DEBUG MODE ENABLED VIA CFG <=='; sleep 5; done;"
+        {{ end }}
+        resources:
+          limits:
+            cpu: {{ .Values.resources.limits.cpu }}
+            memory: {{ .Values.resources.limits.memory }}
+          requests:
+            cpu: {{ .Values.resources.requests.cpu }}
+            memory: {{ .Values.resources.requests.memory }}
+{{ if eq .Values.sail.image "switchboardlabs/reporteer:latest" }}
+        env:
+        - name: SEV_SNP_CACHE_PATH
+          value: "/tmp/certs"
+        - name: REPORTEER_SERVER_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: reporteer-config
+              key: server_port
+        - name: REPORTEER_ENDPOINT_URL
+          valueFrom:
+            configMapKeyRef:
+              name: reporteer-config
+              key: endpoint_url
+        - name: REPORTEER_LOG_LEVEL
+          valueFrom:
+            configMapKeyRef:
+              name: reporteer-config
+              key: log_level
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: http
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: http
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        securityContext:
+          runAsNonRoot: true
+          runAsUser: 10001
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+              - ALL
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+{{ end }} # end if for reporteer image

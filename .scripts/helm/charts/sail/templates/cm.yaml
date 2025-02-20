@@ -1,0 +1,12 @@
+{{ if eq .Values.sail.image "switchboardlabs/reporteer:latest" }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: reporteer-config
+  namespace: {{ .Release.Namespace }}
+data:
+  server_port: {{ .Values.sail.pod.port | default 3000 | quote }}
+  endpoint_url: "http://127.0.0.1:8006/derived_key"
+  log_level: "info"
+{{ end }} # end if for reporteer image

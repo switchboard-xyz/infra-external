@@ -1,1 +1,0 @@
-../../../.scripts/solana/oracle-create-sol-account.sh
