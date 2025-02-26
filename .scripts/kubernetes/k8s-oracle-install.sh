@@ -98,9 +98,9 @@ if [[ "${LANDING_ENABLED}" != "" && "${LANDING_ENABLED}" == "true" ]]; then
   helm upgrade -i "sb-landing-page" \
     -n "${LANDING_NAMESPACE}" --create-namespace \
     -f "${tmp_helm_file}" \
-    --set components.landing.namespace="${LANDING_NAMESPACE}" \
-    --set components.landing.image="${LANDING_IMAGE}" \
-    --set components.landing.image_tag="${LANDING_IMAGE_TAG}" \
+    --set landing.namespace="${LANDING_NAMESPACE}" \
+    --set landing.image="${LANDING_IMAGE}" \
+    --set landing.image_tag="${LANDING_IMAGE_TAG}" \
     "${helm_landing_page_chart_dir}" >/dev/null
   echo "HELM: Switchboard Landing page installed under namespace ${LANDING_NAMESPACE}"
 fi
