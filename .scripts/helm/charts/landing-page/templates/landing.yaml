@@ -1,4 +1,3 @@
-{{ if eq $.Values.components.landing.enabled true }}
 apiVersion: apps/v1
 kind: Deployment
 
@@ -162,4 +161,3 @@ spec:
             port:
               number: {{ $.Values.components.landing.port }}
 {{ end }} ## end Ingress IF
-{{ end }} ## end landing enable check
