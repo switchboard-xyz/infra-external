@@ -3,7 +3,7 @@ kind: Deployment
 
 metadata:
   name: landing
-  namespace: {{ $.Values.components.landing.namespace | quote }}
+  namespace: {{ $.Values.landing.namespace | quote }}
 
   labels:
     app: landing
@@ -45,13 +45,13 @@ spec:
         runAsUser: 10001
 
       containers:
-      - image: {{ printf "%s:%s" $.Values.components.landing.image $.Values.components.landing.image_tag | quote }}
+      - image: {{ printf "%s:%s" $.Values.landing.image $.Values.landing.image_tag | quote }}
         imagePullPolicy: Always #IfNotPresent
         name: landing
 
         ports:
         - name: web
-          containerPort: {{ $.Values.components.landing.port }}
+          containerPort: {{ $.Values.landing.port }}
           protocol: TCP
 
         securityContext:
@@ -66,11 +66,11 @@ spec:
         - name: SEV_SNP_CACHE_PATH
           value: "/tmp/certs"
         - name: DOCKER_IMAGE_TAG
-          value: {{ $.Values.components.docker_image_tag | quote }}
+          value: {{ $.Values.docker_image_tag | quote }}
         - name: REPORTEER_SERVER_PORT
-          value: {{ $.Values.components.landing.port | quote }}
+          value: {{ $.Values.landing.port | quote }}
         - name: REPORTEER_ENDPOINT_URL
-          value: {{ $.Values.components.landing.attestation_url | quote }}
+          value: {{ $.Values.landing.attestation_url | quote }}
         # LOGGING
         - name: RUST_LOG
           value: "info"
@@ -82,7 +82,7 @@ spec:
         - name: DEBUG
           value: {{ $.Values.debug | default "false" | quote }}
 
-        {{ if eq $.Values.components.landing.command "shell" }}
+        {{ if eq $.Values.landing.command "shell" }}
         command: [
           "/bin/sh"
         ]
@@ -92,11 +92,11 @@ spec:
         ]
         {{ end }}
 
-        {{ if not $.Values.components.landing.command }}
+        {{ if not $.Values.landing.command }}
         readinessProbe:
           httpGet:
             path: "/health"
-            port: {{ $.Values.components.landing.port }}
+            port: {{ $.Values.landing.port }}
           initialDelaySeconds: 60
           failureThreshold: 10
           periodSeconds: 10
@@ -104,7 +104,7 @@ spec:
         livenessProbe:
           httpGet:
             path: "/health"
-            port: {{ $.Values.components.landing.port }}
+            port: {{ $.Values.landing.port }}
           initialDelaySeconds: 60
           failureThreshold: 10
           periodSeconds: 10
@@ -113,38 +113,38 @@ spec:
 
         resources:
           limits:
-            cpu: {{ $.Values.components.landing.resources.limits.cpu }}
-            memory: {{ $.Values.components.landing.resources.limits.memory }}
+            cpu: {{ $.Values.landing.resources.limits.cpu }}
+            memory: {{ $.Values.landing.resources.limits.memory }}
           requests:
-            cpu: {{ $.Values.components.landing.resources.requests.cpu }}
-            memory: {{ $.Values.components.landing.resources.requests.memory }}
+            cpu: {{ $.Values.landing.resources.requests.cpu }}
+            memory: {{ $.Values.landing.resources.requests.memory }}
 
 ---
 apiVersion: v1
 kind: Service
 metadata:
   name: landing
-  namespace: {{ $.Values.components.landing.namespace | quote }}
+  namespace: {{ $.Values.landing.namespace | quote }}
 spec:
   selector:
     app: landing
   ports:
     - protocol: TCP
-      port: {{ $.Values.components.landing.port }}
-      targetPort: {{ $.Values.components.landing.port }}
+      port: {{ $.Values.landing.port }}
+      targetPort: {{ $.Values.landing.port }}
       name: landing
 
-{{ if eq $.Values.components.landing.ingress.enabled true }}
+{{ if eq $.Values.landing.ingress.enabled true }}
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: landing
-  namespace: {{ $.Values.components.landing.namespace | quote }}
+  namespace: {{ $.Values.landing.namespace | quote }}
   annotations:
-    cert-manager.io/cluster-issuer: {{ $.Values.components.landing.ingress.issuer | quote }}
+    cert-manager.io/cluster-issuer: {{ $.Values.landing.ingress.issuer | quote }}
 spec:
-  ingressClassName: {{ $.Values.components.landing.ingress.class | quote }}
+  ingressClassName: {{ $.Values.landing.ingress.class | quote }}
   tls:
   - hosts:
     - {{ $.Values.host | quote }}
@@ -159,5 +159,5 @@ spec:
           service:
             name: landing
             port:
-              number: {{ $.Values.components.landing.port }}
+              number: {{ $.Values.landing.port }}
 {{ end }} ## end Ingress IF
