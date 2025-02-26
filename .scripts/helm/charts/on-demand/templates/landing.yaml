@@ -46,7 +46,7 @@ spec:
         runAsUser: 10001
 
       containers:
-      - image: {{ printf "%s:%s" $.Values.components.landing.image $.Values.components.docker_image_tag | quote }}
+      - image: {{ printf "%s:%s" $.Values.components.landing.image $.Values.components.landing.image_tag | quote }}
         imagePullPolicy: Always #Always #IfNotPresent
         name: landing
 

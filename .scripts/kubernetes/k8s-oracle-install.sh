@@ -71,7 +71,8 @@ helm upgrade -i "sb-oracle-${NETWORK}" \
   --set components.gateway.image="${GATEWAY_DOCKER_IMAGE}" \
   --set components.guardian.enabled="${GUARDIAN_ENABLED}" \
   --set components.landing.enabled="${LANDING_ENABLED}" \
-  "${helm_chart_dir}" >/dev/null
+  --set components.landing.image="${LANDING_IMAGE}" \
+  --set components.landing.image_tag="${LANDING_IMAGE_TAG}" \ "${helm_chart_dir}" >/dev/null
 echo "HELM: Switchboard Oracle installed under namespace ${NAMESPACE}"
 
 rm "${tmp_helm_file}"
