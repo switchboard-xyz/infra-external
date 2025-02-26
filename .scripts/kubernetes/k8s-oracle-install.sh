@@ -65,12 +65,14 @@ helm upgrade -i "sb-oracle-${NETWORK}" \
   -n "${NAMESPACE}" --create-namespace \
   -f "${helm_default_values_file}" \
   -f "${tmp_helm_file}" \
+  --set components.oracle.enabled="${GUARDIAN_ENABLED}" \
   --set components.docker_image_tag="${DOCKER_IMAGE_TAG}" \
   --set components.oracle.image="${ORACLE_DOCKER_IMAGE}" \
   --set components.guardian.image="${GUARDIAN_DOCKER_IMAGE}" \
   --set components.gateway.image="${GATEWAY_DOCKER_IMAGE}" \
   --set components.guardian.enabled="${GUARDIAN_ENABLED}" \
   --set components.landing.enabled="${LANDING_ENABLED}" \
+  --set components.landing.namespace="${LANDING_NAMESPACE}" \
   --set components.landing.image="${LANDING_IMAGE}" \
   --set components.landing.image_tag="${LANDING_IMAGE_TAG}" \ "${helm_chart_dir}" >/dev/null
 echo "HELM: Switchboard Oracle installed under namespace ${NAMESPACE}"

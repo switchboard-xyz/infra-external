@@ -102,6 +102,7 @@ components:
     enabled: true
     image: "docker.io/switchboardlabs/reporteer"
     image_tag: "latest"
+    namespace: "default"
     port: 3000
     attestation_url: "http://127.0.0.1:8006/derived_key"
     ingress:
