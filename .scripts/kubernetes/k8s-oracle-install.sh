@@ -43,10 +43,10 @@ if [[ "$(kubectl get ns | grep -e '^'${NAMESPACE}'\W')" == "" ]]; then
   echo "KUBECTL: Namespace ${NAMESPACE} created"
 fi
 
-helm_dir="${repo_dir}/.scripts/helm/charts/"
-helm_on_demand_chart_dir="${helm_dir}/on-demand/"
-helm_landing_page_chart_dir="${helm_dir}/landing-page/"
-helm_default_values_file="${helm_dir}/values.yaml"
+helm_dir="${repo_dir}/.scripts/helm/"
+helm_charts_dir="${helm_dir}/charts/"
+helm_on_demand_chart_dir="${helm_charts_dir}/charts/on-demand/"
+helm_landing_page_chart_dir="${helm_charts_dir}/charts/landing-page/"
 helm_values_file="${helm_dir}/cfg/${cluster}-solana-values.yaml"
 tmp_helm_file="/tmp/helm_values.yaml"
 
@@ -64,7 +64,6 @@ fi
 echo "HELM: Installing Switchboard Oracle under namespace ${NAMESPACE}"
 helm upgrade -i "sb-oracle-${NETWORK}" \
   -n "${NAMESPACE}" --create-namespace \
-  -f "${helm_default_values_file}" \
   -f "${tmp_helm_file}" \
   --set components.docker_image_tag="${DOCKER_IMAGE_TAG}" \
   --set components.oracle.enabled=${ORACLE_ENABLED} \
@@ -98,7 +97,6 @@ if [[ "${LANDING_ENABLED}" != "" && "${LANDING_ENABLED}" == "true" ]]; then
   echo "HELM: Installing Switchboard Landing page under namespace ${LANDING_NAMESPACE}"
   helm upgrade -i "sb-landing-page" \
     -n "${LANDING_NAMESPACE}" --create-namespace \
-    -f "${helm_default_values_file}" \
     -f "${tmp_helm_file}" \
     --set components.landing.namespace="${LANDING_NAMESPACE}" \
     --set components.landing.image="${LANDING_IMAGE}" \
