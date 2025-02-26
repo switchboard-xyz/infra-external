@@ -1,4 +1,4 @@
-{{ if eq $.Values.components.oracle.enabled "true" }}
+{{ if eq $.Values.components.oracle.enabled true }}
 apiVersion: apps/v1
 kind: Deployment
 
@@ -34,7 +34,7 @@ spec:
   template:
     metadata:
       annotations:
-        io.katacontainers.config.hypervisor.kernel_params: " agent.guest_components_rest_api=all" # agent.aa_kbc_params=cc_kbc::http://141.95.35.110:31256"
+        io.katacontainers.config.hypervisor.kernel_params: " agent.guest_components_rest_api=all"
         io.containerd.cri.runtime-handler: kata-qemu-snp
       labels:
         chain: {{ $.Values.chain | quote }}
@@ -47,7 +47,7 @@ spec:
 
       containers:
       - image: {{ printf "%s:%s" $.Values.components.oracle.image $.Values.components.docker_image_tag | quote }}
-        imagePullPolicy: Always #Always #IfNotPresent
+        imagePullPolicy: Always #IfNotPresent
         name: oracle
 
         ports:
