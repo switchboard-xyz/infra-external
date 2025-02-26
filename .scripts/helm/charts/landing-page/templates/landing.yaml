@@ -81,6 +81,10 @@ spec:
           value: {{ $.Values.verbose | default "0" | quote }}
         - name: DEBUG
           value: {{ $.Values.debug | default "false" | quote }}
+        - name: HOSTNAME
+          value: {{ $.Values.ingress.host | default "false" | quote }}
+        - name: TEE_TYPE
+          value: "kata-qemu-snp"
 
         {{ if eq $.Values.landing.command "shell" }}
         command: [
