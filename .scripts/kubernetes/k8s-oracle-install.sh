@@ -46,7 +46,7 @@ fi
 helm_dir="${repo_dir}/.scripts/helm/charts/"
 helm_on_demand_chart_dir="${helm_dir}/on-demand/"
 helm_landing_page_chart_dir="${helm_dir}/landing-page/"
-helm_default_values_file="${helm_chart_dir}/values.yaml"
+helm_default_values_file="${helm_dir}/values.yaml"
 helm_values_file="${helm_dir}/cfg/${cluster}-solana-values.yaml"
 tmp_helm_file="/tmp/helm_values.yaml"
 
