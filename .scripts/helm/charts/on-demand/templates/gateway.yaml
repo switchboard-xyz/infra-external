@@ -1,4 +1,4 @@
-{{ if eq $.Values.components.gateway.enabled true }}
+{{ if eq $.Values.components.gateway.enabled "true" }}
 apiVersion: apps/v1
 kind: Deployment
 
