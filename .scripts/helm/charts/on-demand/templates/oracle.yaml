@@ -1,4 +1,4 @@
-{{ if eq $.Values.components.oracle.enabled true }}
+{{ if $.Values.components.oracle.enabled }}
 apiVersion: apps/v1
 kind: Deployment
 
@@ -178,7 +178,7 @@ spec:
       targetPort: {{ $.Values.components.oracle.port }}
       name: oracle
 
-{{ if eq $.Values.components.oracle.ingress.enabled true }}
+{{ if $.Values.components.oracle.ingress.enabled }}
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
