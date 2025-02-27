@@ -89,18 +89,18 @@ spec:
           httpGet:
             path: "/health"
             port: {{ $.Values.oracle_landing_page.port }}
-          initialDelaySeconds: 60
-          failureThreshold: 10
-          periodSeconds: 10
-          timeoutSeconds: 10
+          initialDelaySeconds: 10
+          failureThreshold: 5
+          periodSeconds: 2
+          timeoutSeconds: 2
         livenessProbe:
           httpGet:
             path: "/health"
             port: {{ $.Values.oracle_landing_page.port }}
-          initialDelaySeconds: 60
-          failureThreshold: 10
-          periodSeconds: 10
-          timeoutSeconds: 10
+          initialDelaySeconds: 10
+          failureThreshold: 5
+          periodSeconds: 2
+          timeoutSeconds: 2
         {{ end }}
 
         resources:
