@@ -49,6 +49,7 @@ helm_on_demand_chart_dir="${helm_charts_dir}/on-demand/"
 helm_landing_page_chart_dir="${helm_charts_dir}/oracle-landing-page/"
 helm_values_file="${helm_dir}/cfg/${cluster}-solana-values.yaml"
 tmp_helm_file="/tmp/helm_values.yaml"
+landing_tmp_helm_file="/tmp/helm_landing_values.yaml"
 
 cp "${helm_values_file}" "${tmp_helm_file}"
 
@@ -97,7 +98,7 @@ if [[ "${LANDING_ENABLED}" != "" && "${LANDING_ENABLED}" == "true" ]]; then
   echo "HELM: Installing Switchboard Landing page under namespace ${LANDING_NAMESPACE}"
   helm upgrade -i "oracle-landing-page" \
     -n "${LANDING_NAMESPACE}" --create-namespace \
-    -f "${tmp_helm_file}" \
+    -f "${landing_tmp_helm_file}" \
     --set oracle_landing_page.namespace="${LANDING_NAMESPACE}" \
     --set oracle_landing_page.image="${LANDING_IMAGE}" \
     --set oracle_landing_page.image_tag="${LANDING_IMAGE_TAG}" \
