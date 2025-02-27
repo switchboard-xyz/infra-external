@@ -1,0 +1,153 @@
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: oracle-landing-page
+  namespace: {{ $.Values.oracle_landing_page.namespace | quote }}
+
+  labels:
+    app: oracle-landing-page
+
+  annotations:
+    keel.sh/approvals: "0"
+    keel.sh/policy: "regexp:^(canary-)?(devnet|stable)$"  # update policy (available: patch, minor, major, all, force)
+    keel.sh/trigger: "poll"                                 # enable active repository checking (webhooks and GCR would still work)
+    keel.sh/match-tag: "true"                               # only makes a difference when used with 'force' policy, will only update if tag matches :dev->:dev, :prod->:prod
+    #keel.sh/policy: "force"
+    #keel.sh/pollSchedule: "@every 1m"
+
+spec:
+  replicas: 1
+
+  selector:
+    matchLabels:
+      app: oracle-landing-page
+
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+
+  template:
+    metadata:
+      annotations:
+        io.katacontainers.config.hypervisor.kernel_params: " agent.guest_components_rest_api=all"
+        io.containerd.cri.runtime-handler: kata-qemu-snp
+      labels:
+        app: oracle-landing-page
+
+    spec:
+      runtimeClassName: kata-qemu-snp
+      dnsPolicy: ClusterFirst # TODO: probably not needed.. to be removed
+
+      containers:
+      - image: {{ printf "%s:%s" $.Values.oracle_landing_page.image $.Values.oracle_landing_page.image_tag | quote }}
+        imagePullPolicy: Always #IfNotPresent
+        name: oracle-landing-page
+
+        ports:
+        - name: web
+          containerPort: {{ $.Values.oracle_landing_page.port }}
+          protocol: TCP
+
+        env:
+        - name: SEV_SNP_CACHE_PATH
+          value: "/tmp/certs"
+        - name: DOCKER_IMAGE_TAG
+          value: {{ $.Values.docker_image_tag | quote }}
+        - name: REPORTEER_SERVER_PORT
+          value: {{ $.Values.oracle_landing_page.port | quote }}
+        - name: REPORTEER_ENDPOINT_URL
+          value: {{ $.Values.oracle_landing_page.attestation_url | quote }}
+        # LOGGING
+        - name: RUST_LOG
+          value: "info"
+        - name: RUST_BACKTRACE
+          value: "1"
+        # ALERTING
+        - name: VERBOSE
+          value: {{ $.Values.verbose | default "0" | quote }}
+        - name: DEBUG
+          value: {{ $.Values.debug | default "false" | quote }}
+        - name: HOSTNAME
+          value: {{ $.Values.oracle_landing_page.ingress.host | default "localhost" | quote }}
+        - name: TEE_TYPE
+          value: "SEV-SNP"
+
+        {{ if eq $.Values.oracle_landing_page.command "shell" }}
+        command: [
+          "/bin/sh"
+        ]
+        args: [
+          "-c",
+          "while true; do echo '==> DEBUG MODE ENABLED VIA CFG <=='; sleep 5; done;"
+        ]
+        {{ end }}
+
+        {{ if not $.Values.oracle_landing_page.command }}
+        readinessProbe:
+          tcpSocket:
+            port: {{ $.Values.oracle_landing_page.port }}
+          initialDelaySeconds: 10
+          failureThreshold: 5
+          periodSeconds: 2
+          timeoutSeconds: 2
+        livenessProbe:
+          tcpSocket:
+            port: {{ $.Values.oracle_landing_page.port }}
+          initialDelaySeconds: 10
+          failureThreshold: 5
+          periodSeconds: 2
+          timeoutSeconds: 2
+        {{ end }}
+
+        resources:
+          limits:
+            cpu: {{ $.Values.oracle_landing_page.resources.limits.cpu }}
+            memory: {{ $.Values.oracle_landing_page.resources.limits.memory }}
+          requests:
+            cpu: {{ $.Values.oracle_landing_page.resources.requests.cpu }}
+            memory: {{ $.Values.oracle_landing_page.resources.requests.memory }}
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: oracle-landing-page
+  namespace: {{ $.Values.oracle_landing_page.namespace | quote }}
+spec:
+  selector:
+    app: oracle-landing-page
+  ports:
+    - protocol: TCP
+      port: {{ $.Values.oracle_landing_page.port }}
+      targetPort: {{ $.Values.oracle_landing_page.port }}
+      name: oracle-landing-page
+
+{{ if eq $.Values.oracle_landing_page.ingress.enabled true }}
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: oracle-landing-page
+  namespace: {{ $.Values.oracle_landing_page.namespace | quote }}
+  annotations:
+    cert-manager.io/cluster-issuer: {{ $.Values.oracle_landing_page.ingress.issuer | quote }}
+spec:
+  ingressClassName: {{ $.Values.oracle_landing_page.ingress.class | quote }}
+  tls:
+  - hosts:
+    - {{ $.Values.oracle_landing_page.ingress.host | quote }}
+    secretName: ingress-tls
+  rules:
+  - host: {{ $.Values.oracle_landing_page.ingress.host | quote }}
+    http:
+      paths:
+      - path: /
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: oracle-landing-page
+            port:
+              number: {{ $.Values.oracle_landing_page.port }}
+{{ end }} ## end Ingress IF

@@ -44,16 +44,21 @@ if [[ "$(kubectl get ns | grep -e '^'${NAMESPACE}'\W')" == "" ]]; then
 fi
 
 helm_dir="${repo_dir}/.scripts/helm/"
-helm_chart_dir="${helm_dir}/charts/on-demand/"
-helm_default_values_file="${helm_chart_dir}/values.yaml"
+helm_charts_dir="${helm_dir}/charts/"
+helm_on_demand_chart_dir="${helm_charts_dir}/on-demand/"
+helm_landing_page_chart_dir="${helm_charts_dir}/oracle-landing-page/"
 helm_values_file="${helm_dir}/cfg/${cluster}-solana-values.yaml"
+helm_landing_values_file="${helm_dir}/cfg/oracle-landing-page-values.yaml"
 tmp_helm_file="/tmp/helm_values.yaml"
+landing_tmp_helm_file="/tmp/helm_landing_values.yaml"
 
 cp "${helm_values_file}" "${tmp_helm_file}"
+cp "${helm_landing_values_file}" "${landing_tmp_helm_file}"
 
 source "${repo_dir}"/.scripts/var/_load_vars.sh
 set +u
 load_vars "${tmp_helm_file}" >/dev/null 2>&1
+load_vars "${landing_tmp_helm_file}" >/dev/null 2>&1
 
 sgx_data_dir="${repo_dir}/data/${cluster}_protected_files"
 if [ ! -d "${repo_dir}" ]; then
@@ -63,17 +68,16 @@ fi
 echo "HELM: Installing Switchboard Oracle under namespace ${NAMESPACE}"
 helm upgrade -i "sb-oracle-${NETWORK}" \
   -n "${NAMESPACE}" --create-namespace \
-  -f "${helm_default_values_file}" \
   -f "${tmp_helm_file}" \
   --set components.docker_image_tag="${DOCKER_IMAGE_TAG}" \
+  --set components.oracle.enabled=${ORACLE_ENABLED} \
   --set components.oracle.image="${ORACLE_DOCKER_IMAGE}" \
+  --set components.guardian.enabled=${GUARDIAN_ENABLED} \
   --set components.guardian.image="${GUARDIAN_DOCKER_IMAGE}" \
+  --set components.gateway.enabled=${GATEWAY_ENABLED} \
   --set components.gateway.image="${GATEWAY_DOCKER_IMAGE}" \
-  --set components.guardian.enabled="${GUARDIAN_ENABLED}" \
-  "${helm_chart_dir}" >/dev/null
+  "${helm_on_demand_chart_dir}" >/dev/null
 echo "HELM: Switchboard Oracle installed under namespace ${NAMESPACE}"
-
-rm "${tmp_helm_file}"
 
 if [[ "${PAYER_SECRET_KEY}" != "" ]]; then
   echo "KUBECTL: creating secret ${NAMESPACE}/payer-secret"
@@ -92,4 +96,20 @@ if [[ "${PAYER_SECRET_KEY}" != "" ]]; then
     payer-secret >/dev/null
   echo "KUBECTL: secret ${NAMESPACE}/payer-secret created"
 fi
+
+if [[ "${LANDING_ENABLED}" != "" && "${LANDING_ENABLED}" == "true" ]]; then
+  echo "HELM: Installing Switchboard Landing page under namespace ${LANDING_NAMESPACE}"
+  helm upgrade -i "oracle-landing-page" \
+    -n "${LANDING_NAMESPACE}" --create-namespace \
+    -f "${landing_tmp_helm_file}" \
+    --set oracle_landing_page.namespace="${LANDING_NAMESPACE}" \
+    --set oracle_landing_page.image="${LANDING_IMAGE}" \
+    --set oracle_landing_page.image_tag="${LANDING_IMAGE_TAG}" \
+    --set oracle_landing_page.ingress.host="${CLUSTER_DOMAIN}" \
+    "${helm_landing_page_chart_dir}" >/dev/null
+  echo "HELM: Switchboard Oracle Landing page installed under namespace ${LANDING_NAMESPACE}"
+fi
+
+rm "${tmp_helm_file}"
+
 set -u
