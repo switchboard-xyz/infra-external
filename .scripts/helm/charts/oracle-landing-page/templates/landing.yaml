@@ -72,7 +72,7 @@ spec:
         - name: HOSTNAME
           value: {{ $.Values.oracle_landing_page.ingress.host | default "false" | quote }}
         - name: TEE_TYPE
-          value: "kata-qemu-snp"
+          value: "SEV-SNP"
 
         {{ if eq $.Values.oracle_landing_page.command "shell" }}
         command: [
