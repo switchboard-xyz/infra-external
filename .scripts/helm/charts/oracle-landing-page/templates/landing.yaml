@@ -139,10 +139,10 @@ spec:
   ingressClassName: {{ $.Values.oracle_landing_page.ingress.class | quote }}
   tls:
   - hosts:
-    - {{ $.Values.oracle_landing_page.host | quote }}
+    - {{ $.Values.oracle_landing_page.ingress.host | quote }}
     secretName: ingress-tls
   rules:
-  - host: {{ $.Values.oracle_landing_page.host | quote }}
+  - host: {{ $.Values.oracle_landing_page.ingress.host | quote }}
     http:
       paths:
       - path: /
