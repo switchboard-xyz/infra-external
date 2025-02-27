@@ -1,0 +1,24 @@
+debug: ""
+verbose: ""
+list_config_and_exit: ""
+
+oracle_landing_page:
+  image: "__LANDING_IMAGE__"
+  image_tag: "__LANDING_IMAGE_TAG__"
+  namespace: "__LANDING_NAMESPACE__"
+  port: 80
+  attestation_url: "http://127.0.0.1:8006/derived_key"
+  ingress:
+    enabled: true
+    class: "nginx"
+    issuer: "letsencrypt-production"
+    host: "__CLUSTER_DOMAIN__"
+    url: ""
+  command: ""
+  resources:
+    limits:
+      cpu: "250m"
+      memory: "256Mi"
+    requests:
+      cpu: "100m"
+      memory: "128Mi"
