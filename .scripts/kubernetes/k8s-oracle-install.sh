@@ -48,10 +48,12 @@ helm_charts_dir="${helm_dir}/charts/"
 helm_on_demand_chart_dir="${helm_charts_dir}/on-demand/"
 helm_landing_page_chart_dir="${helm_charts_dir}/oracle-landing-page/"
 helm_values_file="${helm_dir}/cfg/${cluster}-solana-values.yaml"
+helm_landing_values_file="${helm_dir}/cfg/${cluster}-solana-values.yaml"
 tmp_helm_file="/tmp/helm_values.yaml"
 landing_tmp_helm_file="/tmp/helm_landing_values.yaml"
 
 cp "${helm_values_file}" "${tmp_helm_file}"
+cp "${helm_landing_values_file}" "${landing_tmp_helm_file}"
 
 source "${repo_dir}"/.scripts/var/_load_vars.sh
 set +u
