@@ -46,7 +46,7 @@ fi
 helm_dir="${repo_dir}/.scripts/helm/"
 helm_charts_dir="${helm_dir}/charts/"
 helm_on_demand_chart_dir="${helm_charts_dir}/on-demand/"
-helm_landing_page_chart_dir="${helm_charts_dir}/landing-page/"
+helm_landing_page_chart_dir="${helm_charts_dir}/oracle-landing-page/"
 helm_values_file="${helm_dir}/cfg/${cluster}-solana-values.yaml"
 tmp_helm_file="/tmp/helm_values.yaml"
 
@@ -95,14 +95,14 @@ fi
 
 if [[ "${LANDING_ENABLED}" != "" && "${LANDING_ENABLED}" == "true" ]]; then
   echo "HELM: Installing Switchboard Landing page under namespace ${LANDING_NAMESPACE}"
-  helm upgrade -i "sb-landing-page" \
+  helm upgrade -i "oracle-landing-page" \
     -n "${LANDING_NAMESPACE}" --create-namespace \
     -f "${tmp_helm_file}" \
     --set landing.namespace="${LANDING_NAMESPACE}" \
     --set landing.image="${LANDING_IMAGE}" \
     --set landing.image_tag="${LANDING_IMAGE_TAG}" \
     "${helm_landing_page_chart_dir}" >/dev/null
-  echo "HELM: Switchboard Landing page installed under namespace ${LANDING_NAMESPACE}"
+  echo "HELM: Switchboard Oracle Landing page installed under namespace ${LANDING_NAMESPACE}"
 fi
 
 rm "${tmp_helm_file}"
