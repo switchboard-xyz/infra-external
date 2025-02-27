@@ -2,11 +2,11 @@ debug: ""
 verbose: ""
 list_config_and_exit: ""
 
-landing:
-  image: "docker.io/switchboardlabs/reporteer"
+oracle-landing-page:
+  image: "docker.io/switchboardlabs/oracle-landing-page"
   image_tag: "latest"
   namespace: "default"
-  port: 3000
+  port: 80
   attestation_url: "http://127.0.0.1:8006/derived_key"
   ingress:
     enabled: true
@@ -22,11 +22,3 @@ landing:
     requests:
       cpu: "100m"
       memory: "128Mi"
-  securityContext:
-    runAsNonRoot: true
-    runAsUser: 10001
-    allowPrivilegeEscalation: false
-    capabilities:
-      drop:
-        - ALL
-

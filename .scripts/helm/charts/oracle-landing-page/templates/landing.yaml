@@ -2,11 +2,11 @@ apiVersion: apps/v1
 kind: Deployment
 
 metadata:
-  name: landing
-  namespace: {{ $.Values.landing.namespace | quote }}
+  name: oracle-landing-page
+  namespace: {{ $.Values.oracle-landing-page.namespace | quote }}
 
   labels:
-    app: landing
+    app: oracle-landing-page
 
   annotations:
     keel.sh/approvals: "0"
@@ -21,7 +21,7 @@ spec:
 
   selector:
     matchLabels:
-      app: landing
+      app: oracle-landing-page
 
   strategy:
     rollingUpdate:
@@ -34,33 +34,21 @@ spec:
         io.katacontainers.config.hypervisor.kernel_params: " agent.guest_components_rest_api=all"
         io.containerd.cri.runtime-handler: kata-qemu-snp
       labels:
-        app: landing
+        app: oracle-landing-page
 
     spec:
       runtimeClassName: kata-qemu-snp
       dnsPolicy: ClusterFirst # TODO: probably not needed.. to be removed
 
-      securityContext:
-        runAsNonRoot: true
-        runAsUser: 10001
-
       containers:
-      - image: {{ printf "%s:%s" $.Values.landing.image $.Values.landing.image_tag | quote }}
+      - image: {{ printf "%s:%s" $.Values.oracle-landing-page.image $.Values.oracle-landing-page.image_tag | quote }}
         imagePullPolicy: Always #IfNotPresent
-        name: landing
+        name: oracle-landing-page
 
         ports:
         - name: web
-          containerPort: {{ $.Values.landing.port }}
+          containerPort: {{ $.Values.oracle-landing-page.port }}
           protocol: TCP
-
-        securityContext:
-          runAsNonRoot: true
-          runAsUser: 10001
-          allowPrivilegeEscalation: false
-          capabilities:
-            drop:
-              - ALL
 
         env:
         - name: SEV_SNP_CACHE_PATH
@@ -68,9 +56,9 @@ spec:
         - name: DOCKER_IMAGE_TAG
           value: {{ $.Values.docker_image_tag | quote }}
         - name: REPORTEER_SERVER_PORT
-          value: {{ $.Values.landing.port | quote }}
+          value: {{ $.Values.oracle-landing-page.port | quote }}
         - name: REPORTEER_ENDPOINT_URL
-          value: {{ $.Values.landing.attestation_url | quote }}
+          value: {{ $.Values.oracle-landing-page.attestation_url | quote }}
         # LOGGING
         - name: RUST_LOG
           value: "info"
@@ -86,7 +74,7 @@ spec:
         - name: TEE_TYPE
           value: "kata-qemu-snp"
 
-        {{ if eq $.Values.landing.command "shell" }}
+        {{ if eq $.Values.oracle-landing-page.command "shell" }}
         command: [
           "/bin/sh"
         ]
@@ -96,11 +84,11 @@ spec:
         ]
         {{ end }}
 
-        {{ if not $.Values.landing.command }}
+        {{ if not $.Values.oracle-landing-page.command }}
         readinessProbe:
           httpGet:
             path: "/health"
-            port: {{ $.Values.landing.port }}
+            port: {{ $.Values.oracle-landing-page.port }}
           initialDelaySeconds: 60
           failureThreshold: 10
           periodSeconds: 10
@@ -108,7 +96,7 @@ spec:
         livenessProbe:
           httpGet:
             path: "/health"
-            port: {{ $.Values.landing.port }}
+            port: {{ $.Values.oracle-landing-page.port }}
           initialDelaySeconds: 60
           failureThreshold: 10
           periodSeconds: 10
@@ -117,38 +105,38 @@ spec:
 
         resources:
           limits:
-            cpu: {{ $.Values.landing.resources.limits.cpu }}
-            memory: {{ $.Values.landing.resources.limits.memory }}
+            cpu: {{ $.Values.oracle-landing-page.resources.limits.cpu }}
+            memory: {{ $.Values.oracle-landing-page.resources.limits.memory }}
           requests:
-            cpu: {{ $.Values.landing.resources.requests.cpu }}
-            memory: {{ $.Values.landing.resources.requests.memory }}
+            cpu: {{ $.Values.oracle-landing-page.resources.requests.cpu }}
+            memory: {{ $.Values.oracle-landing-page.resources.requests.memory }}
 
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: landing
-  namespace: {{ $.Values.landing.namespace | quote }}
+  name: oracle-landing-page
+  namespace: {{ $.Values.oracle-landing-page.namespace | quote }}
 spec:
   selector:
-    app: landing
+    app: oracle-landing-page
   ports:
     - protocol: TCP
-      port: {{ $.Values.landing.port }}
-      targetPort: {{ $.Values.landing.port }}
-      name: landing
+      port: {{ $.Values.oracle-landing-page.port }}
+      targetPort: {{ $.Values.oracle-landing-page.port }}
+      name: oracle-landing-page
 
-{{ if eq $.Values.landing.ingress.enabled true }}
+{{ if eq $.Values.oracle-landing-page.ingress.enabled true }}
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: landing
-  namespace: {{ $.Values.landing.namespace | quote }}
+  name: oracle-landing-page
+  namespace: {{ $.Values.oracle-landing-page.namespace | quote }}
   annotations:
-    cert-manager.io/cluster-issuer: {{ $.Values.landing.ingress.issuer | quote }}
+    cert-manager.io/cluster-issuer: {{ $.Values.oracle-landing-page.ingress.issuer | quote }}
 spec:
-  ingressClassName: {{ $.Values.landing.ingress.class | quote }}
+  ingressClassName: {{ $.Values.oracle-landing-page.ingress.class | quote }}
   tls:
   - hosts:
     - {{ $.Values.host | quote }}
@@ -161,7 +149,7 @@ spec:
         pathType: ImplementationSpecific
         backend:
           service:
-            name: landing
+            name: oracle-landing-page
             port:
-              number: {{ $.Values.landing.port }}
+              number: {{ $.Values.oracle-landing-page.port }}
 {{ end }} ## end Ingress IF
