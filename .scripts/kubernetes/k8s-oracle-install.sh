@@ -98,9 +98,9 @@ if [[ "${LANDING_ENABLED}" != "" && "${LANDING_ENABLED}" == "true" ]]; then
   helm upgrade -i "oracle-landing-page" \
     -n "${LANDING_NAMESPACE}" --create-namespace \
     -f "${tmp_helm_file}" \
-    --set landing.namespace="${LANDING_NAMESPACE}" \
-    --set landing.image="${LANDING_IMAGE}" \
-    --set landing.image_tag="${LANDING_IMAGE_TAG}" \
+    --set oracle_landing_page.namespace="${LANDING_NAMESPACE}" \
+    --set oracle_landing_page.image="${LANDING_IMAGE}" \
+    --set oracle_landing_page.image_tag="${LANDING_IMAGE_TAG}" \
     "${helm_landing_page_chart_dir}" >/dev/null
   echo "HELM: Switchboard Oracle Landing page installed under namespace ${LANDING_NAMESPACE}"
 fi

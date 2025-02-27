@@ -70,7 +70,7 @@ spec:
         - name: DEBUG
           value: {{ $.Values.debug | default "false" | quote }}
         - name: HOSTNAME
-          value: {{ $.Values.ingress.host | default "false" | quote }}
+          value: {{ $.Values.oracle_landing_page.ingress.host | default "false" | quote }}
         - name: TEE_TYPE
           value: "kata-qemu-snp"
 
@@ -139,10 +139,10 @@ spec:
   ingressClassName: {{ $.Values.oracle_landing_page.ingress.class | quote }}
   tls:
   - hosts:
-    - {{ $.Values.host | quote }}
+    - {{ $.Values.oracle_landing_page.host | quote }}
     secretName: ingress-tls
   rules:
-  - host: {{ $.Values.host | quote }}
+  - host: {{ $.Values.oracle_landing_page.host | quote }}
     http:
       paths:
       - path: /
