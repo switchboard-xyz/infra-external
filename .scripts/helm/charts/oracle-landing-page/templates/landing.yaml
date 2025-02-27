@@ -70,7 +70,7 @@ spec:
         - name: DEBUG
           value: {{ $.Values.debug | default "false" | quote }}
         - name: HOSTNAME
-          value: {{ $.Values.oracle_landing_page.ingress.host | default "false" | quote }}
+          value: {{ $.Values.oracle_landing_page.ingress.host | default "localhost" | quote }}
         - name: TEE_TYPE
           value: "SEV-SNP"
 
