@@ -86,16 +86,14 @@ spec:
 
         {{ if not $.Values.oracle_landing_page.command }}
         readinessProbe:
-          httpGet:
-            path: "/health"
+          tcpSocket:
             port: {{ $.Values.oracle_landing_page.port }}
           initialDelaySeconds: 10
           failureThreshold: 5
           periodSeconds: 2
           timeoutSeconds: 2
         livenessProbe:
-          httpGet:
-            path: "/health"
+          tcpSocket:
             port: {{ $.Values.oracle_landing_page.port }}
           initialDelaySeconds: 10
           failureThreshold: 5
