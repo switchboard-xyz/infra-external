@@ -2,7 +2,7 @@ debug: ""
 verbose: ""
 list_config_and_exit: ""
 
-oracle-landing-page:
+oracle_landing_page:
   image: "docker.io/switchboardlabs/oracle-landing-page"
   image_tag: "latest"
   namespace: "default"

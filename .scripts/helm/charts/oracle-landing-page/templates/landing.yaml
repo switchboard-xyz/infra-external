@@ -3,7 +3,7 @@ kind: Deployment
 
 metadata:
   name: oracle-landing-page
-  namespace: {{ $.Values.oracle-landing-page.namespace | quote }}
+  namespace: {{ $.Values.oracle_landing_page.namespace | quote }}
 
   labels:
     app: oracle-landing-page
@@ -41,13 +41,13 @@ spec:
       dnsPolicy: ClusterFirst # TODO: probably not needed.. to be removed
 
       containers:
-      - image: {{ printf "%s:%s" $.Values.oracle-landing-page.image $.Values.oracle-landing-page.image_tag | quote }}
+      - image: {{ printf "%s:%s" $.Values.oracle_landing_page.image $.Values.oracle_landing_page.image_tag | quote }}
         imagePullPolicy: Always #IfNotPresent
         name: oracle-landing-page
 
         ports:
         - name: web
-          containerPort: {{ $.Values.oracle-landing-page.port }}
+          containerPort: {{ $.Values.oracle_landing_page.port }}
           protocol: TCP
 
         env:
@@ -56,9 +56,9 @@ spec:
         - name: DOCKER_IMAGE_TAG
           value: {{ $.Values.docker_image_tag | quote }}
         - name: REPORTEER_SERVER_PORT
-          value: {{ $.Values.oracle-landing-page.port | quote }}
+          value: {{ $.Values.oracle_landing_page.port | quote }}
         - name: REPORTEER_ENDPOINT_URL
-          value: {{ $.Values.oracle-landing-page.attestation_url | quote }}
+          value: {{ $.Values.oracle_landing_page.attestation_url | quote }}
         # LOGGING
         - name: RUST_LOG
           value: "info"
@@ -74,7 +74,7 @@ spec:
         - name: TEE_TYPE
           value: "kata-qemu-snp"
 
-        {{ if eq $.Values.oracle-landing-page.command "shell" }}
+        {{ if eq $.Values.oracle_landing_page.command "shell" }}
         command: [
           "/bin/sh"
         ]
@@ -84,11 +84,11 @@ spec:
         ]
         {{ end }}
 
-        {{ if not $.Values.oracle-landing-page.command }}
+        {{ if not $.Values.oracle_landing_page.command }}
         readinessProbe:
           httpGet:
             path: "/health"
-            port: {{ $.Values.oracle-landing-page.port }}
+            port: {{ $.Values.oracle_landing_page.port }}
           initialDelaySeconds: 60
           failureThreshold: 10
           periodSeconds: 10
@@ -96,7 +96,7 @@ spec:
         livenessProbe:
           httpGet:
             path: "/health"
-            port: {{ $.Values.oracle-landing-page.port }}
+            port: {{ $.Values.oracle_landing_page.port }}
           initialDelaySeconds: 60
           failureThreshold: 10
           periodSeconds: 10
@@ -105,38 +105,38 @@ spec:
 
         resources:
           limits:
-            cpu: {{ $.Values.oracle-landing-page.resources.limits.cpu }}
-            memory: {{ $.Values.oracle-landing-page.resources.limits.memory }}
+            cpu: {{ $.Values.oracle_landing_page.resources.limits.cpu }}
+            memory: {{ $.Values.oracle_landing_page.resources.limits.memory }}
           requests:
-            cpu: {{ $.Values.oracle-landing-page.resources.requests.cpu }}
-            memory: {{ $.Values.oracle-landing-page.resources.requests.memory }}
+            cpu: {{ $.Values.oracle_landing_page.resources.requests.cpu }}
+            memory: {{ $.Values.oracle_landing_page.resources.requests.memory }}
 
 ---
 apiVersion: v1
 kind: Service
 metadata:
   name: oracle-landing-page
-  namespace: {{ $.Values.oracle-landing-page.namespace | quote }}
+  namespace: {{ $.Values.oracle_landing_page.namespace | quote }}
 spec:
   selector:
     app: oracle-landing-page
   ports:
     - protocol: TCP
-      port: {{ $.Values.oracle-landing-page.port }}
-      targetPort: {{ $.Values.oracle-landing-page.port }}
+      port: {{ $.Values.oracle_landing_page.port }}
+      targetPort: {{ $.Values.oracle_landing_page.port }}
       name: oracle-landing-page
 
-{{ if eq $.Values.oracle-landing-page.ingress.enabled true }}
+{{ if eq $.Values.oracle_landing_page.ingress.enabled true }}
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: oracle-landing-page
-  namespace: {{ $.Values.oracle-landing-page.namespace | quote }}
+  namespace: {{ $.Values.oracle_landing_page.namespace | quote }}
   annotations:
-    cert-manager.io/cluster-issuer: {{ $.Values.oracle-landing-page.ingress.issuer | quote }}
+    cert-manager.io/cluster-issuer: {{ $.Values.oracle_landing_page.ingress.issuer | quote }}
 spec:
-  ingressClassName: {{ $.Values.oracle-landing-page.ingress.class | quote }}
+  ingressClassName: {{ $.Values.oracle_landing_page.ingress.class | quote }}
   tls:
   - hosts:
     - {{ $.Values.host | quote }}
@@ -151,5 +151,5 @@ spec:
           service:
             name: oracle-landing-page
             port:
-              number: {{ $.Values.oracle-landing-page.port }}
+              number: {{ $.Values.oracle_landing_page.port }}
 {{ end }} ## end Ingress IF
