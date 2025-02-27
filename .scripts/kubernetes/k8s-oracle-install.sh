@@ -58,6 +58,7 @@ cp "${helm_landing_values_file}" "${landing_tmp_helm_file}"
 source "${repo_dir}"/.scripts/var/_load_vars.sh
 set +u
 load_vars "${tmp_helm_file}" >/dev/null 2>&1
+load_vars "${landing_tmp_helm_file}" >/dev/null 2>&1
 
 sgx_data_dir="${repo_dir}/data/${cluster}_protected_files"
 if [ ! -d "${repo_dir}" ]; then
@@ -104,6 +105,7 @@ if [[ "${LANDING_ENABLED}" != "" && "${LANDING_ENABLED}" == "true" ]]; then
     --set oracle_landing_page.namespace="${LANDING_NAMESPACE}" \
     --set oracle_landing_page.image="${LANDING_IMAGE}" \
     --set oracle_landing_page.image_tag="${LANDING_IMAGE_TAG}" \
+    --set oracle_landing_page.ingress.host="${CLUSTER_DOMAIN}" \
     "${helm_landing_page_chart_dir}" >/dev/null
   echo "HELM: Switchboard Oracle Landing page installed under namespace ${LANDING_NAMESPACE}"
 fi
