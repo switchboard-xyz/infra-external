@@ -157,9 +157,6 @@ spec:
           limits:
             cpu: {{ $.Values.components.gateway.resources.limits.cpu }}
             memory: {{ $.Values.components.gateway.resources.limits.memory }}
-          requests:
-            cpu: {{ $.Values.components.gateway.resources.requests.cpu }}
-            memory: {{ $.Values.components.gateway.resources.requests.memory }}
 
 ---
 apiVersion: v1

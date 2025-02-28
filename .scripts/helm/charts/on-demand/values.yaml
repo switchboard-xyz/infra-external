@@ -46,9 +46,6 @@ components:
       limits:
         cpu: "4000m"
         memory: "2000Mi"
-      requests:
-        cpu: "1000m"
-        memory: "500Mi"
 
   guardian:
     enabled: true
@@ -69,11 +66,8 @@ components:
       path: "/metrics"
     resources:
       limits:
-        cpu: "4000m"
+        cpu: "6000m"
         memory: "2000Mi"
-      requests:
-        cpu: "2000m"
-        memory: "1000Mi"
 
   gateway:
     enabled: true
@@ -94,7 +88,4 @@ components:
       limits:
         cpu: "4000m"
         memory: "1000Mi"
-      requests:
-        cpu: "500m"
-        memory: "500Mi"
 
