@@ -157,6 +157,9 @@ spec:
           limits:
             cpu: {{ $.Values.components.guardian.resources.limits.cpu }}
             memory: {{ $.Values.components.guardian.resources.limits.memory }}
+          requests:
+            cpu: {{ $.Values.components.guardian.resources.requests.cpu }}
+            memory: {{ $.Values.components.guardian.resources.requests.memory }}
 
 ---
 apiVersion: v1

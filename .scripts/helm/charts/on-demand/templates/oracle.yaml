@@ -159,6 +159,9 @@ spec:
           limits:
             cpu: {{ $.Values.components.oracle.resources.limits.cpu }}
             memory: {{ $.Values.components.oracle.resources.limits.memory }}
+          requests:
+            cpu: {{ $.Values.components.oracle.resources.requests.cpu }}
+            memory: {{ $.Values.components.oracle.resources.requests.memory }}
 
 ---
 apiVersion: v1
