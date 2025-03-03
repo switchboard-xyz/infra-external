@@ -2,6 +2,18 @@ debug: ""
 verbose: ""
 list_config_and_exit: ""
 
+oracle:
+  mainnet:
+    enabled: false
+  devnet:
+    enabled: true
+
+guardian:
+  mainnet:
+    enabled: false
+  devnet:
+    enabled: false
+
 oracle_landing_page:
   image: "docker.io/switchboardlabs/oracle-landing-page"
   image_tag: "latest"

@@ -10,7 +10,6 @@ metadata:
 
   annotations:
     keel.sh/approvals: "0"
-    keel.sh/policy: "regexp:^(canary-)?(devnet|stable)$"  # update policy (available: patch, minor, major, all, force)
     keel.sh/trigger: "poll"                                 # enable active repository checking (webhooks and GCR would still work)
     keel.sh/match-tag: "true"                               # only makes a difference when used with 'force' policy, will only update if tag matches :dev->:dev, :prod->:prod
     #keel.sh/policy: "force"
@@ -53,6 +52,14 @@ spec:
         env:
         - name: SEV_SNP_CACHE_PATH
           value: "/tmp/certs"
+        - name: GUARDIAN_DEVNET_ENABLED
+          value: {{ $.Values.guardian.devnet.enabled | quote }}
+        - name: GUARDIAN_MAINNET_ENABLED
+          value: {{ $.Values.guardian.mainnet.enabled | quote }}
+        - name: ORACLE_DEVNET_ENABLED
+          value: {{ $.Values.oracle.devnet.enabled | quote }}
+        - name: ORACLE_MAINNET_ENABLED
+          value: {{ $.Values.oracle.mainnet.enabled | quote }}
         - name: DOCKER_IMAGE_TAG
           value: {{ $.Values.docker_image_tag | quote }}
         - name: REPORTEER_SERVER_PORT

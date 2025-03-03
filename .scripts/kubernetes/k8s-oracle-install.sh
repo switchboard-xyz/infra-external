@@ -106,6 +106,10 @@ if [[ "${LANDING_ENABLED}" != "" && "${LANDING_ENABLED}" == "true" ]]; then
     --set oracle_landing_page.image="${LANDING_IMAGE}" \
     --set oracle_landing_page.image_tag="${LANDING_IMAGE_TAG}" \
     --set oracle_landing_page.ingress.host="${CLUSTER_DOMAIN}" \
+    --set guardian.devnet.enabled=${GUARDIAN_ENABLED} \
+    --set guardian.mainnet.enabled=${GUARDIAN_ENABLED} \
+    --set oracle.devnet.enabled=${ORACLE_ENABLED} \
+    --set oracle.mainnet.enabled=${ORACLE_ENABLED} \
     "${helm_landing_page_chart_dir}" >/dev/null
   echo "HELM: Switchboard Oracle Landing page installed under namespace ${LANDING_NAMESPACE}"
 fi
