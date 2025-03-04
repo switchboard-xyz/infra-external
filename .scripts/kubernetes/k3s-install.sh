@@ -21,7 +21,10 @@ flannel-backend: wireguard-native
 EOM
 
 # Install k3s
-curl -sfL https://get.k3s.io | sh -s - server --config /etc/rancher/k3s/config.yaml
+wget 'https://github.com/k3s-io/k3s/releases/download/v1.31.5%2Bk3s1/k3s' -O /usr/local/bin/k3s
+chmod 700 /usr/local/bin/k3s
+
+curl -sfL https://get.k3s.io | INSTALL_K3S_SKIP_DOWNLOAD=true sh -s - server --config /etc/rancher/k3s/config.yaml
 
 # Wait for k3s to be ready
 timeout 30 bash -c 'until sudo k3s kubectl get node | grep -q " Ready"; do sleep 1; done'
