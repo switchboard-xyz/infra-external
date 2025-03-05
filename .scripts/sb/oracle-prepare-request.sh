@@ -77,20 +77,20 @@ echo "  -> queueKey: ${queueKey}"
 if [[ "${register_oracle}" == "y" || "${register_oracle}" == "Y" ]]; then
   echo " "
   if [[ "${DEBUG}" == "true" ]]; then
-    ( \
-    sb solana on-demand oracle create \
-      --queue "${queueKey}" \
-      --cluster "${cluster}" \
-      --priorityFee "${priorityFee}" \
-      --keypair "${PAYER_FILE}" \
+    (
+      sb solana on-demand oracle create \
+        --queue "${queueKey}" \
+        --cluster "${cluster}" \
+        --priorityFee "${priorityFee}" \
+        --keypair "${PAYER_FILE}"
     )
   else
-    ( \
-    sb solana on-demand oracle create \
-      --queue "${queueKey}" \
-      --cluster "${cluster}" \
-      --priorityFee "${priorityFee}" \
-      --keypair "${PAYER_FILE}" \
+    (
+      sb solana on-demand oracle create \
+        --queue "${queueKey}" \
+        --cluster "${cluster}" \
+        --priorityFee "${priorityFee}" \
+        --keypair "${PAYER_FILE}"
     ) 2>/dev/null
   fi
 fi
@@ -98,26 +98,46 @@ fi
 if [[ "${register_guardian}" == "y" || "${register_guardian}" == "Y" ]]; then
   echo " "
   if [[ "${DEBUG}" == "true" ]]; then
-    ( \
+    (
       sb solana on-demand guardian create \
-      --cluster "${cluster}" \
-      --priorityFee "${priorityFee}" \
-      --keypair "${PAYER_FILE}" \
+        --cluster "${cluster}" \
+        --priorityFee "${priorityFee}" \
+        --keypair "${PAYER_FILE}"
     )
   else
-    ( \
+    (
       sb solana on-demand guardian create \
-      --cluster "${cluster}" \
-      --priorityFee "${priorityFee}" \
-      --keypair "${PAYER_FILE}" \
+        --cluster "${cluster}" \
+        --priorityFee "${priorityFee}" \
+        --keypair "${PAYER_FILE}"
     ) 2>/dev/null
   fi
 fi
 
 echo " "
-echo "==================================================="
-echo "=                !!! IMPORTANT !!!                ="
-echo "=  COPY/SAVE THE OUTPUT ABOVE, BEFORE PROCEEDING  ="
-echo "=  THEN TYPE 'exit' TO LEAVE THIS TMP CONTAINER.  ="
-echo "==================================================="
+echo "=========================================================================="
+echo "||                         !!! IMPORTANT NOTICE !!!                     ||"
+echo "=========================================================================="
+echo "||                                                                      ||"
+echo "|| The output above contains your Oracle/Guardian public keys and       ||"
+echo "|| related data.                                                        ||"
+echo "||                                                                      ||"
+echo "|| SECURITY WARNING:                                                    ||"
+echo "||  Keep your 24-word seed phrase and private key (array-like number)   ||"
+echo "||                  ABSOLUTELY PRIVATE!                                 ||"
+echo "||                                                                      ||"
+echo "|| Next steps:                                                          ||"
+echo "||   1. Edit infra-external/cfg/00-vars.cfg and insert the output       ||"
+echo "||      in the proper variables                                         ||"
+echo "||                                                                      ||"
+echo "||   2. Submit a request for approval of your Oracle/Guardian data at:  ||"
+echo "||      https://forms.gle/2xWwFQ8XPBGu9DRL6                             ||"
+echo "||                                                                      ||"
+echo "||   3. Wait for approval before proceeding with further steps          ||"
+echo "||                                                                      ||"
+echo "||   4. If you want to come back and use step 52, you'll have to rerun  ||"
+echo "||      step 50 to reenter this temporary container.                    ||"
+echo "||                                                                      ||"
+echo "||          SAVE THIS OUTPUT NOW, THEN TYPE 'exit' TO CONTINUE          ||"
+echo "=========================================================================="
 echo " "
