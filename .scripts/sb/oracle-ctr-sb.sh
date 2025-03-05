@@ -15,7 +15,7 @@ pkill -9 -f "${CTR_NAME}"
 sleep 3
 set -e
 
-export image="docker.io/switchboardlabs/sb-utils:3.5.9"
+export image="docker.io/switchboardlabs/sb-utils:3.5.10"
 
 set +e
 k3s ctr snapshot rm "${CTR_NAME}" >/dev/null 2>&1
