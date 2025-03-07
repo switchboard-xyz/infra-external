@@ -1,0 +1,57 @@
+args:
+- -w
+- --config-dir
+- /etc/vector/
+containerPorts:
+- containerPort: 9090
+  name: prom-exporter
+  protocol: TCP
+customConfig:
+  api:
+    address: 0.0.0.0:8686
+    enabled: false
+    playground: true
+  data_dir: /vector-data-dir
+  sinks:
+    exporter:
+      address: 0.0.0.0:9090
+      inputs:
+      - internal_metrics
+      type: prometheus_exporter
+    vlogs:
+      api_version: v8
+      compression: gzip
+      endpoints:
+      - https://victoria-logs.switchboard.xyz/insert/elasticsearch/
+      healthcheck:
+        enabled: false
+      inputs:
+      - parser
+      mode: bulk
+      request:
+        headers:
+          AccountID: "0"
+          ProjectID: "0"
+          VL-Msg-Field: message,msg,_msg,log.msg,log.message,log
+          VL-Stream-Fields: stream,kubernetes.pod_name,kubernetes.container_name,kubernetes.pod_namespace
+          VL-Time-Field: timestamp
+      type: elasticsearch
+  sources:
+    internal_metrics:
+      type: internal_metrics
+    k8s:
+      type: kubernetes_logs
+  transforms:
+    parser:
+      inputs:
+      - k8s
+      source: |
+        .log = parse_json(.message) ?? .message
+        del(.message)
+      type: remap
+customConfigNamespace: ""
+dataDir: /vector-data-dir
+resources: {}
+role: Agent
+service:
+  enabled: false
