@@ -63,7 +63,7 @@ printf "||                                                                      
 printf "||                 >>> COPY/SAVE THE OUTPUT FROM HERE <<<               ||\n"
 printf "||                                                                      ||\n"
 printf "||  -> Solana cluster: %-8s %42s\n" "${cluster}" "||"
-printf "||  -> queueKey: %44s %10s\n" "${queueKey}" "||"
+printf "||  -> queueKey: %44s %12s\n" "${queueKey}" "||"
 printf "||                                                                      ||\n"
 printf "||  Creating new registration request for:                              ||\n"
 if [[ "${register_oracle}" == "y" || "${register_oracle}" == "Y" ]]; then
