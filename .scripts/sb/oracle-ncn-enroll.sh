@@ -47,14 +47,14 @@ while [[
   "${OPERATOR_NCN_EXISTING}" != "Y" &&
   "${OPERATOR_NCN_EXISTING}" != "n" &&
   "${OPERATOR_NCN_EXISTING}" != "N" ]]; do
-  printf -n "Do you already have a NCN operator? (y/n) "
+  printf "Do you already have a NCN operator? (y/n) "
   read -r OPERATOR_NCN_EXISTING
 done
 
 if [[ "${OPERATOR_NCN_EXISTING}" == "N" || "${OPERATOR_NCN_EXISTING}" == "N" ]]; then
   printf "jito-restaking-cli restaking operator initialize 100 --rpc-url ${RPC_URL} --keypair ${PAYER_FILE}"
 else
-  printf -n "Please provide your current NCN operator: "
+  printf "Please provide your current NCN operator: "
   read -r OPERATOR_NCN
 fi
 
