@@ -9,18 +9,17 @@ export script_ctr_dir="/app"
 export prep_script_filename="51-oracle-prepare-request.sh"
 export check_script_filename="52-oracle-check-perms.sh"
 
+export image="docker.io/switchboardlabs/sb-utils:3.5.10"
+
 CTR_NAME="CTR-sb-tmp-node"
 set +e
 pkill -9 -f "${CTR_NAME}"
 sleep 3
-set -e
 
-export image="docker.io/switchboardlabs/sb-utils:3.5.10"
-
-set +e
 k3s ctr snapshot rm "${CTR_NAME}" >/dev/null 2>&1
 k3s ctr c rm "${CTR_NAME}" >/dev/null 2>&1
 set -e
+
 k3s ctr i pull "${image}"
 k3s ctr run -t --net-host \
   --rm --cwd "${script_ctr_dir}" \
