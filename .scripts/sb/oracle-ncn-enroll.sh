@@ -51,7 +51,7 @@ while [[
   read -r OPERATOR_NCN_EXISTING
 done
 
-if [[ "${OPERATOR_NCN_EXISTING}" == "N" || "${OPERATOR_NCN_EXISTING}" == "N" ]]; then
+if [[ "${OPERATOR_NCN_EXISTING}" == "n" || "${OPERATOR_NCN_EXISTING}" == "N" ]]; then
   printf "jito-restaking-cli restaking operator initialize 100 --rpc-url ${RPC_URL} --keypair ${PAYER_FILE}\n"
 else
   printf "Please provide your current NCN operator: "
