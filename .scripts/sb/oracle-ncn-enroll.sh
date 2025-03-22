@@ -52,15 +52,17 @@ while [[
 done
 
 if [[ "${OPERATOR_NCN_EXISTING}" == "N" || "${OPERATOR_NCN_EXISTING}" == "N" ]]; then
-  printf "jito-restaking-cli restaking operator initialize 100 --rpc-url ${RPC_URL} --keypair ${PAYER_FILE}"
+  printf "jito-restaking-cli restaking operator initialize 100 --rpc-url ${RPC_URL} --keypair ${PAYER_FILE}\n"
 else
   printf "Please provide your current NCN operator: "
   read -r OPERATOR_NCN
 fi
 
-printf "jito-restaking-cli restaking operator initialize-operator-vault-ticket ${OPERATOR_ORACLE} ${VAULT} --rpc-url ${RPC_URL} --keypair ${PAYER_FILE}"
-printf "jito-restaking-cli restaking operator warmup-operator-vault-ticket ${OPERATOR_ORACLE} ${VAULT} --rpc-url ${RPC_URL} --keypair ${PAYER_FILE}"
-printf "sb solana on-demand oracle setOperator ${OPERATOR_ORACLE} --operator ${OPERATOR_NCN} -u ${RPC_URL} -k ${PAYER_FILE}"
+printf "\n"
+printf "jito-restaking-cli restaking operator initialize-operator-vault-ticket ${OPERATOR_ORACLE} ${VAULT} --rpc-url ${RPC_URL} --keypair ${PAYER_FILE}\n"
+printf "jito-restaking-cli restaking operator warmup-operator-vault-ticket ${OPERATOR_ORACLE} ${VAULT} --rpc-url ${RPC_URL} --keypair ${PAYER_FILE}\n"
+printf "sb solana on-demand oracle setOperator ${OPERATOR_ORACLE} --operator ${OPERATOR_NCN} -u ${RPC_URL} -k ${PAYER_FILE}\n"
+printf "\n"
 
 printf "\n"
 printf "==========================================================================\n"
@@ -70,17 +72,18 @@ printf "||                                                                      
 printf "||                 >>> COPY/SAVE THE OUTPUT FROM HERE <<<               ||\n"
 printf "||                                                                      ||\n"
 printf "|| Creating new Oracle/Guardian permission request on Solana for:       ||\n"
-printf "||  -> Solana cluster: ${cluster}                                       ||\n"
-printf "||  -> NCN: ${NCN}                                                      ||\n"
-printf "||  -> VAULT: ${VAULT}                                                  ||\n"
+printf "||  -> Solana cluster: %-8s %42s\n" "${cluster}" "||"
+printf "||  -> NCN: %44s %17s\n" "${NCN}" "||"
+printf "||  -> VAULT: %44s %15s\n" "${VAULT}" "||"
 printf "||                                                                      ||\n"
 printf "==========================================================================\n"
 printf "\n"
 
+printf "\n"
 printf "WAIT FOR SWITCHBOARD TO RUN \`restaking ncn initialize-ncn-operator-state\` on your operator\n"
-
 # 6 ... THEN OPERATORS RUN...
 printf "jito-restaking-cli restaking operator operator-warmup-ncn ${OPERATOR_NCN} ${NCN} --rpc-url ${RPC_URL} --keypair ${PAYER_FILE}"
+printf "\n"
 
 printf "\n"
 printf "==========================================================================\n"
