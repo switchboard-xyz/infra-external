@@ -23,8 +23,8 @@ elif [[ "${cluster}" == "mainnet-beta" ]]; then
 fi
 
 export RPC_URL="DEVNET_OR_MAINNET_RPC"
-export OPERATOR_ORACLE="DEVNET_OR_MAINNET_ORACLE_PUBKEY"
-export OPERATOR_NCN="DEVNET_OR_MAINNET_NCN_PUBKEY"
+export ORACLE_OPERATOR="DEVNET_OR_MAINNET_ORACLE_PUBKEY"
+export NCN_OPERATOR="DEVNET_OR_MAINNET_NCN_PUBKEY"
 
 printf "\n"
 printf "==========================================================================\n"
@@ -41,27 +41,27 @@ if [[ "${cluster}" == "mainnet" ]]; then
 fi
 
 printf "\n"
-export OPERATOR_NCN_EXISTING=""
+export NCN_OPERATOR_EXISTING=""
 while [[ 
-  "${OPERATOR_NCN_EXISTING}" != "y" &&
-  "${OPERATOR_NCN_EXISTING}" != "Y" &&
-  "${OPERATOR_NCN_EXISTING}" != "n" &&
-  "${OPERATOR_NCN_EXISTING}" != "N" ]]; do
+  "${NCN_OPERATOR_EXISTING}" != "y" &&
+  "${NCN_OPERATOR_EXISTING}" != "Y" &&
+  "${NCN_OPERATOR_EXISTING}" != "n" &&
+  "${NCN_OPERATOR_EXISTING}" != "N" ]]; do
   printf "Do you already have a NCN operator? (y/n) "
-  read -r OPERATOR_NCN_EXISTING
+  read -r NCN_OPERATOR_EXISTING
 done
 
-if [[ "${OPERATOR_NCN_EXISTING}" == "n" || "${OPERATOR_NCN_EXISTING}" == "N" ]]; then
+if [[ "${NCN_OPERATOR_EXISTING}" == "n" || "${NCN_OPERATOR_EXISTING}" == "N" ]]; then
   printf "jito-restaking-cli restaking operator initialize 100 --rpc-url ${RPC_URL} --keypair ${PAYER_FILE}\n"
 else
   printf "Please provide your current NCN operator: "
-  read -r OPERATOR_NCN
+  read -r NCN_OPERATOR
 fi
 
 printf "\n"
-printf "jito-restaking-cli restaking operator initialize-operator-vault-ticket ${OPERATOR_ORACLE} ${VAULT} --rpc-url ${RPC_URL} --keypair ${PAYER_FILE}\n"
-printf "jito-restaking-cli restaking operator warmup-operator-vault-ticket ${OPERATOR_ORACLE} ${VAULT} --rpc-url ${RPC_URL} --keypair ${PAYER_FILE}\n"
-printf "sb solana on-demand oracle setOperator ${OPERATOR_ORACLE} --operator ${OPERATOR_NCN} -u ${RPC_URL} -k ${PAYER_FILE}\n"
+printf "jito-restaking-cli restaking operator initialize-operator-vault-ticket ${ORACLE_OPERATOR} ${VAULT} --rpc-url ${RPC_URL} --keypair ${PAYER_FILE}\n"
+printf "jito-restaking-cli restaking operator warmup-operator-vault-ticket ${ORACLE_OPERATOR} ${VAULT} --rpc-url ${RPC_URL} --keypair ${PAYER_FILE}\n"
+printf "sb solana on-demand oracle setOperator ${ORACLE_OPERATOR} --operator ${NCN_OPERATOR} -u ${RPC_URL} -k ${PAYER_FILE}\n"
 printf "\n"
 
 printf "\n"
@@ -82,7 +82,7 @@ printf "\n"
 printf "\n"
 printf "WAIT FOR SWITCHBOARD TO RUN \`restaking ncn initialize-ncn-operator-state\` on your operator\n"
 # 6 ... THEN OPERATORS RUN...
-printf "jito-restaking-cli restaking operator operator-warmup-ncn ${OPERATOR_NCN} ${NCN} --rpc-url ${RPC_URL} --keypair ${PAYER_FILE}"
+printf "jito-restaking-cli restaking operator operator-warmup-ncn ${NCN_OPERATOR} ${NCN} --rpc-url ${RPC_URL} --keypair ${PAYER_FILE}"
 printf "\n"
 
 printf "\n"
