@@ -51,8 +51,10 @@ while [[
   read -r NCN_OPERATOR_EXISTING
 done
 
+export NCN_OPERATOR_FEE=100
+
 if [[ "${NCN_OPERATOR_EXISTING}" == "n" || "${NCN_OPERATOR_EXISTING}" == "N" ]]; then
-  printf "jito-restaking-cli restaking operator initialize 100 --rpc-url ${RPC_URL} --keypair ${PAYER_FILE}\n"
+  printf "jito-restaking-cli restaking operator initialize ${NCN_OPERATOR_FEE} --rpc-url ${RPC_URL} --keypair ${PAYER_FILE}\n"
 else
   printf "Please provide your current NCN operator: "
   read -r NCN_OPERATOR
@@ -72,16 +74,18 @@ printf "||                                                                      
 printf "||                 >>> COPY/SAVE THE OUTPUT FROM HERE <<<               ||\n"
 printf "||                                                                      ||\n"
 printf "|| Creating new Oracle/Guardian permission request on Solana for:       ||\n"
-printf "||  -> Solana cluster: %-8s %42s\n" "${cluster}" "||"
-printf "||  -> NCN: %44s %17s\n" "${NCN}" "||"
-printf "||  -> VAULT: %44s %15s\n" "${VAULT}" "||"
+printf "||  -> Solana cluster: %-8s%43s\n" "${cluster}" "||"
+printf "||  -> NCN: %44s%87s\n" "${NCN}" "||"
+printf "||  -> VAULT: %44s%16s\n" "${VAULT}" "||"
 printf "||                                                                      ||\n"
 printf "==========================================================================\n"
 printf "\n"
 
 printf "\n"
-printf "WAIT FOR SWITCHBOARD TO RUN \`restaking ncn initialize-ncn-operator-state\` on your operator\n"
-# 6 ... THEN OPERATORS RUN...
+printf "Please notify SWITCHBOARD that you registered you oracle to the NCN vault.\n"
+printf "They'll need to validate and confirm on their side, then you should come back and run the following step\n"
+
+printf "\n"
 printf "jito-restaking-cli restaking operator operator-warmup-ncn ${NCN_OPERATOR} ${NCN} --rpc-url ${RPC_URL} --keypair ${PAYER_FILE}"
 printf "\n"
 
@@ -90,8 +94,7 @@ printf "========================================================================
 printf "||                       !!! IMPORTANT NOTICE !!!                       ||\n"
 printf "==========================================================================\n"
 printf "||                                                                      ||\n"
-printf "|| SOMETHING SOMETHING                                                  ||\n"
-printf "||                                                                      ||\n"
 printf "||          SAVE THIS OUTPUT NOW, THEN TYPE 'exit' TO CONTINUE          ||\n"
+printf "||                                                                      ||\n"
 printf "==========================================================================\n"
 printf "\n"
