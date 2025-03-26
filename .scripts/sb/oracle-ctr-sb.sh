@@ -9,7 +9,7 @@ export script_ctr_dir="/app"
 export prep_script_filename="51-oracle-prepare-request.sh"
 export ncn_enroll_script_filename="52-oracle-ncn-enroll.sh"
 
-export image="docker.io/switchboardlabs/sb-utils:3.5.10"
+export image="docker.io/switchboardlabs/sb-utils:3.5.11"
 
 CTR_NAME="CTR-sb-tmp-node"
 set +e
