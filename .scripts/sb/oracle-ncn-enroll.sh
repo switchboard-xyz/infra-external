@@ -29,7 +29,7 @@ debug "RPC_URL=${RPC_URL}"
 
 # source ORACLE_OPERATOR from cfg file
 source <(awk \
-  '/^PULL_ORACLE=/ {gsub("PULL_ORACLE","ORACLE_OPERATOR")}' \
+  '/^PULL_ORACLE=/ {gsub("PULL_ORACLE","ORACLE_OPERATOR", $0)}; print $0' \
   "/cfg/00-${cluster}-vars.cfg")
 debug "ORACLE_OPERATOR=${ORACLE_OPERATOR}"
 
