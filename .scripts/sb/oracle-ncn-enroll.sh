@@ -101,6 +101,9 @@ if [[ -z "${NCN_OPERATOR}" ]]; then
   if [[ "${SAVE_NCN_OPERATOR}" == "y" || "${SAVE_NCN_OPERATOR}" == "Y" ]]; then
     sed -i "s/^NCN_OPERATOR=.*/NCN_OPERATOR=${NCN_OPERATOR}/" "${CFG_FILE}"
   fi
+else
+  printf "Imported NCN_OPERATOR from ${CFG_FILE}\n"
+  printf "Please reset the NCN_OPERATOR variable in that file if this was not intended\n"
 fi
 debug "NCN_OPERATOR=${NCN_OPERATOR}"
 printf "\n"
@@ -113,10 +116,10 @@ printf "||                                                                      
 printf "||             >>> COPY/SAVE THIS OUTPUT TO A SAFE PLACE <<<            ||\n"
 printf "||                                                                      ||\n"
 printf "|| Creating new Oracle/Guardian permission request on Solana for:       ||\n"
-printf "||  -> Solana cluster: %-8s%43s\n" "${cluster}" "||"
-printf "||  -> NCN: %44s%18s\n" "${NCN}" "||"
-printf "||  -> VAULT: %44s%16s\n" "${VAULT}" "||"
-printf "||  -> NCN OPERATOR: %44s%9s\n" "${NCN_OPERATOR}" "||"
+printf "%-6s%16s %-44s%7s\n" "||" "Solana cluster:" "${cluster}" " ||"
+printf "%-6s%16s %-44s%7s\n" "||" "NCN:" "${NCN}" " ||"
+printf "%-6s%16s %-44s%7s\n" "||" "VAULT:" "${VAULT}" " ||"
+printf "%-6s%16s %-44s%7s\n" "||" "NCN_OPERATOR:" "${NCN_OPERATOR}" " ||"
 printf "||                                                                      ||\n"
 printf "==========================================================================\n"
 printf "\n"
