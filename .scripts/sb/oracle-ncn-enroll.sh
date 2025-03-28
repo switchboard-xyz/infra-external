@@ -17,20 +17,24 @@ fi
 
 export DEBUG="${DEBUG:-false}"
 debug "DEBUG=${DEBUG}"
+
 export PAYER_FILE="/data/${cluster}_payer.json"
 debug "PAYER_FILE=${PAYER_FILE}"
 export NCN_PAYER_FILE="${PAYER_FILE}"
 debug "NCN_PAYER_FILE=${NCN_PAYER_FILE}"
 
-source <(awk '/^NETWORK=/' "/cfg/00-${cluster}-vars.cfg")
+export CFG_FILE="/cfg/00-${cluster}-vars.cfg"
+debug "CFG_FILE=${CFG_FILE}"
+
+source <(awk '/^NETWORK=/' "${CFG_FILE}")
 debug "NETWORK=${NETWORK}"
-source <(awk '/^RPC_URL=/' "/cfg/00-${cluster}-vars.cfg")
+source <(awk '/^RPC_URL=/' "${CFG_FILE}")
 debug "RPC_URL=${RPC_URL}"
 
 # source ORACLE_OPERATOR from cfg file
 source <(awk \
   '/^PULL_ORACLE=/ {gsub("PULL_ORACLE","ORACLE_OPERATOR", $0); print $0}' \
-  "/cfg/00-${cluster}-vars.cfg")
+  "${CFG_FILE}")
 debug "ORACLE_OPERATOR=${ORACLE_OPERATOR}"
 
 export NCN=""
@@ -47,6 +51,7 @@ debug "NCN=${NCN}"
 debug "VAULT=${VAULT}"
 
 export NCN_OPERATOR=""
+source <(awk '/^NCN_OPERATOR=/' "${CFG_FILE}")
 
 printf "\n"
 printf "==========================================================================\n"
@@ -59,27 +64,44 @@ printf "\n"
 
 export NCN_OPERATOR_EXISTING=""
 
-printf "\n"
-while [[ 
-  "${NCN_OPERATOR_EXISTING}" != "y" &&
-  "${NCN_OPERATOR_EXISTING}" != "Y" &&
-  "${NCN_OPERATOR_EXISTING}" != "n" &&
-  "${NCN_OPERATOR_EXISTING}" != "N" ]]; do
-  printf "Do you already have a NCN operator? (y/n) "
-  read -r NCN_OPERATOR_EXISTING
-done
-printf "\n"
-debug "NCN_OPERATOR_EXISTING=${NCN_OPERATOR_EXISTING}"
+if [[ -z "${NCN_OPERATOR}" ]]; then
+  printf "\n"
+  while [[ 
+    "${NCN_OPERATOR_EXISTING}" != "y" &&
+    "${NCN_OPERATOR_EXISTING}" != "Y" &&
+    "${NCN_OPERATOR_EXISTING}" != "n" &&
+    "${NCN_OPERATOR_EXISTING}" != "N" ]]; do
+    printf "Do you already have a NCN operator? (y/n) "
+    read -r NCN_OPERATOR_EXISTING
+  done
+  printf "\n"
+  debug "NCN_OPERATOR_EXISTING=${NCN_OPERATOR_EXISTING}"
 
-export NCN_OPERATOR_FEE=100
+  export NCN_OPERATOR_FEE=100
 
-if [[ "${NCN_OPERATOR_EXISTING}" == "n" || "${NCN_OPERATOR_EXISTING}" == "N" ]]; then
-  printf "jito-restaking-cli restaking operator initialize ${NCN_OPERATOR_FEE} --rpc-url ${RPC_URL} --keypair ${PAYER_FILE}\n"
-else
-  printf "Please provide your current NCN operator: "
-  read -r NCN_OPERATOR
+  if [[ "${NCN_OPERATOR_EXISTING}" == "n" || "${NCN_OPERATOR_EXISTING}" == "N" ]]; then
+    cmd="jito-restaking-cli restaking operator initialize ${NCN_OPERATOR_FEE} --rpc-url ${RPC_URL} --keypair ${PAYER_FILE}"
+    printf "Creating an NCN OPERATOR account for you:\n%s\n" "${cmd}"
+    NCN_OPERATOR="$(${cmd} 2>&1 | awk '/Operator initialized at address/ {print $NF}')"
+  else
+    printf "Please provide your current NCN operator: "
+    read -r NCN_OPERATOR
+    while [[ 
+      "${SAVE_NCN_OPERATOR}" != "y" &&
+      "${SAVE_NCN_OPERATOR}" != "Y" &&
+      "${SAVE_NCN_OPERATOR}" != "n" &&
+      "${SAVE_NCN_OPERATOR}" != "N" ]]; do
+      printf "Do you want to save this NCN operator in ${CFG_FILE}? (y/n) "
+      read -r SAVE_NCN_OPERATOR
+    done
+
+    if [[ "SAVE_NCN_OPERATOR" == "y" || "SAVE_NCN_OPERATOR" == "Y" ]]; then
+      sed -i "s/^NCN_OPREATOR=.*/NCN_OPERATOR=${NCN_OPERATOR}/" "${CFG_FILE}"
+    fi
+  fi
 fi
 debug "NCN_OPERATOR=${NCN_OPERATOR}"
+printf "Your NCN OPERATOR is: %s\n" "${NCN_OPERATOR}"
 
 printf "\n"
 printf "jito-restaking-cli restaking operator initialize-operator-vault-ticket ${ORACLE_OPERATOR} ${VAULT} --rpc-url ${RPC_URL} --keypair ${NCN_PAYER_FILE}\n"
