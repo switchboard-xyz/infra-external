@@ -28,8 +28,9 @@ source <(awk '/^RPC_URL=/' "/cfg/00-${cluster}-vars.cfg")
 debug "RPC_URL=${RPC_URL}"
 
 # source ORACLE_OPERATOR from cfg file
-source <(awk "/cfg/00-${cluster}-vars.cfg" \
-  '/^PULL_ORACLE=/ {gsub("PULL_ORACLE","ORACLE_OPERATOR")}')
+source <(awk \
+  '/^PULL_ORACLE=/ {gsub("PULL_ORACLE","ORACLE_OPERATOR")}' \
+  "/cfg/00-${cluster}-vars.cfg")
 debug "ORACLE_OPERATOR=${ORACLE_OPERATOR}"
 
 export NCN=""
