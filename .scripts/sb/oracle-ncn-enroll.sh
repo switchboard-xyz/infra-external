@@ -20,11 +20,11 @@ debug "DEBUG=${DEBUG}"
 export PAYER_FILE="/data/${cluster}_payer.json"
 debug "PAYER_FILE=${PAYER_FILE}"
 export NCN_PAYER_FILE="${PAYER_FILE}"
-debug "NCN_PAYER_FILE={NCN_PAYER_FILE}"
+debug "NCN_PAYER_FILE=${NCN_PAYER_FILE}"
 
-source <(grep '/^NETWORK/' "/cfg/00-${cluster}-vars.cfg")
+source <(awk '/^NETWORK=/' "/cfg/00-${cluster}-vars.cfg")
 debug "NETWORK=${NETWORK}"
-source <(grep '/^RPC_URL/' "/cfg/00-${cluster}-vars.cfg")
+source <(awk '/^RPC_URL=/' "/cfg/00-${cluster}-vars.cfg")
 debug "RPC_URL=${RPC_URL}"
 
 # source ORACLE_OPERATOR from cfg file
