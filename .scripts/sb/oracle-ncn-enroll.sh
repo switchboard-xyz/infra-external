@@ -16,21 +16,21 @@ if [[ "${cluster}" != "devnet" &&
 fi
 
 export DEBUG="${DEBUG:-false}"
-debug <printf "DEBUG=%s\n" "${DEBUG}"
+debug "DEBUG=${DEBUG}"
 export PAYER_FILE="/data/${cluster}_payer.json"
-debug <printf "PAYER_FILE=%s\n" "${PAYER_FILE}"
+debug "PAYER_FILE=${PAYER_FILE}"
 export NCN_PAYER_FILE="${PAYER_FILE}"
-debug <printf "NCN_PAYER_FILE=%s\n" "${NCN_PAYER_FILE}"
+debug "NCN_PAYER_FILE={NCN_PAYER_FILE}"
 
 source <(grep '/^NETWORK/' "/cfg/00-${cluster}-vars.cfg")
-debug <printf "NETWORK=%s\n" "${NETWORK}"
+debug "NETWORK=${NETWORK}"
 source <(grep '/^RPC_URL/' "/cfg/00-${cluster}-vars.cfg")
-debug <printf "RPC_URL=%s\n" "${RPC_URL}"
+debug "RPC_URL=${RPC_URL}"
 
 # source ORACLE_OPERATOR from cfg file
 source <(awk "/cfg/00-${cluster}-vars.cfg" \
   '/^PULL_ORACLE=/ {gsub("PULL_ORACLE","ORACLE_OPERATOR")}')
-debug <printf "ORACLE_OPERATOR=%s\n" "${ORACLE_OPERATOR}"
+debug "ORACLE_OPERATOR=${ORACLE_OPERATOR}"
 
 export NCN=""
 export VAULT=""
@@ -42,8 +42,8 @@ elif [[ "${cluster}" == "mainnet" ]]; then
   NCN=BGTtt2wdTdhLyFQwSGbNriLZiCxXKBbm29bDvYZ4jD6G
   VAULT=HR1ANmDHjaEhknvsTaK48M5xZtbBiwNdXM5NTiWhAb4S
 fi
-debug <printf "NCN=%s\n" "${NCN}"
-debug <printf "VAULT=%s\n" "${VAULT}"
+debug "NCN=${NCN}"
+debug "VAULT=${VAULT}"
 
 export NCN_OPERATOR=""
 
@@ -68,7 +68,7 @@ while [[
   read -r NCN_OPERATOR_EXISTING
 done
 printf "\n"
-debug <printf "NCN_OPERATOR_EXISTING=%s\n" "${NCN_OPERATOR_EXISTING}"
+debug "NCN_OPERATOR_EXISTING=${NCN_OPERATOR_EXISTING}"
 
 export NCN_OPERATOR_FEE=100
 
@@ -78,7 +78,7 @@ else
   printf "Please provide your current NCN operator: "
   read -r NCN_OPERATOR
 fi
-debug <printf "NCN_OPERATOR=%s\n" "${NCN_OPERATOR}"
+debug "NCN_OPERATOR=${NCN_OPERATOR}"
 
 printf "\n"
 printf "jito-restaking-cli restaking operator initialize-operator-vault-ticket ${ORACLE_OPERATOR} ${VAULT} --rpc-url ${RPC_URL} --keypair ${NCN_PAYER_FILE}\n"
