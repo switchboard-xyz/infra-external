@@ -62,10 +62,10 @@ printf "||                                                                      
 printf "==========================================================================\n"
 printf "\n"
 
-export NCN_OPERATOR_EXISTING=""
-
 if [[ -z "${NCN_OPERATOR}" ]]; then
+
   printf "\n"
+  export NCN_OPERATOR_EXISTING=""
   while [[ 
     "${NCN_OPERATOR_EXISTING}" != "y" &&
     "${NCN_OPERATOR_EXISTING}" != "Y" &&
@@ -74,11 +74,10 @@ if [[ -z "${NCN_OPERATOR}" ]]; then
     printf "Do you already have a NCN operator? (y/n) "
     read -r NCN_OPERATOR_EXISTING
   done
-  printf "\n"
   debug "NCN_OPERATOR_EXISTING=${NCN_OPERATOR_EXISTING}"
+  printf "\n"
 
   export NCN_OPERATOR_FEE=100
-
   if [[ "${NCN_OPERATOR_EXISTING}" == "n" || "${NCN_OPERATOR_EXISTING}" == "N" ]]; then
     cmd="jito-restaking-cli restaking operator initialize ${NCN_OPERATOR_FEE} --rpc-url ${RPC_URL} --keypair ${PAYER_FILE}"
     debug "NCN_OPERATOR_CMD: ${cmd}"
@@ -89,6 +88,7 @@ if [[ -z "${NCN_OPERATOR}" ]]; then
     read -r NCN_OPERATOR
   fi
 
+  export SAVE_NCN_OPERATOR=""
   while [[ 
     "${SAVE_NCN_OPERATOR}" != "y" &&
     "${SAVE_NCN_OPERATOR}" != "Y" &&
@@ -103,6 +103,7 @@ if [[ -z "${NCN_OPERATOR}" ]]; then
   fi
 fi
 debug "NCN_OPERATOR=${NCN_OPERATOR}"
+printf "\n"
 
 printf "\n"
 printf "==========================================================================\n"
