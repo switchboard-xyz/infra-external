@@ -81,47 +81,49 @@ if [[ -z "${NCN_OPERATOR}" ]]; then
 
   if [[ "${NCN_OPERATOR_EXISTING}" == "n" || "${NCN_OPERATOR_EXISTING}" == "N" ]]; then
     cmd="jito-restaking-cli restaking operator initialize ${NCN_OPERATOR_FEE} --rpc-url ${RPC_URL} --keypair ${PAYER_FILE}"
-    printf "Creating an NCN OPERATOR account for you:\n%s\n" "${cmd}"
+    debug "NCN_OPERATOR_CMD: ${cmd}"
+    printf "Creating an NCN OPERATOR account for you, please stand by.\n"
     NCN_OPERATOR="$(${cmd} 2>&1 | awk '/Operator initialized at address/ {print $NF}')"
   else
     printf "Please provide your current NCN operator: "
     read -r NCN_OPERATOR
-    while [[ 
-      "${SAVE_NCN_OPERATOR}" != "y" &&
-      "${SAVE_NCN_OPERATOR}" != "Y" &&
-      "${SAVE_NCN_OPERATOR}" != "n" &&
-      "${SAVE_NCN_OPERATOR}" != "N" ]]; do
-      printf "Do you want to save this NCN operator in ${CFG_FILE}? (y/n) "
-      read -r SAVE_NCN_OPERATOR
-    done
+  fi
 
-    if [[ "SAVE_NCN_OPERATOR" == "y" || "SAVE_NCN_OPERATOR" == "Y" ]]; then
-      sed -i "s/^NCN_OPREATOR=.*/NCN_OPERATOR=${NCN_OPERATOR}/" "${CFG_FILE}"
-    fi
+  while [[ 
+    "${SAVE_NCN_OPERATOR}" != "y" &&
+    "${SAVE_NCN_OPERATOR}" != "Y" &&
+    "${SAVE_NCN_OPERATOR}" != "n" &&
+    "${SAVE_NCN_OPERATOR}" != "N" ]]; do
+    printf "Do you want me to write this NCN operator in ${CFG_FILE} for you? (y/n) "
+    read -r SAVE_NCN_OPERATOR
+  done
+
+  if [[ "SAVE_NCN_OPERATOR" == "y" || "SAVE_NCN_OPERATOR" == "Y" ]]; then
+    sed -i "s/^NCN_OPREATOR=.*/NCN_OPERATOR=${NCN_OPERATOR}/" "${CFG_FILE}"
   fi
 fi
 debug "NCN_OPERATOR=${NCN_OPERATOR}"
-printf "Your NCN OPERATOR is: %s\n" "${NCN_OPERATOR}"
-
-printf "\n"
-printf "jito-restaking-cli restaking operator initialize-operator-vault-ticket ${ORACLE_OPERATOR} ${VAULT} --rpc-url ${RPC_URL} --keypair ${NCN_PAYER_FILE}\n"
-printf "jito-restaking-cli restaking operator warmup-operator-vault-ticket ${ORACLE_OPERATOR} ${VAULT} --rpc-url ${RPC_URL} --keypair ${NCN_PAYER_FILE}\n"
-printf "sb solana on-demand oracle setOperator ${ORACLE_OPERATOR} --operator ${NCN_OPERATOR} -u ${RPC_URL} -k ${PAYER_FILE}\n"
-printf "\n"
 
 printf "\n"
 printf "==========================================================================\n"
 printf "||                       !!! IMPORTANT NOTICE !!!                       ||\n"
 printf "==========================================================================\n"
 printf "||                                                                      ||\n"
-printf "||                 >>> COPY/SAVE THE OUTPUT FROM HERE <<<               ||\n"
+printf "||             >>> COPY/SAVE THIS OUTPUT TO A SAFE PLACE <<<            ||\n"
 printf "||                                                                      ||\n"
 printf "|| Creating new Oracle/Guardian permission request on Solana for:       ||\n"
 printf "||  -> Solana cluster: %-8s%43s\n" "${cluster}" "||"
 printf "||  -> NCN: %44s%87s\n" "${NCN}" "||"
 printf "||  -> VAULT: %44s%16s\n" "${VAULT}" "||"
+printf "||  -> NCN OPERATOR: %44s%78s\n" "${NCN_OPERATOR}" "||"
 printf "||                                                                      ||\n"
 printf "==========================================================================\n"
+printf "\n"
+
+printf "\n"
+printf "jito-restaking-cli restaking operator initialize-operator-vault-ticket ${ORACLE_OPERATOR} ${VAULT} --rpc-url ${RPC_URL} --keypair ${NCN_PAYER_FILE}\n"
+printf "jito-restaking-cli restaking operator warmup-operator-vault-ticket ${ORACLE_OPERATOR} ${VAULT} --rpc-url ${RPC_URL} --keypair ${NCN_PAYER_FILE}\n"
+printf "sb solana on-demand oracle setOperator ${ORACLE_OPERATOR} --operator ${NCN_OPERATOR} -u ${RPC_URL} -k ${PAYER_FILE}\n"
 printf "\n"
 
 printf "\n"
