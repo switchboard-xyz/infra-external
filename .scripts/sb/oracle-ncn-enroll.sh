@@ -1,30 +1,51 @@
 #!/usr/bin/env bash
+set -u -e
+
+function debug() {
+  if [[ "${DEBUG}" == "true" ]]; then
+    printf "DEBUG: $@\n"
+  fi
+}
 
 cluster="${1:-devnet}"
 
 if [[ "${cluster}" != "devnet" &&
   "${cluster}" != "mainnet" ]]; then
-  printf "Only valid cluster values are 'devnet' and 'mainnet'\n"
-  exit 1
+  printf "Only valid cluster values are 'devnet' (default) and 'mainnet'\n"
+  exit 254
 fi
 
-DEBUG="${DEBUG:-false}"
-PAYER_FILE="/data/${cluster}_payer.json"
+export DEBUG="${DEBUG:-false}"
+debug <printf "DEBUG=%s\n" "${DEBUG}"
+export PAYER_FILE="/data/${cluster}_payer.json"
+debug <printf "PAYER_FILE=%s\n" "${PAYER_FILE}"
+export NCN_PAYER_FILE="${PAYER_FILE}"
+debug <printf "NCN_PAYER_FILE=%s\n" "${NCN_PAYER_FILE}"
 
-NCN=""
-VAULT=""
+source <(grep '/^NETWORK/' "/cfg/00-${cluster}-vars.cfg")
+debug <printf "NETWORK=%s\n" "${NETWORK}"
+source <(grep '/^RPC_URL/' "/cfg/00-${cluster}-vars.cfg")
+debug <printf "RPC_URL=%s\n" "${RPC_URL}"
+
+# source ORACLE_OPERATOR from cfg file
+source <(awk "/cfg/00-${cluster}-vars.cfg" \
+  '/^PULL_ORACLE=/ {gsub("PULL_ORACLE","ORACLE_OPERATOR")}')
+debug <printf "ORACLE_OPERATOR=%s\n" "${ORACLE_OPERATOR}"
+
+export NCN=""
+export VAULT=""
 
 if [[ "${cluster}" == "devnet" ]]; then
   NCN=A9muHr9VqgabHCeEgXyGuAeeAVcW8nLJeHLsmWYGLbv5
   VAULT=BxhsigZDYjWTzXGgem9W3DsvJgFpEK5pM2RANP22bxBE
-elif [[ "${cluster}" == "mainnet-beta" ]]; then
+elif [[ "${cluster}" == "mainnet" ]]; then
   NCN=BGTtt2wdTdhLyFQwSGbNriLZiCxXKBbm29bDvYZ4jD6G
   VAULT=HR1ANmDHjaEhknvsTaK48M5xZtbBiwNdXM5NTiWhAb4S
 fi
+debug <printf "NCN=%s\n" "${NCN}"
+debug <printf "VAULT=%s\n" "${VAULT}"
 
-export RPC_URL="DEVNET_OR_MAINNET_RPC"
-export ORACLE_OPERATOR="DEVNET_OR_MAINNET_ORACLE_PUBKEY"
-export NCN_OPERATOR="DEVNET_OR_MAINNET_NCN_PUBKEY"
+export NCN_OPERATOR=""
 
 printf "\n"
 printf "==========================================================================\n"
@@ -35,13 +56,9 @@ printf "||                                                                      
 printf "==========================================================================\n"
 printf "\n"
 
-# change `mainnet` to `mainnet-beta` for historical reasons
-if [[ "${cluster}" == "mainnet" ]]; then
-  cluster="mainnet-beta"
-fi
+export NCN_OPERATOR_EXISTING=""
 
 printf "\n"
-export NCN_OPERATOR_EXISTING=""
 while [[ 
   "${NCN_OPERATOR_EXISTING}" != "y" &&
   "${NCN_OPERATOR_EXISTING}" != "Y" &&
@@ -50,6 +67,8 @@ while [[
   printf "Do you already have a NCN operator? (y/n) "
   read -r NCN_OPERATOR_EXISTING
 done
+printf "\n"
+debug <printf "NCN_OPERATOR_EXISTING=%s\n" "${NCN_OPERATOR_EXISTING}"
 
 export NCN_OPERATOR_FEE=100
 
@@ -59,10 +78,11 @@ else
   printf "Please provide your current NCN operator: "
   read -r NCN_OPERATOR
 fi
+debug <printf "NCN_OPERATOR=%s\n" "${NCN_OPERATOR}"
 
 printf "\n"
-printf "jito-restaking-cli restaking operator initialize-operator-vault-ticket ${ORACLE_OPERATOR} ${VAULT} --rpc-url ${RPC_URL} --keypair ${PAYER_FILE}\n"
-printf "jito-restaking-cli restaking operator warmup-operator-vault-ticket ${ORACLE_OPERATOR} ${VAULT} --rpc-url ${RPC_URL} --keypair ${PAYER_FILE}\n"
+printf "jito-restaking-cli restaking operator initialize-operator-vault-ticket ${ORACLE_OPERATOR} ${VAULT} --rpc-url ${RPC_URL} --keypair ${NCN_PAYER_FILE}\n"
+printf "jito-restaking-cli restaking operator warmup-operator-vault-ticket ${ORACLE_OPERATOR} ${VAULT} --rpc-url ${RPC_URL} --keypair ${NCN_PAYER_FILE}\n"
 printf "sb solana on-demand oracle setOperator ${ORACLE_OPERATOR} --operator ${NCN_OPERATOR} -u ${RPC_URL} -k ${PAYER_FILE}\n"
 printf "\n"
 

@@ -4,6 +4,9 @@ set -u -e
 export data_host_dir="$(pwd)/../../../data"
 export data_ctr_dir="/data"
 
+export cfg_host_dir="$(pwd)/../../../cfg"
+export cfg_ctr_dir="/cfg"
+
 export script_host_dir="$(pwd)"
 export script_ctr_dir="/app"
 export prep_script_filename="51-oracle-prepare-request.sh"
@@ -24,6 +27,7 @@ k3s ctr i pull "${image}"
 k3s ctr run -t --net-host \
   --rm --cwd "${script_ctr_dir}" \
   --mount "type=bind,src=${data_host_dir},dst=${data_ctr_dir},options=rbind:rw" \
+  --mount "type=bind,src=${cfg_host_dir},dst=${cfg_ctr_dir},options=rbind:rw" \
   --mount "type=bind,src=${script_host_dir}/${prep_script_filename},dst=${script_ctr_dir}/${prep_script_filename},options=rbind:rw" \
   --mount "type=bind,src=${script_host_dir}/${ncn_enroll_script_filename},dst=${script_ctr_dir}/${ncn_enroll_script_filename},options=rbind:rw" \
   "${image}" "${CTR_NAME}" /bin/bash
