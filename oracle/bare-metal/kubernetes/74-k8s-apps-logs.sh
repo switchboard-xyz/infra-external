@@ -1,1 +1,1 @@
-../../../.scripts/kubernetes/k8s-apps-vmlogs.sh
+../../../.scripts/kubernetes/k8s-apps-alloy.sh
