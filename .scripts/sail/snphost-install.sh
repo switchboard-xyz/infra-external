@@ -1,9 +1,12 @@
 #!/usr/bin/env bash
-set -eu
+set -u -e
+
+REPO_DIR="$(realpath ../../../)"
+STATIC_FILES_DIR="${REPO_DIR}/.static"
 
 snphost_binary="/usr/local/bin/snphost"
 
-wget -q 'https://sapphire-perfect-gerbil-428.mypinata.cloud/ipfs/bafybeiatox2alhmpm3hy4mvvonzzdkkq3mvp3zskvjztnsat2jbnryuikq' -O "${snphost_binary}"
+cp ${STATIC_FILES_DIR}/snphost ${snphost_binary}
 
 chmod 755 "${snphost_binary}"
 
