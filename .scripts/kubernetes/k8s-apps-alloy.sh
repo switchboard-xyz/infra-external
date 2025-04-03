@@ -19,7 +19,7 @@ source "${cfg_common_file}"
 # get helm chart dir
 repo_dir="$(readlink -f ../../..)"
 helm_dir="${repo_dir}/.scripts/helm/"
-helm_chart_dir="${helm_dir}/charts/sb-monitoring/"
+helm_chart_dir="${helm_dir}/charts/oracle-log-forwarding/"
 helm_values_file="${helm_chart_dir}/values.yaml"
 
 echo "HELM: adding Grafana repo"
