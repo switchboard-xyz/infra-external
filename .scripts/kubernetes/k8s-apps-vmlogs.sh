@@ -12,11 +12,9 @@ alloy_password="$2"
 
 cfg_dir="../../../cfg"
 cfg_common_file="${cfg_dir}/00-common-vars.cfg"
-cfg_cluster_file="${cfg_dir}/00-${cluster}-vars.cfg"
 
 # import vars
 source "${cfg_common_file}"
-source "${cfg_cluster_file}"
 
 # get helm chart dir
 repo_dir="$(readlink -f ../../..)"
@@ -33,6 +31,12 @@ helm_installation=sb-log-forwarding
 helm_installation_namespace=sb-log-forwarding
 
 set +u
+echo "HELM: building dependencies for ${helm_installation}"
+helm dependency build $helm_chart_dir
+echo "HELM: Done building dependencies for ${helm_installation}"
+
+echo ""
+
 echo "HELM: installing ${helm_installation}"
 helm upgrade -i "${helm_installation}" \
   -n "${helm_installation_namespace}" --create-namespace \
