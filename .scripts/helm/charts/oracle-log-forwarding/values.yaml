@@ -124,7 +124,7 @@ alloy:
           stage.static_labels {
               values = {
                 operator   = "{{ .Values.operator }}",
-                oracleIP   = "{{ .Values.oracleIP }}",
+                oracleIPv4   = "{{ .Values.oracleIPv4 }}",
               }
           }
 
@@ -152,7 +152,7 @@ alloy:
           stage.static_labels {
             values = {
               operator   = "{{ .Values.operator }}",
-              oracleIP   = "{{ .Values.oracleIP }}",
+              oracleIPv4   = "{{ .Values.oracleIPv4 }}",
             }
           }
 
