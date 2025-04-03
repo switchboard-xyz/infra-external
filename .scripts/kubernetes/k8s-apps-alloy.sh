@@ -44,7 +44,7 @@ helm upgrade -i "${helm_installation}" \
   --set alloy.basicAuth.username="${alloy_user}" \
   --set alloy.basicAuth.password="${alloy_password}" \
   --set alloy.operator="${CLUSTER_DOMAIN}" \
-  --set alloy.oracleIP.="${IPv4}" \
+  --set alloy.oracleIPv4="${IPv4}" \
   "${helm_chart_dir}" >/dev/null
 
 

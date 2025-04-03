@@ -3,7 +3,7 @@ alloy:
     username: "set-me"
     password: "set-me"
   operator: switchboard
-  oracleIP: "someIP"
+  oracleIPv4: "someIP"
   alloy:
     configMap:
       # -- Content to assign to the new ConfigMap.  This is passed into `tpl` allowing for templating from values.
