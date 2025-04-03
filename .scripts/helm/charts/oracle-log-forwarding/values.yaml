@@ -13,8 +13,8 @@ alloy:
           endpoint {
             url = "https://loki.switchboard.xyz/loki/api/v1/push"
             basic_auth {
-              username = {{ .Values.basicAuth.username }}
-              password = {{ .Values.basicAuth.password }}
+              username = {{ .Values.basicAuth.username  | quote }}
+              password = {{ .Values.basicAuth.password  | quote }}
             }
           }
         }
