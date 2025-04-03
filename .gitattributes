@@ -1,0 +1,9 @@
+*.deb binary
+.static/ filter=lfs diff=lfs merge=lfs -text
+.static/linux-headers-6.8.0-rc5-next-20240221-snp-host-cc2568386_6.8.0-rc5-gcc2568386ccb-2_amd64.deb filter=lfs diff=lfs merge=lfs -text
+.static/linux-image-6.8.0-rc5-next-20240221-snp-host-cc2568386-dbg_6.8.0-rc5-gcc2568386ccb-2_amd64.deb filter=lfs diff=lfs merge=lfs -text
+.static/linux-image-6.8.0-rc5-next-20240221-snp-host-cc2568386_6.8.0-rc5-gcc2568386ccb-2_amd64.deb filter=lfs diff=lfs merge=lfs -text
+.static/linux-libc-dev_6.8.0-rc5-gcc2568386ccb-2_amd64.deb filter=lfs diff=lfs merge=lfs -text
+.static/sb-sail-initrd filter=lfs diff=lfs merge=lfs -text
+.static/sb-sail-kernel filter=lfs diff=lfs merge=lfs -text
+.static/snphost filter=lfs diff=lfs merge=lfs -text
