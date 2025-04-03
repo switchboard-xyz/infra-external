@@ -29,7 +29,7 @@ alloy:
               job       = "node/syslog",
               node_name = sys.env("HOSTNAME"),
               operator  = "{{ .Values.operator }}",
-              oracleIP   = "{{ .Values.oracleIP }}",
+              oracleIPv4   = "{{ .Values.oracleIPv4 }}",
           }]
         }
 
