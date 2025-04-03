@@ -10,4 +10,4 @@ cp ${STATIC_FILES_DIR}/snphost ${snphost_binary}
 
 chmod 755 "${snphost_binary}"
 
-echo "SNPHOST installed in /usr/local/bin/snphost"
+echo "SNPHOST installed at /usr/local/bin/snphost"
