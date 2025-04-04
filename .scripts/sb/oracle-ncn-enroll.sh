@@ -1,11 +1,10 @@
 #!/usr/bin/env bash
 set -u -e
 
-function debug() {
-  if [[ "${DEBUG}" == "true" ]]; then
-    printf "DEBUG: $@\n"
-  fi
-}
+export DEBUG="${DEBUG:-false}"
+if [[ "${DEBUG}" == "true" ]]; then
+  set -x
+fi
 
 cluster="${1:-devnet}"
 
@@ -15,27 +14,18 @@ if [[ "${cluster}" != "devnet" &&
   exit 254
 fi
 
-export DEBUG="${DEBUG:-false}"
-debug "DEBUG=${DEBUG}"
-
 export PAYER_FILE="/data/${cluster}_payer.json"
-debug "PAYER_FILE=${PAYER_FILE}"
 export NCN_PAYER_FILE="${PAYER_FILE}"
-debug "NCN_PAYER_FILE=${NCN_PAYER_FILE}"
 
 export CFG_FILE="/cfg/00-${cluster}-vars.cfg"
-debug "CFG_FILE=${CFG_FILE}"
 
 source <(awk '/^NETWORK=/' "${CFG_FILE}")
-debug "NETWORK=${NETWORK}"
 source <(awk '/^RPC_URL=/' "${CFG_FILE}")
-debug "RPC_URL=${RPC_URL}"
 
 # source ORACLE_OPERATOR from cfg file
 source <(awk \
   '/^PULL_ORACLE=/ {gsub("PULL_ORACLE","ORACLE_OPERATOR", $0); print $0}' \
   "${CFG_FILE}")
-debug "ORACLE_OPERATOR=${ORACLE_OPERATOR}"
 
 export NCN=""
 export VAULT=""
@@ -47,8 +37,6 @@ elif [[ "${cluster}" == "mainnet" ]]; then
   NCN=BGTtt2wdTdhLyFQwSGbNriLZiCxXKBbm29bDvYZ4jD6G
   VAULT=HR1ANmDHjaEhknvsTaK48M5xZtbBiwNdXM5NTiWhAb4S
 fi
-debug "NCN=${NCN}"
-debug "VAULT=${VAULT}"
 
 export NCN_OPERATOR=""
 source <(awk '/^NCN_OPERATOR=/' "${CFG_FILE}")
@@ -74,13 +62,11 @@ if [[ -z "${NCN_OPERATOR}" ]]; then
     printf "Do you already have a NCN operator? (y/n) "
     read -r NCN_OPERATOR_EXISTING
   done
-  debug "NCN_OPERATOR_EXISTING=${NCN_OPERATOR_EXISTING}"
   printf "\n"
 
   export NCN_OPERATOR_FEE=100
   if [[ "${NCN_OPERATOR_EXISTING}" == "n" || "${NCN_OPERATOR_EXISTING}" == "N" ]]; then
     cmd="jito-restaking-cli restaking operator initialize ${NCN_OPERATOR_FEE} --rpc-url ${RPC_URL} --keypair ${PAYER_FILE}"
-    debug "NCN_OPERATOR_CMD: ${cmd}"
     printf "Creating an NCN OPERATOR account for you, please stand by.\n"
     NCN_OPERATOR="$(${cmd} 2>&1 | awk '/Operator initialized at address/ {print $NF}')"
   else
@@ -105,7 +91,6 @@ else
   printf "Imported NCN_OPERATOR from ${CFG_FILE}\n"
   printf "Please reset the NCN_OPERATOR variable in that file if this was not intended\n"
 fi
-debug "NCN_OPERATOR=${NCN_OPERATOR}"
 printf "\n"
 
 printf "\n"
@@ -127,16 +112,25 @@ printf "\n"
 export NCN_OPERATOR_ADMIN="$(jito-restaking-cli restaking operator get ${NCN_OPERATOR} --rpc-url ${RPC_URL} 2>&1 | sed 's/.* admin: \(.\{44\}\).*/\1/g')"
 export ORACLE_OPERATOR_AUTHORITY="$(sb solana on-demand oracle print --rpc-url ${RPC_URL} ${ORACLE_OPERATOR} 2>&1 | grep authority)"
 
-printf "\n"
-printf "jito-restaking-cli restaking operator initialize-operator-vault-ticket ${ORACLE_OPERATOR} ${VAULT} --rpc-url ${RPC_URL} --keypair ${NCN_PAYER_FILE}\n"
-printf "jito-restaking-cli restaking operator warmup-operator-vault-ticket ${ORACLE_OPERATOR} ${VAULT} --rpc-url ${RPC_URL} --keypair ${NCN_PAYER_FILE}\n"
-printf "sb solana on-demand oracle setOperator ${ORACLE_OPERATOR} --operator ${NCN_OPERATOR} -u ${RPC_URL} -k ${PAYER_FILE}\n"
-printf "\n"
+if [[ "${NCN_OPERATOR_ADMIN}" == "${ORACLE_OPERATOR_AUTHORITY}" ]]; then
+  jito-restaking-cli restaking operator initialize-operator-vault-ticket ${ORACLE_OPERATOR} ${VAULT} --rpc-url ${RPC_URL} --keypair ${NCN_PAYER_FILE}
+  jito-restaking-cli restaking operator warmup-operator-vault-ticket ${ORACLE_OPERATOR} ${VAULT} --rpc-url ${RPC_URL} --keypair ${NCN_PAYER_FILE}
+  sb solana on-demand oracle setOperator ${ORACLE_OPERATOR} --operator ${NCN_OPERATOR} -u ${RPC_URL} -k ${PAYER_FILE}
+else
+  printf "\n"
+  printf "jito-restaking-cli restaking operator initialize-operator-vault-ticket ${ORACLE_OPERATOR} ${VAULT} --rpc-url ${RPC_URL} --keypair ${NCN_PAYER_FILE}\n"
+  printf "jito-restaking-cli restaking operator warmup-operator-vault-ticket ${ORACLE_OPERATOR} ${VAULT} --rpc-url ${RPC_URL} --keypair ${NCN_PAYER_FILE}\n"
+  printf "sb solana on-demand oracle setOperator ${ORACLE_OPERATOR} --operator ${NCN_OPERATOR} -u ${RPC_URL} -k ${PAYER_FILE}\n"
+  printf "\n"
+fi
 
 printf "\n"
 printf "Please notify SWITCHBOARD that you registered you oracle to the NCN vault.\n"
 printf "They'll need to validate and confirm on their side, then you should come back and run the following step\n"
 
+printf "\n"
+printf "After SWITCHBOARD confims they have run their part of process,\n"
+printf "please come back to this temporary container using ./50-... and then run:\n"
 printf "\n"
 printf "jito-restaking-cli restaking operator operator-warmup-ncn ${NCN_OPERATOR} ${NCN} --rpc-url ${RPC_URL} --keypair ${PAYER_FILE}"
 printf "\n"
