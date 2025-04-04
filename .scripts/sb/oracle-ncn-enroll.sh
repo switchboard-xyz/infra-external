@@ -124,6 +124,9 @@ printf "||                                                                      
 printf "==========================================================================\n"
 printf "\n"
 
+export NCN_OPERATOR_ADMIN="$(jito-restaking-cli restaking operator get ${NCN_OPERATOR} --rpc-url ${RPC_URL} 2>&1 | sed 's/.* admin: \(.\{44\}\).*/\1/g')"
+export ORACLE_OPERATOR_AUTHORITY="$(sb solana on-demand oracle print --rpc-url ${RPC_URL} ${ORACLE_OPERATOR} 2>&1 | grep authority)"
+
 printf "\n"
 printf "jito-restaking-cli restaking operator initialize-operator-vault-ticket ${ORACLE_OPERATOR} ${VAULT} --rpc-url ${RPC_URL} --keypair ${NCN_PAYER_FILE}\n"
 printf "jito-restaking-cli restaking operator warmup-operator-vault-ticket ${ORACLE_OPERATOR} ${VAULT} --rpc-url ${RPC_URL} --keypair ${NCN_PAYER_FILE}\n"
