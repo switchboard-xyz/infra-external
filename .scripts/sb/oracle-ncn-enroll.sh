@@ -114,9 +114,12 @@ export NCN_OPERATOR_ADMIN="$(jito-restaking-cli restaking operator get ${NCN_OPE
 export ORACLE_OPERATOR_AUTHORITY="$(sb solana on-demand oracle print --cluster ${cluster} --rpcUrl ${RPC_URL} ${ORACLE_OPERATOR} 2>&1 | awk '/authority/ {print $(NF)}')"
 
 if [[ "${NCN_OPERATOR_ADMIN}" == "${ORACLE_OPERATOR_AUTHORITY}" ]]; then
-  jito-restaking-cli restaking operator initialize-operator-vault-ticket ${NCN_OPERATOR} ${VAULT} --rpc-url ${RPC_URL} --keypair ${NCN_PAYER_FILE} 2>&1 | awk '/Transaction confirmed/ {print "Transaction:"$(NF)}'
-  jito-restaking-cli restaking operator warmup-operator-vault-ticket ${NCN_OPERATOR} ${VAULT} --rpc-url ${RPC_URL} --keypair ${NCN_PAYER_FILE} 2>&1 | awk '/Transaction confirmed/ {print "Transaction: "$(NF)}'
-  sb solana on-demand oracle setOperator ${ORACLE_OPERATOR} --operator ${NCN_OPERATOR} --cluster ${cluster} -u ${RPC_URL} -k ${PAYER_FILE} 2>/dev/null | awk '/Explorer: / {print $(NF)}'
+  printf "Tx initialize-operator-vault-ticket: %s \n" \
+    "$(jito-restaking-cli restaking operator initialize-operator-vault-ticket ${NCN_OPERATOR} ${VAULT} --rpc-url ${RPC_URL} --keypair ${NCN_PAYER_FILE} 2>&1 | awk '/Transaction confirmed/ {print $(NF)}')"
+  printf "Tx warmup-operator-vault-ticket: %s \n" \
+    "$(jito-restaking-cli restaking operator warmup-operator-vault-ticket ${NCN_OPERATOR} ${VAULT} --rpc-url ${RPC_URL} --keypair ${NCN_PAYER_FILE} 2>&1 | awk '/Transaction confirmed/ {print $(NF)}')"
+  printf "Tx SB setOperator: %s \n" \
+    "$(sb solana on-demand oracle setOperator ${ORACLE_OPERATOR} --operator ${NCN_OPERATOR} --cluster ${cluster} -u ${RPC_URL} -k ${PAYER_FILE} 2>/dev/null | awk '/Explorer: / {print $(NF)}')"
 else
   printf "\n"
   printf "==========================================================================\n"
