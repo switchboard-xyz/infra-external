@@ -140,7 +140,7 @@ else
   printf "|| Then change the NCN_ADMIN_PAYER_FILE variable to point to the        ||\n"
   printf "|| file location where you stored the NCN ADMIN payer file temporarily. ||\n"
   printf "||                                                                      ||\n"
-  printf "%-3s%47s%-s%3s" "|| " " DO NOT OVERWRITE/CHANGE THE ORACLE PAYER FILE " "${PAYER_FILE}" " ||"
+  printf "%-3s%47s%-s%3s\n" "||" " DO NOT OVERWRITE/CHANGE THE ORACLE PAYER FILE " "${PAYER_FILE}" "||"
   printf "||                                                                      ||\n"
   printf "==========================================================================\n"
   printf "\n"
