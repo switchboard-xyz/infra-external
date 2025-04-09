@@ -3,9 +3,11 @@ set -u -e
 
 cluster="${1:-devnet}"
 
+set +u
 if [[ -z "${1}" ]]; then
   printf "No cluster specified, using default: 'devnet'\n"
 fi
+set -u
 
 if [[ "${cluster}" != "devnet" &&
   "${cluster}" != "mainnet" ]]; then
