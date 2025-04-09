@@ -16,9 +16,11 @@ if [[ "${cluster}" != "devnet" &&
   exit 1
 fi
 
+set +u
 if [[ -z "${2}" ]]; then
   printf "No priorityFee specified, using default: '${priorityFee}'\n"
 fi
+set -u
 
 export DEBUG="${DEBUG:-false}"
 if [[ "${DEBUG}" == "true" ]]; then
