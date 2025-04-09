@@ -3,16 +3,13 @@ set -u -e
 
 cluster="${1:-devnet}"
 
-if [[ "${cluster}" == "mainnet-beta" ]]; then
-  cluster="mainnet"
+if [[ -z "${1}" ]]; then
+  printf "No cluster specified, using default: 'devnet'\n"
 fi
 
-if [[ "${cluster}" != "v2" &&
-  "${cluster}" != "devnet" &&
-  "${cluster}" != "mainnet" &&
-  "${cluster}" != "mainnet-beta" ]]; then
-  echo "Only valid cluster values are 'devnet' and 'mainnet'/'mainnet-beta'."
-  echo "syntax: $0 [<cluster>]"
+if [[ "${cluster}" != "devnet" &&
+  "${cluster}" != "mainnet" ]]; then
+  printf "Only valid cluster values are 'devnet' and 'mainnet'.\n"
   exit 1
 fi
 
@@ -27,9 +24,9 @@ source "${cfg_common_file}"
 source "${cfg_cluster_file}"
 
 if [[ "$(kubectl get ns | grep -e '^'${NAMESPACE}'\W')" == "" ]]; then
-  echo "KUBECTL: creating namespace ${NAMESPACE}"
+  printf "KUBECTL: creating namespace ${NAMESPACE}\n"
   kubectl create namespace "${NAMESPACE}" >/dev/null
-  echo "KUBECTL: namespace ${NAMESPACE} created"
+  printf "KUBECTL: namespace ${NAMESPACE} created\n"
 fi
 
 TMP_FILE="./testcert.yml"
@@ -95,16 +92,23 @@ cat >"${TMP_FILE}" <<-EOF
 	            - containerPort: 80
 EOF
 
-echo "KUBECTL: Creating Test Ingress + Staging Cert"
+printf "KUBECTL: Creating Test Ingress + Staging Cert\n"
 kubectl apply -f "${TMP_FILE}" -n "${NAMESPACE}" >/dev/null
-echo "KUBECTL: Test Ingress + Staging Cert done"
+printf "KUBECTL: Test Ingress + Staging Cert done\n"
 
-echo "======"
-echo " "
-echo "Now give the certificate about 3-5 minutes to be created."
-echo "Then by visiting https://${CLUSTER_DOMAIN} and looking into the certificate details,"
-echo "you should be greeted with an INVALID certificate issued by Let's Encrypt Staging."
-echo "If that's the case, everything worked correctly."
-echo "If you get a certificate from 'Kubernetes Local Issuer',"
-echo "give it a few more minutes and try from a different browser (for caching reasons)."
-echo " "
+printf "\n"
+printf "==========================================================================\n"
+printf "||                                                                      ||\n"
+printf "|| Now give the certificate about 3-5 minutes to be created.            ||\n"
+printf "||                                                                      ||\n"
+printf "|| Then by visiting https://${CLUSTER_DOMAIN} and looking into the      ||\n"
+printf "|| certificate details, you should be greeted with an INVALID           ||\n"
+printf "|| certificate issued by Let's Encrypt Staging.                         ||\n"
+printf "||                                                                      ||\n"
+printf "|| If that's the case, everything worked correctly.                     ||\n"
+printf "|| If you get a certificate from 'Kubernetes Local Issuer',             ||\n"
+printf "|| give it a few more minutes and try from a different browser          ||\n"
+printf "|| (for caching reasons).                                               ||\n"
+printf "||                                                                      ||\n"
+printf "==========================================================================\n"
+printf "\n"

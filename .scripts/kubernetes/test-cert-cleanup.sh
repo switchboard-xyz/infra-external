@@ -3,14 +3,13 @@ set -u -e
 
 cluster="${1:-devnet}"
 
-if [[ "${cluster}" == "mainnet-beta" ]]; then
-  cluster="mainnet"
+if [[ -z "${1}" ]]; then
+  printf "No cluster specified, using default: 'devnet'\n"
 fi
 
 if [[ "${cluster}" != "devnet" &&
-  "${cluster}" != "mainnet" &&
-  "${cluster}" != "mainnet-beta" ]]; then
-  echo "Only valid cluster values are 'devnet' and 'mainnet'/'mainnet-beta'."
+  "${cluster}" != "mainnet" ]]; then
+  printf "Only valid cluster values are 'devnet' and 'mainnet'.\n"
   exit 1
 fi
 
@@ -24,11 +23,11 @@ source "${cfg_cluster_file}"
 
 TMP_FILE="./testcert.yml"
 
-echo " "
-echo "KUBECTL: deleting tmp file and resources created in the previous step."
-echo " "
+printf "\n"
+printf "KUBECTL: deleting tmp file and resources created in the previous step.\n"
+printf "\n"
 
 kubectl delete -n "${NAMESPACE}" -f "${TMP_FILE}" >/dev/null &&
   rm -f "${TMP_FILE}"
 
-echo " "
+printf "\n"

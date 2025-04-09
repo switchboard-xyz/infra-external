@@ -3,14 +3,13 @@ set -u -e
 
 cluster="${1:-devnet}"
 
-if [[ "${cluster}" == "mainnet-beta" ]]; then
-  cluster="mainnet"
+if [[ -z "${1}" ]]; then
+  printf "No cluster specified, using default: 'devnet'\n"
 fi
 
 if [[ "${cluster}" != "devnet" &&
-  "${cluster}" != "mainnet" &&
-  "${cluster}" != "mainnet-beta" ]]; then
-  echo "Only valid cluster values are 'devnet' and 'mainnet'/'mainnet-beta'."
+  "${cluster}" != "mainnet" ]]; then
+  printf "Only valid cluster values are 'devnet' and 'mainnet'.\n"
   exit 1
 fi
 
@@ -34,13 +33,14 @@ cfg_cluster_file="${cfg_dir}/00-${cluster}-vars.cfg"
 source "${cfg_common_file}"
 source "${cfg_cluster_file}"
 
-echo "===="
-echo " "
+printf "\n"
+printf "==========================================================================\n"
+printf "\n"
 
 if [[ "$(kubectl get ns | grep -e '^'${NAMESPACE}'\W')" == "" ]]; then
-  echo "KUBECTL: creating Namespace ${NAMESPACE}"
+  printf "KUBECTL: creating Namespace ${NAMESPACE}\n"
   kubectl create namespace "${NAMESPACE}"
-  echo "KUBECTL: Namespace ${NAMESPACE} created"
+  printf "KUBECTL: Namespace ${NAMESPACE} created\n"
 fi
 
 helm_dir="${repo_dir}/.scripts/helm/"
@@ -65,7 +65,7 @@ if [ ! -d "${repo_dir}" ]; then
   mkdir "${repo_dir}"
 fi
 
-echo "HELM: Installing Switchboard Oracle under namespace ${NAMESPACE}"
+printf "HELM: Installing Switchboard Oracle under namespace ${NAMESPACE}\n"
 helm upgrade -i "sb-oracle-${NETWORK}" \
   -n "${NAMESPACE}" --create-namespace \
   -f "${tmp_helm_file}" \
@@ -77,10 +77,10 @@ helm upgrade -i "sb-oracle-${NETWORK}" \
   --set components.gateway.enabled=${GATEWAY_ENABLED} \
   --set components.gateway.image="${GATEWAY_DOCKER_IMAGE}" \
   "${helm_on_demand_chart_dir}" >/dev/null
-echo "HELM: Switchboard Oracle installed under namespace ${NAMESPACE}"
+printf "HELM: Switchboard Oracle installed under namespace ${NAMESPACE}\n"
 
 if [[ "${PAYER_SECRET_KEY}" != "" ]]; then
-  echo "KUBECTL: creating secret ${NAMESPACE}/payer-secret"
+  printf "KUBECTL: creating secret ${NAMESPACE}/payer-secret\n"
   # delete pre-existing secret
   set +e
   kubectl \
@@ -94,11 +94,11 @@ if [[ "${PAYER_SECRET_KEY}" != "" ]]; then
     create secret generic \
     --from-file="${PAYER_SECRET_KEY}=../../../data/${cluster}_payer.json" \
     payer-secret >/dev/null
-  echo "KUBECTL: secret ${NAMESPACE}/payer-secret created"
+  printf "KUBECTL: secret ${NAMESPACE}/payer-secret created\n"
 fi
 
 if [[ "${LANDING_ENABLED}" != "" && "${LANDING_ENABLED}" == "true" ]]; then
-  echo "HELM: Installing Switchboard Landing page under namespace ${LANDING_NAMESPACE}"
+  printf "HELM: Installing Switchboard Landing page under namespace ${LANDING_NAMESPACE}\n"
   helm upgrade -i "oracle-landing-page" \
     -n "${LANDING_NAMESPACE}" --create-namespace \
     -f "${landing_tmp_helm_file}" \
@@ -111,7 +111,7 @@ if [[ "${LANDING_ENABLED}" != "" && "${LANDING_ENABLED}" == "true" ]]; then
     --set oracle.devnet.enabled=${ORACLE_ENABLED} \
     --set oracle.mainnet.enabled=${ORACLE_ENABLED} \
     "${helm_landing_page_chart_dir}" >/dev/null
-  echo "HELM: Switchboard Oracle Landing page installed under namespace ${LANDING_NAMESPACE}"
+  printf "HELM: Switchboard Oracle Landing page installed under namespace ${LANDING_NAMESPACE}\n"
 fi
 
 rm "${tmp_helm_file}"

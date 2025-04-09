@@ -1,7 +1,12 @@
 #!/usr/bin/env bash
+set -u -e
 
 cluster="${1:-devnet}"
 priorityFee="${2:-10000}"
+
+if [[ -z "${1}" ]]; then
+  printf "No cluster specified, using default: 'devnet'\n"
+fi
 
 if [[ "${cluster}" != "devnet" &&
   "${cluster}" != "mainnet" ]]; then
@@ -9,8 +14,16 @@ if [[ "${cluster}" != "devnet" &&
   exit 1
 fi
 
-DEBUG="${DEBUG:-false}"
-PAYER_FILE="/data/${cluster}_payer.json"
+if [[ -z "${2}" ]]; then
+  printf "No priorityFee specified, using default: '${priorityFee}'\n"
+fi
+
+export DEBUG="${DEBUG:-false}"
+if [[ "${DEBUG}" == "true" ]]; then
+  set -x
+fi
+
+export PAYER_FILE="/data/${cluster}_payer.json"
 
 queueKey=""
 if [[ "${cluster}" == "devnet" ]]; then

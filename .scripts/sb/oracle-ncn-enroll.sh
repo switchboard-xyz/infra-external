@@ -8,6 +8,10 @@ fi
 
 cluster="${1:-devnet}"
 
+if [[ -z "${1}" ]]; then
+  printf "No cluster specified, using default: 'devnet'\n"
+fi
+
 if [[ "${cluster}" != "devnet" &&
   "${cluster}" != "mainnet" ]]; then
   printf "Only valid cluster values are 'devnet' (default) and 'mainnet'\n"
@@ -144,9 +148,16 @@ else
   printf "||                                                                      ||\n"
   printf "==========================================================================\n"
   printf "\n"
+  printf "# Set the location for the NCN ADMIN PAYER file (keypair with NCN operator admin authority)\n"
   printf "export NCN_ADMIN_PAYER_FILE='/tmp/ncn_admin_payer.json'\n"
+  printf "\n"
+  printf "# Initialize the operator vault ticket - creates permission for your operator to interact with the vault\n"
   printf "jito-restaking-cli restaking operator initialize-operator-vault-ticket ${NCN_OPERATOR} ${VAULT} --rpc-url ${RPC_URL} --keypair \${NCN_ADMIN_PAYER_FILE}\n"
+  printf "\n"
+  printf "# Warm up the operator vault ticket - prepares your operator for vault interactions\n"
   printf "jito-restaking-cli restaking operator warmup-operator-vault-ticket ${NCN_OPERATOR} ${VAULT} --rpc-url ${RPC_URL} --keypair \${NCN_ADMIN_PAYER_FILE}\n"
+  printf "\n"
+  printf "# Link your Switchboard Oracle to your NCN operator - establishes the connection between services\n"
   printf "sb solana on-demand oracle setOperator ${ORACLE_OPERATOR} --operator ${NCN_OPERATOR} --cluster ${cluster} -u ${RPC_URL} -k ${PAYER_FILE}\n"
   printf "\n"
 fi
