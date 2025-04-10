@@ -7,4 +7,4 @@
 
 This repository is complementary to and used through our official docs.
 
-Our full documentation is readable at our [Switchboard Docs](https://docs.switchboard.xyz/docs/switchboard/running-switchboard-oracles) URL.
+Our full documentation is readable at our [Switchboard Docs](https://docs.switchboard.xyz/switchboard-protocol/running-a-switchboard-oracle) URL.
