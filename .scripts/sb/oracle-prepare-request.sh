@@ -137,6 +137,7 @@ if [[ "${register_oracle}" == "y" || "${register_oracle}" == "Y" ]]; then
 
   # Save the oracle key to config file if it was created successfully
   if [[ -n "${PULL_ORACLE_KEY}" ]]; then
+    printf "\n"
     printf "Oracle key created: %s\n" "${PULL_ORACLE_KEY}"
 
     export SAVE_ORACLE_KEY=""
@@ -235,23 +236,28 @@ printf "||                                                                      
 printf "|| Next steps:                                                          ||\n"
 if [[ "${SAVE_ORACLE_KEY}" == "y" || "${SAVE_ORACLE_KEY}" == "Y" ]] &&
   [[ "${SAVE_GUARDIAN_KEY}" == "y" || "${SAVE_GUARDIAN_KEY}" == "Y" ]]; then
-  printf "||   1. Your Oracle & Guardian keys have been automatically saved to    ||\n"
+  printf "||   1. Your Oracle & Guardian keys have been automatically saved to:   ||\n"
+  printf "||                                                                      ||\n"
   printf "%-10s%-61s%3s\n" "|| " "${CFG_FILE}" " ||"
 elif [[ "${SAVE_ORACLE_KEY}" == "y" || "${SAVE_ORACLE_KEY}" == "Y" ]] &&
   [[ "${register_guardian}" == "y" || "${register_guardian}" == "Y" ]]; then
   printf "||   1. Your Oracle key has been automatically saved to                 ||\n"
+  printf "||                                                                      ||\n"
   printf "%-10s%-61s%3s\n" "|| " "${CFG_FILE}" " ||"
   printf "||      but you'll need to manually add your Guardian key               ||\n"
 elif [[ "${SAVE_GUARDIAN_KEY}" == "y" || "${SAVE_GUARDIAN_KEY}" == "Y" ]] &&
   [[ "${register_oracle}" == "y" || "${register_oracle}" == "Y" ]]; then
   printf "||   1. Your Guardian key has been automatically saved to               ||\n"
+  printf "||                                                                      ||\n"
   printf "%-10s%-61s%3s\n" "|| " "${CFG_FILE}" " ||"
   printf "||      but you'll need to manually add your Oracle key                 ||\n"
 elif [[ "${SAVE_ORACLE_KEY}" == "y" || "${SAVE_ORACLE_KEY}" == "Y" ]]; then
   printf "||   1. Your Oracle key has been automatically saved to                 ||\n"
+  printf "||                                                                      ||\n"
   printf "%-10s%-61s%3s\n" "|| " "${CFG_FILE}" " ||"
 elif [[ "${SAVE_GUARDIAN_KEY}" == "y" || "${SAVE_GUARDIAN_KEY}" == "Y" ]]; then
   printf "||   1. Your Guardian key has been automatically saved to               ||\n"
+  printf "||                                                                      ||\n"
   printf "%-10s%-61s%3s\n" "|| " "${CFG_FILE}" " ||"
 else
   printf "%-5s%-8s%-62s%3s\n" "|| " "1. Edit " "${CFG_FILE} file" " ||"
