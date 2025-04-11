@@ -87,9 +87,9 @@ printf "||                                                                      
 printf "||                 >>> COPY/SAVE THE OUTPUT FROM HERE <<<               ||\n"
 printf "||                                                                      ||\n"
 printf "||  -> Solana cluster: %-8s %42s\n" "${cluster}" "||"
-printf "||  -> Pull Queue: %44s %12s\n" "${PULL_QUEUE_KEY}" "||"
+printf "||  -> Pull Queue: %44s %10s\n" "${PULL_QUEUE_KEY}" "||"
 if [[ "${register_guardian}" == "y" || "${register_guardian}" == "Y" ]]; then
-  printf "||  -> Guardian Queue: %44s %8s\n" "${GUARDIAN_QUEUE_KEY}" "||"
+  printf "||  -> Guardian Queue: %44s %6s\n" "${GUARDIAN_QUEUE_KEY}" "||"
 fi
 printf "||                                                                      ||\n"
 printf "||  Creating new registration request for:                              ||\n"
@@ -107,8 +107,11 @@ printf "\n"
 export PULL_ORACLE_KEY=""
 export GUARDIAN_ORACLE_KEY=""
 
+export SAVE_ORACLE_KEY=""
+export SAVE_GUARDIAN_KEY=""
 if [[ "${register_oracle}" == "y" || "${register_oracle}" == "Y" ]]; then
   printf "\n"
+  export ORACLE_OUTPUT=""
   if [[ "${DEBUG}" == "true" ]]; then
     ORACLE_OUTPUT=$(
       sb solana on-demand oracle create \
@@ -119,7 +122,6 @@ if [[ "${register_oracle}" == "y" || "${register_oracle}" == "Y" ]]; then
         --keypair "${PAYER_FILE}"
     )
     printf "%s\n" "${ORACLE_OUTPUT}"
-    PULL_ORACLE_KEY=$(echo "${ORACLE_OUTPUT}" | grep -o "Oracle created with address: [a-zA-Z0-9]*" | awk '{print $NF}')
   else
     ORACLE_OUTPUT=$(
       sb solana on-demand oracle create \
@@ -130,8 +132,8 @@ if [[ "${register_oracle}" == "y" || "${register_oracle}" == "Y" ]]; then
         --keypair "${PAYER_FILE}" 2>/dev/null
     )
     printf "%s\n" "${ORACLE_OUTPUT}"
-    PULL_ORACLE_KEY=$(echo "${ORACLE_OUTPUT}" | grep -o "Oracle created with address: [a-zA-Z0-9]*" | awk '{print $NF}')
   fi
+  PULL_ORACLE_KEY=$(echo "${ORACLE_OUTPUT}" | awk -F '=' '/^PULL_ORACLE=/ {print $NF}')
 
   # Save the oracle key to config file if it was created successfully
   if [[ -n "${PULL_ORACLE_KEY}" ]]; then
@@ -157,6 +159,7 @@ fi
 
 if [[ "${register_guardian}" == "y" || "${register_guardian}" == "Y" ]]; then
   printf "\n"
+  export GUARDIAN_OUTPUT=""
   if [[ "${DEBUG}" == "true" ]]; then
     GUARDIAN_OUTPUT=$(
       sb solana on-demand guardian create \
@@ -165,7 +168,6 @@ if [[ "${register_guardian}" == "y" || "${register_guardian}" == "Y" ]]; then
         --keypair "${PAYER_FILE}"
     )
     printf "%s\n" "${GUARDIAN_OUTPUT}"
-    GUARDIAN_ORACLE_KEY=$(echo "${GUARDIAN_OUTPUT}" | grep -o "Guardian created with address: [a-zA-Z0-9]*" | awk '{print $NF}')
   else
     GUARDIAN_OUTPUT=$(
       sb solana on-demand guardian create \
@@ -174,8 +176,8 @@ if [[ "${register_guardian}" == "y" || "${register_guardian}" == "Y" ]]; then
         --keypair "${PAYER_FILE}" 2>/dev/null
     )
     printf "%s\n" "${GUARDIAN_OUTPUT}"
-    GUARDIAN_ORACLE_KEY=$(echo "${GUARDIAN_OUTPUT}" | grep -o "Guardian created with address: [a-zA-Z0-9]*" | awk '{print $NF}')
   fi
+  GUARDIAN_ORACLE_KEY=$(echo "${GUARDIAN_OUTPUT}" | awk -F '=' '/^GUARDIAN_ORACLE=/ {print $NF}')
 
   # Save the guardian key to config file if it was created successfully
   if [[ -n "${GUARDIAN_ORACLE_KEY}" ]]; then
