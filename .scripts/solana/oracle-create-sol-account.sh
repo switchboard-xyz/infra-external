@@ -30,12 +30,12 @@ if [[ -f "${CFG_FILE}" ]]; then
 fi
 
 printf "\n"
-printf "==========================================================================\n"
-printf "||                                                                      ||\n"
-printf "||                 YOU ARE NOW IN A TEMPORARY CONTAINER                 ||\n"
-printf "||          PLEASE FOLLOW THE INSTRUCTIONS BELOW AND THE DOCS           ||\n"
-printf "||                                                                      ||\n"
-printf "==========================================================================\n"
+printf "========================================================================\n"
+printf "||                                                                    ||\n"
+printf "||               YOU ARE NOW IN A TEMPORARY CONTAINER                 ||\n"
+printf "||        PLEASE FOLLOW THE INSTRUCTIONS BELOW AND THE DOCS           ||\n"
+printf "||                                                                    ||\n"
+printf "========================================================================\n"
 printf "\n"
 
 # Check if payer file already exists
@@ -47,8 +47,8 @@ if [[ ! -z "$(cat ${PAYER_FILE})" ]]; then
   printf "||                                                                    ||\n"
   printf "|| Our script detected that the payer file at location                ||\n"
   printf "%-7s%-62s%3s\n" "||" "${PAYER_FILE}" "||"
-  printf "||                                                                    ||\n"
   printf "|| already contains some data.                                        ||\n"
+  printf "||                                                                    ||\n"
   printf "|| Continuing will OVERWRITE this file and you will LOSE ACCESS       ||\n"
   printf "|| to any funds associated with this account!                         ||\n"
   printf "||                                                                    ||\n"
