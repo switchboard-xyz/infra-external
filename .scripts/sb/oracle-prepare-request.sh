@@ -28,12 +28,24 @@ if [[ "${DEBUG}" == "true" ]]; then
 fi
 
 export PAYER_FILE="/data/${cluster}_payer.json"
+export CFG_FILE="/cfg/00-${cluster}-vars.cfg"
 
-queueKey=""
+# Load existing configuration if available
+if [[ -f "${CFG_FILE}" ]]; then
+  source <(awk '/^PULL_ORACLE=/' "${CFG_FILE}")
+  source <(awk '/^GUARDIAN_ORACLE=/' "${CFG_FILE}")
+  source <(awk '/^RPC_URL=/' "${CFG_FILE}")
+fi
+
+# Set queue keys based on cluster
+export PULL_QUEUE_KEY=""
+export GUARDIAN_QUEUE_KEY=""
 if [[ "${cluster}" == "devnet" ]]; then
-  queueKey="EYiAmGSdsQTuCw413V5BzaruWuCCSDgTPtBGvLkXHbe7"
+  PULL_QUEUE_KEY="EYiAmGSdsQTuCw413V5BzaruWuCCSDgTPtBGvLkXHbe7"
+  GUARDIAN_QUEUE_KEY="BeZ4tU4HNe2fGQGUzJmNS2UU2TcZdMUUgnCH6RPg4Dpi"
 elif [[ "${cluster}" == "mainnet" ]]; then
-  queueKey="A43DyUGA7s8eXPxqEjJY6EBu1KKbNgfxF8h17VAHn13w"
+  PULL_QUEUE_KEY="A43DyUGA7s8eXPxqEjJY6EBu1KKbNgfxF8h17VAHn13w"
+  GUARDIAN_QUEUE_KEY="B7WgdyAgzK7yGoxfsBaNnY6d41bTybTzEh4ZuQosnvLK"
 fi
 
 printf "\n"
@@ -44,11 +56,6 @@ printf "||          PLEASE FOLLOW THE INSTRUCTIONS BELOW AND THE DOCS           
 printf "||                                                                      ||\n"
 printf "==========================================================================\n"
 printf "\n"
-
-# change `mainnet` to `mainnet-beta` for historical reasons
-if [[ "${cluster}" == "mainnet" ]]; then
-  cluster="mainnet-beta"
-fi
 
 printf "\n"
 export register_oracle=""
@@ -79,8 +86,11 @@ printf "========================================================================
 printf "||                                                                      ||\n"
 printf "||                 >>> COPY/SAVE THE OUTPUT FROM HERE <<<               ||\n"
 printf "||                                                                      ||\n"
-printf "||  -> Solana cluster: %-8s %42s\n" "${cluster}" "||"
-printf "||  -> queueKey: %44s %12s\n" "${queueKey}" "||"
+printf "||  -> Solana cluster: %-8s %42s\n" "${SOLANA_CLUSTER}" "||"
+printf "||  -> Pull Queue: %44s %12s\n" "${PULL_QUEUE_KEY}" "||"
+if [[ "${register_guardian}" == "y" || "${register_guardian}" == "Y" ]]; then
+  printf "||  -> Guardian Queue: %44s %8s\n" "${GUARDIAN_QUEUE_KEY}" "||"
+fi
 printf "||                                                                      ||\n"
 printf "||  Creating new registration request for:                              ||\n"
 if [[ "${register_oracle}" == "y" || "${register_oracle}" == "Y" ]]; then
@@ -93,43 +103,99 @@ printf "||                                                                      
 printf "==========================================================================\n"
 printf "\n"
 
+# Variables to store the created keys
+export PULL_ORACLE_KEY=""
+export GUARDIAN_ORACLE_KEY=""
+
 if [[ "${register_oracle}" == "y" || "${register_oracle}" == "Y" ]]; then
   printf "\n"
   if [[ "${DEBUG}" == "true" ]]; then
-    (
+    ORACLE_OUTPUT=$(
       sb solana on-demand oracle create \
-        --queue "${queueKey}" \
-        --cluster "${cluster}" \
+        --queue "${PULL_QUEUE_KEY}" \
+        --cluster "${SOLANA_CLUSTER}" \
         --priorityFee "${priorityFee}" \
+        --rpcUrl "${RPC_URL}" \
         --keypair "${PAYER_FILE}"
     )
+    printf "%s\n" "${ORACLE_OUTPUT}"
+    PULL_ORACLE_KEY=$(echo "${ORACLE_OUTPUT}" | grep -o "Oracle created with address: [a-zA-Z0-9]*" | awk '{print $NF}')
   else
-    (
+    ORACLE_OUTPUT=$(
       sb solana on-demand oracle create \
-        --queue "${queueKey}" \
-        --cluster "${cluster}" \
+        --queue "${PULL_QUEUE_KEY}" \
+        --cluster "${SOLANA_CLUSTER}" \
         --priorityFee "${priorityFee}" \
-        --keypair "${PAYER_FILE}"
-    ) 2>/dev/null
+        --rpcUrl "${RPC_URL}" \
+        --keypair "${PAYER_FILE}" 2>/dev/null
+    )
+    printf "%s\n" "${ORACLE_OUTPUT}"
+    PULL_ORACLE_KEY=$(echo "${ORACLE_OUTPUT}" | grep -o "Oracle created with address: [a-zA-Z0-9]*" | awk '{print $NF}')
+  fi
+
+  # Save the oracle key to config file if it was created successfully
+  if [[ -n "${PULL_ORACLE_KEY}" ]]; then
+    printf "Oracle key created: %s\n" "${PULL_ORACLE_KEY}"
+
+    export SAVE_ORACLE_KEY=""
+    while [[ 
+      "${SAVE_ORACLE_KEY}" != "y" &&
+      "${SAVE_ORACLE_KEY}" != "Y" &&
+      "${SAVE_ORACLE_KEY}" != "n" &&
+      "${SAVE_ORACLE_KEY}" != "N" ]]; do
+      printf "Do you want to save this Oracle key to ${CFG_FILE}? (y/n) "
+      read -r SAVE_ORACLE_KEY
+    done
+
+    if [[ "${SAVE_ORACLE_KEY}" == "y" || "${SAVE_ORACLE_KEY}" == "Y" ]]; then
+      sed -i "s/^PULL_ORACLE=.*/PULL_ORACLE=${PULL_ORACLE_KEY}/" "${CFG_FILE}"
+      sed -i "s/^PULL_QUEUE=.*/PULL_QUEUE=${PULL_QUEUE_KEY}/" "${CFG_FILE}"
+      printf "Oracle key saved to config file.\n"
+    fi
   fi
 fi
 
 if [[ "${register_guardian}" == "y" || "${register_guardian}" == "Y" ]]; then
   printf "\n"
   if [[ "${DEBUG}" == "true" ]]; then
-    (
+    GUARDIAN_OUTPUT=$(
       sb solana on-demand guardian create \
-        --cluster "${cluster}" \
+        --cluster "${SOLANA_CLUSTER}" \
         --priorityFee "${priorityFee}" \
         --keypair "${PAYER_FILE}"
     )
+    printf "%s\n" "${GUARDIAN_OUTPUT}"
+    GUARDIAN_ORACLE_KEY=$(echo "${GUARDIAN_OUTPUT}" | grep -o "Guardian created with address: [a-zA-Z0-9]*" | awk '{print $NF}')
   else
-    (
+    GUARDIAN_OUTPUT=$(
       sb solana on-demand guardian create \
-        --cluster "${cluster}" \
+        --cluster "${SOLANA_CLUSTER}" \
         --priorityFee "${priorityFee}" \
-        --keypair "${PAYER_FILE}"
-    ) 2>/dev/null
+        --keypair "${PAYER_FILE}" 2>/dev/null
+    )
+    printf "%s\n" "${GUARDIAN_OUTPUT}"
+    GUARDIAN_ORACLE_KEY=$(echo "${GUARDIAN_OUTPUT}" | grep -o "Guardian created with address: [a-zA-Z0-9]*" | awk '{print $NF}')
+  fi
+
+  # Save the guardian key to config file if it was created successfully
+  if [[ -n "${GUARDIAN_ORACLE_KEY}" ]]; then
+    printf "Guardian key created: %s\n" "${GUARDIAN_ORACLE_KEY}"
+
+    export SAVE_GUARDIAN_KEY=""
+    while [[ 
+      "${SAVE_GUARDIAN_KEY}" != "y" &&
+      "${SAVE_GUARDIAN_KEY}" != "Y" &&
+      "${SAVE_GUARDIAN_KEY}" != "n" &&
+      "${SAVE_GUARDIAN_KEY}" != "N" ]]; do
+      printf "Do you want to save this Guardian key to ${CFG_FILE}? (y/n) "
+      read -r SAVE_GUARDIAN_KEY
+    done
+
+    if [[ "${SAVE_GUARDIAN_KEY}" == "y" || "${SAVE_GUARDIAN_KEY}" == "Y" ]]; then
+      sed -i "s/^GUARDIAN_ORACLE=.*/GUARDIAN_ORACLE=${GUARDIAN_ORACLE_KEY}/" "${CFG_FILE}"
+      sed -i "s/^GUARDIAN_QUEUE=.*/GUARDIAN_QUEUE=${GUARDIAN_QUEUE_KEY}/" "${CFG_FILE}"
+      printf "Guardian key saved to config file.\n"
+    fi
   fi
 fi
 
@@ -164,8 +230,13 @@ printf "||  Keep your 24-word seed phrase and private key (array-like number)   
 printf "||                         ABSOLUTELY PRIVATE!                          ||\n"
 printf "||                                                                      ||\n"
 printf "|| Next steps:                                                          ||\n"
-printf "||   1. Edit cfg/00-devnet-vars.cfg or cfg/00-mainnet-vars.cfg file     ||\n"
-printf "||      and insert the output in the proper variables                   ||\n"
+if [[ "${SAVE_ORACLE_KEY}" == "y" || "${SAVE_ORACLE_KEY}" == "Y" ||
+  "${SAVE_GUARDIAN_KEY}" == "y" || "${SAVE_GUARDIAN_KEY}" == "Y" ]]; then
+  printf "||   1. Your keys have been automatically saved to ${CFG_FILE}          ||\n"
+else
+  printf "||   1. Edit cfg/00-devnet-vars.cfg or cfg/00-mainnet-vars.cfg file     ||\n"
+  printf "||      and insert the output in the proper variables                   ||\n"
+fi
 printf "||                                                                      ||\n"
 printf "||   2. Submit a request for approval of your Oracle/Guardian data at:  ||\n"
 printf "||                                                                      ||\n"
