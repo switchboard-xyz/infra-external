@@ -181,6 +181,7 @@ if [[ "${register_guardian}" == "y" || "${register_guardian}" == "Y" ]]; then
 
   # Save the guardian key to config file if it was created successfully
   if [[ -n "${GUARDIAN_ORACLE_KEY}" ]]; then
+    print "\n"
     printf "Guardian key created: %s\n" "${GUARDIAN_ORACLE_KEY}"
 
     export SAVE_GUARDIAN_KEY=""
@@ -232,12 +233,29 @@ printf "||  Keep your 24-word seed phrase and private key (array-like number)   
 printf "||                         ABSOLUTELY PRIVATE!                          ||\n"
 printf "||                                                                      ||\n"
 printf "|| Next steps:                                                          ||\n"
-if [[ "${SAVE_ORACLE_KEY}" == "y" || "${SAVE_ORACLE_KEY}" == "Y" ||
-  "${SAVE_GUARDIAN_KEY}" == "y" || "${SAVE_GUARDIAN_KEY}" == "Y" ]]; then
-  printf "||   1. Your keys have been automatically saved to ${CFG_FILE}          ||\n"
+if [[ "${SAVE_ORACLE_KEY}" == "y" || "${SAVE_ORACLE_KEY}" == "Y" ]] &&
+  [[ "${SAVE_GUARDIAN_KEY}" == "y" || "${SAVE_GUARDIAN_KEY}" == "Y" ]]; then
+  printf "||   1. Both your Oracle and Guardian keys have been automatically saved to ||\n"
+  printf "||           ${CFG_FILE}                                                ||\n"
+elif [[ "${SAVE_ORACLE_KEY}" == "y" || "${SAVE_ORACLE_KEY}" == "Y" ]] &&
+  [[ "${register_guardian}" == "y" || "${register_guardian}" == "Y" ]]; then
+  printf "||   1. Your Oracle key has been automatically saved to                 ||\n"
+  printf "||           ${CFG_FILE}                                                ||\n"
+  printf "||      but you'll need to manually add your Guardian key               ||\n"
+elif [[ "${SAVE_GUARDIAN_KEY}" == "y" || "${SAVE_GUARDIAN_KEY}" == "Y" ]] &&
+  [[ "${register_oracle}" == "y" || "${register_oracle}" == "Y" ]]; then
+  printf "||   1. Your Guardian key has been automatically saved to               ||\n"
+  printf "||           ${CFG_FILE}                                                ||\n"
+  printf "||      but you'll need to manually add your Oracle key                 ||\n"
+elif [[ "${SAVE_ORACLE_KEY}" == "y" || "${SAVE_ORACLE_KEY}" == "Y" ]]; then
+  printf "||   1. Your Oracle key has been automatically saved to                 ||\n"
+  printf "||           ${CFG_FILE}                                                ||\n"
+elif [[ "${SAVE_GUARDIAN_KEY}" == "y" || "${SAVE_GUARDIAN_KEY}" == "Y" ]]; then
+  printf "||   1. Your Guardian key has been automatically saved to               ||\n"
+  printf "||           ${CFG_FILE}                                                ||\n"
 else
-  printf "||   1. Edit cfg/00-devnet-vars.cfg or cfg/00-mainnet-vars.cfg file     ||\n"
-  printf "||      and insert the output in the proper variables                   ||\n"
+  printf "||   1. Edit ${CFG_FILE} file                                           ||\n"
+  printf "||      and the values above in the proper variables                   ||\n"
 fi
 printf "||                                                                      ||\n"
 printf "||   2. Submit a request for approval of your Oracle/Guardian data at:  ||\n"
