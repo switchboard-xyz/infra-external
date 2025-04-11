@@ -236,23 +236,23 @@ printf "|| Next steps:                                                          
 if [[ "${SAVE_ORACLE_KEY}" == "y" || "${SAVE_ORACLE_KEY}" == "Y" ]] &&
   [[ "${SAVE_GUARDIAN_KEY}" == "y" || "${SAVE_GUARDIAN_KEY}" == "Y" ]]; then
   printf "||   1. Your Oracle & Guardian keys have been automatically saved to    ||\n"
-  printf "%-10s%-65s%3s\n" "|| " "${CFG_FILE}" " ||"
+  printf "%-10s%-61s%3s\n" "|| " "${CFG_FILE}" " ||"
 elif [[ "${SAVE_ORACLE_KEY}" == "y" || "${SAVE_ORACLE_KEY}" == "Y" ]] &&
   [[ "${register_guardian}" == "y" || "${register_guardian}" == "Y" ]]; then
   printf "||   1. Your Oracle key has been automatically saved to                 ||\n"
-  printf "%-10s%-65s%3s\n" "|| " "${CFG_FILE}" " ||"
+  printf "%-10s%-61s%3s\n" "|| " "${CFG_FILE}" " ||"
   printf "||      but you'll need to manually add your Guardian key               ||\n"
 elif [[ "${SAVE_GUARDIAN_KEY}" == "y" || "${SAVE_GUARDIAN_KEY}" == "Y" ]] &&
   [[ "${register_oracle}" == "y" || "${register_oracle}" == "Y" ]]; then
   printf "||   1. Your Guardian key has been automatically saved to               ||\n"
-  printf "%-10s%-65s%3s\n" "|| " "${CFG_FILE}" " ||"
+  printf "%-10s%-61s%3s\n" "|| " "${CFG_FILE}" " ||"
   printf "||      but you'll need to manually add your Oracle key                 ||\n"
 elif [[ "${SAVE_ORACLE_KEY}" == "y" || "${SAVE_ORACLE_KEY}" == "Y" ]]; then
   printf "||   1. Your Oracle key has been automatically saved to                 ||\n"
-  printf "%-10s%-65s%3s\n" "|| " "${CFG_FILE}" " ||"
+  printf "%-10s%-61s%3s\n" "|| " "${CFG_FILE}" " ||"
 elif [[ "${SAVE_GUARDIAN_KEY}" == "y" || "${SAVE_GUARDIAN_KEY}" == "Y" ]]; then
   printf "||   1. Your Guardian key has been automatically saved to               ||\n"
-  printf "%-10s%-65s%3s\n" "|| " "${CFG_FILE}" " ||"
+  printf "%-10s%-61s%3s\n" "|| " "${CFG_FILE}" " ||"
 else
   printf "%-5s%-8s%-62s%3s\n" "|| " "1. Edit " "${CFG_FILE} file" " ||"
   printf "||      and add the values copied from above in the proper variables.   ||\n"
@@ -260,7 +260,7 @@ fi
 printf "||                                                                      ||\n"
 printf "||   2. Submit a request for approval of your Oracle/Guardian data at:  ||\n"
 printf "||                                                                      ||\n"
-printf "||      https://forms.gle/2xWwFQ8XPBGu9DRL6                             ||\n"
+printf "||        https://forms.gle/2xWwFQ8XPBGu9DRL6                           ||\n"
 printf "||                                                                      ||\n"
 printf "||      In the form you should just submit the values of                ||\n"
 printf "||        PULL_ORACLE     + PULL_QUEUE                                  ||\n"
