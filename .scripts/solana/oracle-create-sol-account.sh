@@ -45,6 +45,7 @@ if [[ ! -z "$(cat ${PAYER_FILE})" ]]; then
   printf "||                       !!! WARNING !!!                               ||\n"
   printf "==========================================================================\n"
   printf "||                                                                      ||\n"
+  printf "%-3s%18s%s%28s%3s\n" "||" "The payer file at " "${PAYER_FILE}" " already contains some data." "||"
   printf "|| A payer file already exists at ${PAYER_FILE}                         ||\n"
   printf "|| Continuing will OVERWRITE this file and you will LOSE ACCESS         ||\n"
   printf "|| to any funds associated with this account!                           ||\n"
