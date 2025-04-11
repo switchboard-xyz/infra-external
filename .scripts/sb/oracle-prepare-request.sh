@@ -166,6 +166,7 @@ if [[ "${register_guardian}" == "y" || "${register_guardian}" == "Y" ]]; then
       sb solana on-demand guardian create \
         --cluster "${cluster}" \
         --priorityFee "${priorityFee}" \
+        --rpcUrl "${RPC_URL}" \
         --keypair "${PAYER_FILE}"
     )
     printf "%s\n" "${GUARDIAN_OUTPUT}"
@@ -174,6 +175,7 @@ if [[ "${register_guardian}" == "y" || "${register_guardian}" == "Y" ]]; then
       sb solana on-demand guardian create \
         --cluster "${cluster}" \
         --priorityFee "${priorityFee}" \
+        --rpcUrl "${RPC_URL}" \
         --keypair "${PAYER_FILE}" 2>/dev/null
     )
     printf "%s\n" "${GUARDIAN_OUTPUT}"
