@@ -181,7 +181,7 @@ if [[ "${register_guardian}" == "y" || "${register_guardian}" == "Y" ]]; then
 
   # Save the guardian key to config file if it was created successfully
   if [[ -n "${GUARDIAN_ORACLE_KEY}" ]]; then
-    print "\n"
+    printf "\n"
     printf "Guardian key created: %s\n" "${GUARDIAN_ORACLE_KEY}"
 
     export SAVE_GUARDIAN_KEY=""
