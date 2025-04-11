@@ -260,7 +260,7 @@ elif [[ "${SAVE_GUARDIAN_KEY}" == "y" || "${SAVE_GUARDIAN_KEY}" == "Y" ]]; then
   printf "||                                                                      ||\n"
   printf "%-10s%-61s%3s\n" "|| " "${CFG_FILE}" " ||"
 else
-  printf "%-5s%-8s%-62s%3s\n" "|| " "1. Edit " "${CFG_FILE} file" " ||"
+  printf "%-5s%-8s%-58s%3s\n" "|| " "1. Edit " "${CFG_FILE} file" " ||"
   printf "||      and add the values copied from above in the proper variables.   ||\n"
 fi
 printf "||                                                                      ||\n"
