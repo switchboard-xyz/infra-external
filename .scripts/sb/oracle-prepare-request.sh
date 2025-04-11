@@ -86,7 +86,7 @@ printf "========================================================================
 printf "||                                                                      ||\n"
 printf "||                 >>> COPY/SAVE THE OUTPUT FROM HERE <<<               ||\n"
 printf "||                                                                      ||\n"
-printf "||  -> Solana cluster: %-8s %42s\n" "${SOLANA_CLUSTER}" "||"
+printf "||  -> Solana cluster: %-8s %42s\n" "${cluster}" "||"
 printf "||  -> Pull Queue: %44s %12s\n" "${PULL_QUEUE_KEY}" "||"
 if [[ "${register_guardian}" == "y" || "${register_guardian}" == "Y" ]]; then
   printf "||  -> Guardian Queue: %44s %8s\n" "${GUARDIAN_QUEUE_KEY}" "||"
@@ -113,7 +113,7 @@ if [[ "${register_oracle}" == "y" || "${register_oracle}" == "Y" ]]; then
     ORACLE_OUTPUT=$(
       sb solana on-demand oracle create \
         --queue "${PULL_QUEUE_KEY}" \
-        --cluster "${SOLANA_CLUSTER}" \
+        --cluster "${cluster}" \
         --priorityFee "${priorityFee}" \
         --rpcUrl "${RPC_URL}" \
         --keypair "${PAYER_FILE}"
@@ -124,7 +124,7 @@ if [[ "${register_oracle}" == "y" || "${register_oracle}" == "Y" ]]; then
     ORACLE_OUTPUT=$(
       sb solana on-demand oracle create \
         --queue "${PULL_QUEUE_KEY}" \
-        --cluster "${SOLANA_CLUSTER}" \
+        --cluster "${cluster}" \
         --priorityFee "${priorityFee}" \
         --rpcUrl "${RPC_URL}" \
         --keypair "${PAYER_FILE}" 2>/dev/null
@@ -160,7 +160,7 @@ if [[ "${register_guardian}" == "y" || "${register_guardian}" == "Y" ]]; then
   if [[ "${DEBUG}" == "true" ]]; then
     GUARDIAN_OUTPUT=$(
       sb solana on-demand guardian create \
-        --cluster "${SOLANA_CLUSTER}" \
+        --cluster "${cluster}" \
         --priorityFee "${priorityFee}" \
         --keypair "${PAYER_FILE}"
     )
@@ -169,7 +169,7 @@ if [[ "${register_guardian}" == "y" || "${register_guardian}" == "Y" ]]; then
   else
     GUARDIAN_OUTPUT=$(
       sb solana on-demand guardian create \
-        --cluster "${SOLANA_CLUSTER}" \
+        --cluster "${cluster}" \
         --priorityFee "${priorityFee}" \
         --keypair "${PAYER_FILE}" 2>/dev/null
     )
