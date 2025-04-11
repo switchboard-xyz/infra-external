@@ -236,25 +236,26 @@ printf "|| Next steps:                                                          
 if [[ "${SAVE_ORACLE_KEY}" == "y" || "${SAVE_ORACLE_KEY}" == "Y" ]] &&
   [[ "${SAVE_GUARDIAN_KEY}" == "y" || "${SAVE_GUARDIAN_KEY}" == "Y" ]]; then
   printf "||   1. Both your Oracle and Guardian keys have been automatically saved to ||\n"
-  printf "||           ${CFG_FILE}                                                ||\n"
+  printf "%-10s%-65s%3s" "||" "${CFG_FILE}" "||"
 elif [[ "${SAVE_ORACLE_KEY}" == "y" || "${SAVE_ORACLE_KEY}" == "Y" ]] &&
   [[ "${register_guardian}" == "y" || "${register_guardian}" == "Y" ]]; then
   printf "||   1. Your Oracle key has been automatically saved to                 ||\n"
-  printf "||           ${CFG_FILE}                                                ||\n"
+  printf "%-10s%-65s%3s" "||" "${CFG_FILE}" "||"
   printf "||      but you'll need to manually add your Guardian key               ||\n"
 elif [[ "${SAVE_GUARDIAN_KEY}" == "y" || "${SAVE_GUARDIAN_KEY}" == "Y" ]] &&
   [[ "${register_oracle}" == "y" || "${register_oracle}" == "Y" ]]; then
   printf "||   1. Your Guardian key has been automatically saved to               ||\n"
-  printf "||           ${CFG_FILE}                                                ||\n"
+  printf "%-10s%-65s%3s" "||" "${CFG_FILE}" "||"
   printf "||      but you'll need to manually add your Oracle key                 ||\n"
 elif [[ "${SAVE_ORACLE_KEY}" == "y" || "${SAVE_ORACLE_KEY}" == "Y" ]]; then
   printf "||   1. Your Oracle key has been automatically saved to                 ||\n"
-  printf "||           ${CFG_FILE}                                                ||\n"
+  printf "%-10s%-65s%3s" "||" "${CFG_FILE}" "||"
 elif [[ "${SAVE_GUARDIAN_KEY}" == "y" || "${SAVE_GUARDIAN_KEY}" == "Y" ]]; then
   printf "||   1. Your Guardian key has been automatically saved to               ||\n"
-  printf "||           ${CFG_FILE}                                                ||\n"
+  printf "%-10s%-65s%3s" "||" "${CFG_FILE}" "||"
 else
   printf "||   1. Edit ${CFG_FILE} file                                           ||\n"
+  printf "%-5s%-8s%-62s%3s" "||" "1. Edit " "${CFG_FILE} file" "||"
   printf "||      and the values above in the proper variables                   ||\n"
 fi
 printf "||                                                                      ||\n"
