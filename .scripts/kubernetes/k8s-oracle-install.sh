@@ -24,6 +24,7 @@ export V2_DOCKER_IMAGE_TAG="v2-on-v3"
 export ORACLE_DOCKER_IMAGE="docker.io/switchboardlabs/oracle"
 export GUARDIAN_DOCKER_IMAGE="docker.io/switchboardlabs/guardian"
 export GATEWAY_DOCKER_IMAGE="docker.io/switchboardlabs/gateway"
+export OTLP_ENDPOINT="http://sb-log-forwarding-alloy.sb-log-forwarding.svc.cluster.local:4317"
 
 repo_dir="$(readlink -f ../../..)"
 
@@ -74,6 +75,7 @@ helm upgrade -i "sb-oracle-${NETWORK}" \
   --set components.docker_image_tag="${DOCKER_IMAGE_TAG}" \
   --set components.oracle.enabled=${ORACLE_ENABLED} \
   --set components.oracle.image="${ORACLE_DOCKER_IMAGE}" \
+  --set components.oracle.tracing.otlpEndpoint="${OTLP_ENDPOINT}" \
   --set components.guardian.enabled=${GUARDIAN_ENABLED} \
   --set components.guardian.image="${GUARDIAN_DOCKER_IMAGE}" \
   --set components.gateway.enabled=${GATEWAY_ENABLED} \

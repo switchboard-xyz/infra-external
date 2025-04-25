@@ -42,6 +42,8 @@ components:
       endpoint: "remote-write.switchboard.xyz/write"
       port: 9090
       path: "/metrics"
+    tracing:
+      otlpEndpoint: "http://localhost:4317"
     resources:
       limits:
         cpu: "4000m"
