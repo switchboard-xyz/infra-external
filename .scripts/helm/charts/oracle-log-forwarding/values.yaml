@@ -5,6 +5,15 @@ alloy:
   operator: switchboard
   oracleIPv4: "someIP"
   alloy:
+    extraPorts:
+    - name: otlp-grpc # The default port for otlp-grpc is 4317, so you need to add this port to the service related to your alloy instance
+      port: 4317
+      targetPort: 4317
+      protocol: TCP
+    - name: otlp-http # The default port for otlp-http is 4318, so you need to add this port to the service related to your alloy instance
+      port: 4318
+      targetPort: 4318
+      protocol: TCP
     configMap:
       # -- Content to assign to the new ConfigMap.  This is passed into `tpl` allowing for templating from values.
       content: |-
@@ -160,5 +169,54 @@ alloy:
             values = {
               kubernetes_cluster_events = "job",
             }
+          }
+        }
+        // -----------------------
+        // Tracing
+        // -----------------------
+        // otelcol.receiver.otlp accepts OTLP-formatted data over the network and forwards it to other otelcol.* components.
+        otelcol.receiver.otlp "otlp_receiver" {
+          grpc {
+            endpoint = "0.0.0.0:4317"
+          }
+          http {
+            endpoint = "0.0.0.0:4318"
+          }
+          output {
+            traces = [otelcol.processor.k8sattributes.default.input,]
+          }
+        }
+        otelcol.processor.k8sattributes "default" {
+          output {
+            traces  = [otelcol.processor.attributes.default.input]
+          }
+        }
+        otelcol.processor.attributes "default" {
+          action {
+              key = "operator"
+              value = "{{ .Values.operator }}"
+              action = "insert"
+          }
+          action {
+              key = "oracleIPv4"
+              value = "{{ .Values.oracleIPv4 }}"
+              action = "insert"
+          }
+
+          output {
+            traces  = [otelcol.processor.batch.default.input]
+          }
+        }
+
+
+        // batch trace data before sending it to the exporter.
+        otelcol.processor.batch "default" {
+          output {
+            traces  = [otelcol.exporter.otlphttp.tempo.input]
+          }
+        }
+        otelcol.exporter.otlphttp "tempo" {
+          client {
+            endpoint = "https://tempo.switchboard.xyz:443"
           }
         }
