@@ -129,6 +129,9 @@ spec:
           value: {{ $.Values.debug | default "false" | quote }}
         - name: LIST_CONFIG_AND_EXIT
           value: {{ $.Values.list_config_and_exit | default "false" | quote }}
+        # TRACING
+        - name: OTLP_ENDPOINT
+          value: {{ $.Values.tracing.otlpEndpoint | default "http://localhost:4317" | quote }}
 
 
         {{ if eq $.Values.components.gateway.command "shell" }}

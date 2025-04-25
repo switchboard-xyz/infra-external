@@ -133,7 +133,7 @@ spec:
           value: {{ $.Values.list_config_and_exit | default "false" | quote }}
         # TRACING
         - name: OTLP_ENDPOINT
-          value: {{ $.Values.components.oracle.tracing.otlpEndpoint | default "http://localhost:4317" | quote }}
+          value: {{ $.Values.tracing.otlpEndpoint | default "http://localhost:4317" | quote }}
 
 
         {{ if eq $.Values.components.oracle.command "shell" }}
