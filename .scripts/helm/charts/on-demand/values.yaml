@@ -21,6 +21,9 @@ jupiterSwapApiKey: ""
 debug: ""
 verbose: ""
 list_config_and_exit: ""
+tracing:
+  otlpEndpoint: "http://localhost:4317"
+
 
 components:
   docker_image_tag: "devnet"
@@ -42,8 +45,6 @@ components:
       endpoint: "remote-write.switchboard.xyz/write"
       port: 9090
       path: "/metrics"
-    tracing:
-      otlpEndpoint: "http://localhost:4317"
     resources:
       limits:
         cpu: "4000m"

@@ -72,10 +72,10 @@ printf "HELM: Installing Switchboard Oracle under namespace ${NAMESPACE}\n"
 helm upgrade -i "sb-oracle-${NETWORK}" \
   -n "${NAMESPACE}" --create-namespace \
   -f "${tmp_helm_file}" \
+  --set tracing.otlpEndpoint="${OTLP_ENDPOINT}" \
   --set components.docker_image_tag="${DOCKER_IMAGE_TAG}" \
   --set components.oracle.enabled=${ORACLE_ENABLED} \
   --set components.oracle.image="${ORACLE_DOCKER_IMAGE}" \
-  --set components.oracle.tracing.otlpEndpoint="${OTLP_ENDPOINT}" \
   --set components.guardian.enabled=${GUARDIAN_ENABLED} \
   --set components.guardian.image="${GUARDIAN_DOCKER_IMAGE}" \
   --set components.gateway.enabled=${GATEWAY_ENABLED} \
