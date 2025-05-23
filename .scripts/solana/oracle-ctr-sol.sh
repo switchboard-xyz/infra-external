@@ -13,7 +13,7 @@ set +e
 pkill -15 "${CTR_NAME}"
 set -e
 
-export image="docker.io/switchboardlabs/sb-utils:3.5.11"
+export image="docker.io/switchboardlabs/sb-utils:3.5.12"
 
 k3s ctr i pull "${image}"
 k3s ctr run -t --net-host \
