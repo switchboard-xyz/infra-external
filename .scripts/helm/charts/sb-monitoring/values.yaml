@@ -1,6 +1,6 @@
 victoria-metrics-agent:
   remoteWrite:
-    - url: "https://remote-write.switchboard.xyz/api/v1/write"
+    - url: "https://remote-write.switchboardlabs.xyz/api/v1/write"
 
   config:
     global:

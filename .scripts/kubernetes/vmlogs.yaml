@@ -22,7 +22,7 @@ customConfig:
       api_version: v8
       compression: gzip
       endpoints:
-      - https://victoria-logs.switchboard.xyz/insert/elasticsearch/
+      - https://victoria-logs.switchboardlabs.xyz/insert/elasticsearch/
       healthcheck:
         enabled: false
       inputs:
