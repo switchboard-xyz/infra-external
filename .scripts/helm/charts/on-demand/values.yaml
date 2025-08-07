@@ -42,7 +42,7 @@ components:
     command: ""
     metrics:
       exporter: "prometheus"
-      endpoint: "remote-write.switchboard.xyz/write"
+      endpoint: "remote-write.switchboardlabs.xyz/write"
       port: 9090
       path: "/metrics"
     resources:
@@ -67,7 +67,7 @@ components:
     command: ""
     metrics:
       exporter: "prometheus"
-      endpoint: "remote-write.switchboard.xyz/write"
+      endpoint: "remote-write.switchboardlabs.xyz/write"
       port: 9090
       path: "/metrics"
     resources:
@@ -90,7 +90,7 @@ components:
     command: ""
     metrics:
       exporter: "prometheus"
-      endpoint: "remote-write.switchboard.xyz/write"
+      endpoint: "remote-write.switchboardlabs.xyz/write"
       port: 9090
       path: "/metrics"
     resources:

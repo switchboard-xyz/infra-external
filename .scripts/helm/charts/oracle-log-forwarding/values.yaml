@@ -20,7 +20,7 @@ alloy:
         // Logs delivery
         loki.write "default" {
           endpoint {
-            url = "https://loki.switchboard.xyz/loki/api/v1/push"
+            url = "https://loki.switchboardlabs.xyz/loki/api/v1/push"
             basic_auth {
               username = {{ .Values.basicAuth.username  | quote }}
               password = {{ .Values.basicAuth.password  | quote }}
@@ -242,6 +242,6 @@ alloy:
         }
         otelcol.exporter.otlphttp "tempo" {
           client {
-            endpoint = "https://tempo.switchboard.xyz:443"
+            endpoint = "https://tempo.switchboardlabs.xyz:443"
           }
         }
