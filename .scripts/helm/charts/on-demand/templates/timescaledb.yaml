@@ -1,0 +1,91 @@
+{{ if $.Values.components.timescaledb.enabled }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: timescale-pvc
+  namespace: {{ $.Values.namespace | quote }}
+  labels:
+    chain: {{ $.Values.chain | quote }}
+    cluster: {{ $.Values.cluster | quote }}
+    app: timescaledb
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: {{ $.Values.components.timescaledb.capacity }}
+
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: timescaledb
+  labels:
+    chain: {{ $.Values.chain | quote }}
+    cluster: {{ $.Values.cluster | quote }}
+    app: timescaledb
+spec:
+  serviceName: timescaledb
+  replicas: 1
+  selector:
+    matchLabels:
+      app: timescaledb
+  template:
+    metadata:
+      labels:
+        app: timescaledb
+    spec:
+      containers:
+        - name: timescaledb
+          image: 'timescale/timescaledb:latest-pg17'
+          env:
+            - name: POSTGRES_USER
+              value: {{ $.Values.components.timescaledb.credentials.user }}
+            - name: POSTGRES_PASSWORD
+              value: {{ $.Values.components.timescaledb.credentials.password }}
+            - name: POSTGRES_DB
+              value: {{ $.Values.components.timescaledb.credentials.db }}
+            - name: PGDATA
+              value: /var/lib/postgresql/data/pgdata
+          ports:
+            - containerPort: {{ $.Values.components.timescaledb.port }}
+          volumeMounts:
+            - mountPath: /var/lib/postgresql/data
+              name: timescale-storage
+      volumes:
+        - name: timescale-storage
+          persistentVolumeClaim:
+            claimName: timescale-pvc
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: timescaledb
+  namespace: {{ $.Values.namespace | quote }}
+  labels:
+    chain: {{ $.Values.chain | quote }}
+    cluster: {{ $.Values.cluster | quote }}
+    app: timescaledb
+spec:
+  selector:
+    app: timescaledb
+  ports:
+    - protocol: TCP
+      port: 5432
+      targetPort: 5432
+  type: ClusterIP
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: timescaledb
+type: generic
+stringData:
+  PGHOST: timescaledb
+  PGPORT: {{ $.Values.components.timescaledb.port }}
+  PGDATABASE: {{ $.Values.components.timescaledb.credentials.db }}
+  PGUSER: {{ $.Values.components.timescaledb.credentials.user }}
+  PGPASSWORD: {{ $.Values.components.timescaledb.credentials.password }}
+{{ end }} ## end timescaledb enable check

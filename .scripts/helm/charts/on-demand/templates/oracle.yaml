@@ -134,8 +134,12 @@ spec:
         # TRACING
         - name: OTLP_ENDPOINT
           value: {{ $.Values.tracing.otlpEndpoint | default "http://localhost:4317" | quote }}
-
-
+        {{ if $.Values.components.timescaledb.enabled }}
+        # TIMESCALEDB
+        envFrom:
+        - secretRef:
+            name: timescaledb
+        {{ end }}
         {{ if eq $.Values.components.oracle.command "shell" }}
         command: [
           "/bin/sh"
