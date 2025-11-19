@@ -102,7 +102,7 @@ components:
         memory: "100Mi"
   timescaledb:
     enabled: false
-    capacity: 10Gi
+    capacity: 20Gi
     port: 5432
     credentials:
       user: "oracle" ## TODO: set default user, password, db

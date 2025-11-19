@@ -81,6 +81,7 @@ helm upgrade -i "sb-oracle-${NETWORK}" \
   --set components.gateway.enabled=${GATEWAY_ENABLED} \
   --set components.gateway.image="${GATEWAY_DOCKER_IMAGE}" \
   --set components.timescaledb.enabled=${TMESCALEDB_ENABLED} \
+  --set components.timescaledb.capcity=${TIMESCALEDB_CAPACITY} \
   "${helm_on_demand_chart_dir}" >/dev/null
 printf "HELM: Switchboard Oracle installed under namespace ${NAMESPACE}\n"
 
