@@ -84,8 +84,8 @@ metadata:
 type: generic
 stringData:
   PGHOST: timescaledb
-  PGPORT: {{ $.Values.components.timescaledb.port }}
-  PGDATABASE: {{ $.Values.components.timescaledb.credentials.db }}
-  PGUSER: {{ $.Values.components.timescaledb.credentials.user }}
-  PGPASSWORD: {{ $.Values.components.timescaledb.credentials.password }}
+  PGPORT: {{ $.Values.components.timescaledb.port | quote }}
+  PGDATABASE: {{ $.Values.components.timescaledb.credentials.db | quote }}
+  PGUSER: {{ $.Values.components.timescaledb.credentials.user | quote }}
+  PGPASSWORD: {{ $.Values.components.timescaledb.credentials.password | quote }}
 {{ end }} ## end timescaledb enable check
