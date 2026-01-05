@@ -137,7 +137,7 @@ spec:
         {{ if $.Values.components.timescaledb.enabled }}
         # TIMESCALEDB
         - name: CANDLE_COLLECTION_ENABLED
-          value: {{ $.Values.components.oracle.candleCollectionEnabled}}
+          value: {{ $.Values.components.oracle.candleCollectionEnabled | quote }}
         envFrom:
         - secretRef:
             name: timescaledb
