@@ -34,6 +34,7 @@ components:
     queue: ""
     key: ""
     port: 8081
+    candleCollectionEnabled: false
     ingress:
       enabled: true
       class: "nginx"
