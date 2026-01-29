@@ -18,6 +18,7 @@ if [[ "$(kubectl get ns | grep -e '^'${ORACLE_UPDATER_NS}'\W')" == "" ]]; then
   echo "KUBECTL: Namespace ${ORACLE_UPDATER_NS} created"
 fi
 
+repo_dir="$(readlink -f ../../..)"
 helm_dir="${repo_dir}/.scripts/helm/"
 helm_charts_dir="${helm_dir}/charts/"
 helm_oracle_updater_chart_dir="${helm_charts_dir}/oracle-updater/"
