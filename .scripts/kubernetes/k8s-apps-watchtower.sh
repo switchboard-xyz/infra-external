@@ -3,11 +3,13 @@ set -u -e
 
 echo "HELM: Checking for existing watchtower releases (replaced in favour of oracle-updater)"
 
-if read -r WATCHTOWER_RELEASE WATCHTOWER_NS _ < <(helm list -A -f "^watchtower$" --no-headers 2>/dev/null); then
+WATCHTOWER_OUTPUT=$(helm list -A -f "^watchtower$" --no-headers 2>/dev/null || true)
+if [[ -n "$WATCHTOWER_OUTPUT" ]]; then
+  read -r WATCHTOWER_RELEASE WATCHTOWER_NS _ <<< "$WATCHTOWER_OUTPUT"
   echo "HELM: Deleting installed Watchtower release in ${WATCHTOWER_NS}"
   helm uninstall -n "${WATCHTOWER_NS}" "${WATCHTOWER_RELEASE}" >/dev/null
   echo "HELM: Deleted existing Watchtower release"
-  kubectl delete ns $WATCHTOWER_NS >/dev/null
+  kubectl delete ns "$WATCHTOWER_NS" >/dev/null
   echo "KUBECTL: Deleted watchtower namespace"
 fi
 
