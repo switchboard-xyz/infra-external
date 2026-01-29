@@ -1,6 +1,6 @@
 oracle_updater:
   image: "docker.io/switchboardlabs/oracle-updater"
-  image_tag: "0.0.7"
+  image_tag: "0.0.8"
   namespace: "oracle-updater"
   command: ""
   resources:
