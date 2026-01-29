@@ -1,0 +1,43 @@
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: oracle-updater
+  namespace: {{ $.Values.oracle_updater.namespace | quote }}
+
+  labels:
+    app: oracle-updater
+
+spec:
+  replicas: 1
+
+  selector:
+    matchLabels:
+      app: oracle-updater
+
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+
+  template:
+    metadata:
+      annotations:
+      labels:
+        app: oracle-updater
+
+    spec:
+      serviceAccountName: oracle-updater
+      containers:
+      - image: {{ printf "%s:%s" $.Values.oracle_updater.image $.Values.oracle_updater.image_tag | quote }}
+        imagePullPolicy: IfNotPresent
+        name: oracle-updater
+
+        resources:
+          limits:
+            cpu: {{ $.Values.oracle_updater.resources.limits.cpu }}
+            memory: {{ $.Values.oracle_updater.resources.limits.memory }}
+          requests:
+            cpu: {{ $.Values.oracle_updater.resources.requests.cpu }}
+            memory: {{ $.Values.oracle_updater.resources.requests.memory }}
+
