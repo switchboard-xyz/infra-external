@@ -22,6 +22,10 @@ helm upgrade -i "watchtower" \
   keel/keel >/dev/null
 echo "HELM: Watchtower (keel) installed"
 
+printf "\n"
+printf "==========================================================================\n"
+printf "\n"
+
 ORACLE_UPDATER_NS="oracle-updater"
 if [[ "$(kubectl get ns | grep -e '^'${ORACLE_UPDATER_NS}'\W')" == "" ]]; then
   echo "KUBECTL: creating Namespace ${ORACLE_UPDATER_NS}"
@@ -29,12 +33,24 @@ if [[ "$(kubectl get ns | grep -e '^'${ORACLE_UPDATER_NS}'\W')" == "" ]]; then
   echo "KUBECTL: Namespace ${ORACLE_UPDATER_NS} created"
 fi
 
+echo "HELM: Installing oracle-updater"
+
 repo_dir="$(readlink -f ../../..)"
 helm_dir="${repo_dir}/.scripts/helm/"
 helm_charts_dir="${helm_dir}/charts/"
 helm_oracle_updater_chart_dir="${helm_charts_dir}/oracle-updater/"
 
-echo "HELM: Installing oracle-updater"
+cfg_dir="${repo_dir}/cfg"
+cfg_common_file="${cfg_dir}/00-common-vars.cfg"
+cfg_cluster_file="${cfg_dir}/00-${cluster}-vars.cfg"
+
+# import vars
+source "${cfg_common_file}"
+source "${cfg_cluster_file}"
+
+echo "HELM: oracle_updater.image_tag=${DOCKER_IMAGE_TAG}"
+
 helm upgrade -i "oracle-updater" \
   -n "${ORACLE_UPDATER_NS}" \
+  --set oracle_updater.image_tag="${DOCKER_IMAGE_TAG}" \
   "${helm_oracle_updater_chart_dir}" >/dev/null
