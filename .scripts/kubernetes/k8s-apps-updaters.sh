@@ -19,6 +19,7 @@ helm upgrade -i "watchtower" \
   --set debug="false" \
   --set helmProvider.enabled="false" \
   --set polling.defaultSchedule="@every $((74 + RANDOM % 46))s" \
+  --set image.tag="0.19.1"
   keel/keel >/dev/null
 echo "HELM: Watchtower (keel) installed"
 
