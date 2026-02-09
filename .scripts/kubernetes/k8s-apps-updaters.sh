@@ -47,10 +47,10 @@ cfg_common_file="${cfg_dir}/00-common-vars.cfg"
 # import vars
 source "${cfg_common_file}"
 
-echo "HELM: oracle_updater.image_tag=${DOCKER_IMAGE_TAG}"
-
 helm upgrade -i "oracle-updater" \
   -n "${ORACLE_UPDATER_NS}" \
   --set oracle_updater.image="${ORACLE_UPDATER_IMAGE=}" \
   --set oracle_updater.image_tag="${ORACLE_UPDATER_IMAGE_TAG}" \
   "${helm_oracle_updater_chart_dir}" >/dev/null
+
+echo "HELM: oracle-updater installed"
