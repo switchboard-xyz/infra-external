@@ -25,8 +25,6 @@ export ORACLE_DOCKER_IMAGE="docker.io/switchboardlabs/oracle"
 export GUARDIAN_DOCKER_IMAGE="docker.io/switchboardlabs/guardian"
 export GATEWAY_DOCKER_IMAGE="docker.io/switchboardlabs/gateway"
 export OTLP_ENDPOINT="http://sb-log-forwarding-alloy.sb-log-forwarding.svc.cluster.local:4317"
-export TIMESCALEDB_CAPACITY="20Gi"
-export TIMESCALEDB_ENABLED="true"
 
 repo_dir="$(readlink -f ../../..)"
 
@@ -83,7 +81,7 @@ helm upgrade -i "sb-oracle-${NETWORK}" \
   --set components.guardian.image="${GUARDIAN_DOCKER_IMAGE}" \
   --set components.gateway.enabled=${GATEWAY_ENABLED} \
   --set components.gateway.image="${GATEWAY_DOCKER_IMAGE}" \
-  --set components.timescaledb.enabled=${TIMESCALEDB_ENABLED} \
+  --set components.timescaledb.enabled=${CANDLE_COLLECTION_ENABLED} \
   --set components.timescaledb.capcity=${TIMESCALEDB_CAPACITY} \
   "${helm_on_demand_chart_dir}" >/dev/null
 printf "HELM: Switchboard Oracle installed under namespace ${NAMESPACE}\n"
