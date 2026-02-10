@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: oracle-updater
+  namespace: {{ $.Values.oracle_updater.namespace | quote }}
+
+  labels:
+    app: oracle-updater
+
+  annotations:
+    keel.sh/approvals: "0"
+    keel.sh/trigger: "poll"                                 # enable active repository checking (webhooks and GCR would still work)
+    keel.sh/match-tag: "true"                               # only makes a difference when used with 'force' policy, will only update if tag matches :dev->:dev, :prod->:prod
+    keel.sh/policy: "force"
+
+spec:
+  replicas: 1
+
+  selector:
+    matchLabels:
+      app: oracle-updater
+
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+
+  template:
+    metadata:
+      annotations:
+      labels:
+        app: oracle-updater
+
+    spec:
+      serviceAccountName: oracle-updater
+      containers:
+      - image: {{ printf "%s:%s" $.Values.oracle_updater.image $.Values.oracle_updater.image_tag | quote }}
+        imagePullPolicy: IfNotPresent
+        name: oracle-updater
+
+        resources:
+          limits:
+            cpu: {{ $.Values.oracle_updater.resources.limits.cpu }}
+            memory: {{ $.Values.oracle_updater.resources.limits.memory }}
+          requests:
+            cpu: {{ $.Values.oracle_updater.resources.requests.cpu }}
+            memory: {{ $.Values.oracle_updater.resources.requests.memory }}
+

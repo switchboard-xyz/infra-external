@@ -76,10 +76,13 @@ helm upgrade -i "sb-oracle-${NETWORK}" \
   --set components.docker_image_tag="${DOCKER_IMAGE_TAG}" \
   --set components.oracle.enabled=${ORACLE_ENABLED} \
   --set components.oracle.image="${ORACLE_DOCKER_IMAGE}" \
+  --set components.oracle.candleCollectionEnabled="${CANDLE_COLLECTION_ENABLED}" \
   --set components.guardian.enabled=${GUARDIAN_ENABLED} \
   --set components.guardian.image="${GUARDIAN_DOCKER_IMAGE}" \
   --set components.gateway.enabled=${GATEWAY_ENABLED} \
   --set components.gateway.image="${GATEWAY_DOCKER_IMAGE}" \
+  --set components.timescaledb.enabled=${CANDLE_COLLECTION_ENABLED} \
+  --set components.timescaledb.capcity=${TIMESCALEDB_CAPACITY} \
   "${helm_on_demand_chart_dir}" >/dev/null
 printf "HELM: Switchboard Oracle installed under namespace ${NAMESPACE}\n"
 

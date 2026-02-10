@@ -1,0 +1,12 @@
+oracle_updater:
+  image: "docker.io/switchboardlabs/oracle-updater"
+  image_tag: "mainnet"
+  namespace: "oracle-updater"
+  command: ""
+  resources:
+    limits:
+      cpu: "250m"
+      memory: "256Mi"
+    requests:
+      cpu: "100m"
+      memory: "128Mi"
