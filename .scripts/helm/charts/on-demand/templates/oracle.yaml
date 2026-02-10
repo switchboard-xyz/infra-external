@@ -10,7 +10,6 @@ metadata:
     chain: {{ $.Values.chain | quote }}
     cluster: {{ $.Values.cluter | quote }}
     oracle-updater.switchboard.xyz/managed: "true"  # see https://github.com/switchboard-xyz/oracle-updater
-
     app: oracle
 
   annotations:
