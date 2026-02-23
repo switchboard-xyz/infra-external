@@ -43,7 +43,6 @@ cat >"${TMP_FILE}" <<-EOF
 	    cert-manager.io/cluster-issuer: letsencrypt-staging
 	    acme.cert-manager.io/http01-edit-in-place: "true"
 	    cert-manager.io/issue-temporary-certificate: "true"
-	    kubernetes.io/ingress.class: ${ingressClass}
 	spec:
 	  ingressClassName: ${ingressClass}
 	  tls:
