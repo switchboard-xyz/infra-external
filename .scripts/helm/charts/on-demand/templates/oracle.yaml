@@ -183,33 +183,4 @@ spec:
       targetPort: {{ $.Values.components.oracle.port }}
       name: oracle
 
-{{ if $.Values.components.oracle.ingress.enabled }}
----
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  name: oracle
-  namespace: {{ $.Values.namespace | quote }}
-  annotations:
-    cert-manager.io/cluster-issuer: {{ $.Values.components.oracle.ingress.issuer | quote }}
-    nginx.ingress.kubernetes.io/use-regex: "true"
-    nginx.ingress.kubernetes.io/rewrite-target: /$1/$3
-spec:
-  ingressClassName: {{ $.Values.components.oracle.ingress.class | quote }}
-  tls:
-  - hosts:
-    - {{ $.Values.host | quote }}
-    secretName: ingress-tls
-  rules:
-  - host: {{ $.Values.host | quote }}
-    http:
-      paths:
-      - path: /{{ $.Values.cluster }}/(oracle)(/|$)(.*)
-        pathType: ImplementationSpecific
-        backend:
-          service:
-            name: oracle
-            port:
-              number: {{ $.Values.components.oracle.port }}
-{{ end }} ## end Ingress IF
 {{ end }} ## end Oracle enable check

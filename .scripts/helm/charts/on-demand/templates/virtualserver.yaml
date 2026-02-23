@@ -1,0 +1,67 @@
+{{- $oracleEnabled := and $.Values.components.oracle.enabled $.Values.components.oracle.ingress.enabled }}
+{{- $gatewayEnabled := and $.Values.components.gateway.enabled $.Values.components.gateway.ingress.enabled }}
+{{- $guardianEnabled := and $.Values.components.guardian.enabled $.Values.components.guardian.ingress.enabled }}
+{{- if or $oracleEnabled $gatewayEnabled $guardianEnabled }}
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: ingress-tls
+  namespace: {{ $.Values.namespace | quote }}
+spec:
+  secretName: ingress-tls
+  issuerRef:
+    name: {{ coalesce $.Values.components.oracle.ingress.issuer $.Values.components.gateway.ingress.issuer $.Values.components.guardian.ingress.issuer | quote }}
+    kind: ClusterIssuer
+  dnsNames:
+    - {{ $.Values.host | quote }}
+---
+apiVersion: k8s.nginx.org/v1
+kind: VirtualServer
+metadata:
+  name: on-demand
+  namespace: {{ $.Values.namespace | quote }}
+spec:
+  ingressClassName: {{ coalesce $.Values.components.oracle.ingress.class $.Values.components.gateway.ingress.class $.Values.components.guardian.ingress.class | quote }}
+  host: {{ $.Values.host | quote }}
+  tls:
+    secret: ingress-tls
+  upstreams:
+    {{- if $oracleEnabled }}
+    - name: oracle
+      service: oracle
+      port: {{ $.Values.components.oracle.port }}
+    {{- end }}
+    {{- if $gatewayEnabled }}
+    - name: gateway
+      service: gateway
+      port: {{ $.Values.components.gateway.port }}
+    {{- end }}
+    {{- if $guardianEnabled }}
+    - name: guardian
+      service: guardian
+      port: {{ $.Values.components.guardian.port }}
+    {{- end }}
+  routes:
+    {{- if $oracleEnabled }}
+    - path: /{{ $.Values.cluster }}/oracle
+      action:
+        proxy:
+          upstream: oracle
+          rewritePath: /oracle
+    {{- end }}
+    {{- if $gatewayEnabled }}
+    - path: /{{ $.Values.cluster }}/gateway
+      action:
+        proxy:
+          upstream: gateway
+          rewritePath: /gateway
+    {{- end }}
+    {{- if $guardianEnabled }}
+    - path: /{{ $.Values.cluster }}/guardian
+      action:
+        proxy:
+          upstream: guardian
+          rewritePath: /guardian
+    {{- end }}
+{{- end }}
