@@ -32,6 +32,27 @@ helm repo add nginx-stable https://helm.nginx.com/stable >/dev/null
 helm repo update >/dev/null
 echo "HELM: nginx-stable repo added"
 
+echo "HELM: checking for old ingress-nginx release"
+if helm list --namespace ingress-nginx --filter '^ingress-nginx$' --short 2>/dev/null | grep -q 'ingress-nginx'; then
+  echo "HELM: uninstalling old ingress-nginx release"
+  helm uninstall ingress-nginx --namespace ingress-nginx --wait --timeout 600s >/dev/null
+  echo "HELM: old ingress-nginx uninstalled"
+else
+  echo "HELM: no existing ingress-nginx release found, skipping uninstall"
+fi
+
+echo "KUBECTL: removing old ingress-nginx cluster-scoped resources"
+# ValidatingWebhookConfiguration must be removed explicitly — if it lingers after the
+# controller pod is gone, all Ingress admission calls will hang indefinitely.
+kubectl delete validatingwebhookconfiguration ingress-nginx-admission --ignore-not-found >/dev/null
+# IngressClass/nginx must be removed so the F5 controller can register a clean one.
+kubectl delete ingressclass nginx --ignore-not-found >/dev/null
+echo "KUBECTL: old ingress-nginx cluster-scoped resources removed"
+
+echo "KUBECTL: removing old ingress-nginx namespace"
+kubectl delete namespace ingress-nginx --ignore-not-found >/dev/null
+echo "KUBECTL: old ingress-nginx namespace removed"
+
 echo "HELM: installing nginx-ingress in your cluster"
 if [[ "${platform}" == "azure" ]]; then
   if [[ "${IPv6}" == "0000::0000" || "${IPv6}" == "" ]]; then
