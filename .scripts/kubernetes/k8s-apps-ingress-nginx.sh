@@ -57,6 +57,7 @@ echo "HELM: installing nginx-ingress in your cluster"
 if [[ "${platform}" == "azure" ]]; then
   if [[ "${IPv6}" == "0000::0000" || "${IPv6}" == "" ]]; then
     helm upgrade -i nginx-ingress nginx-stable/nginx-ingress \
+      --version 2.4.4 \
       --namespace nginx-ingress \
       --create-namespace \
       --timeout 600s \
@@ -68,6 +69,7 @@ if [[ "${platform}" == "azure" ]]; then
       >/dev/null
   else
     helm upgrade -i nginx-ingress nginx-stable/nginx-ingress \
+      --version 2.4.4 \
       --namespace nginx-ingress \
       --create-namespace \
       --timeout 600s \
@@ -81,6 +83,7 @@ if [[ "${platform}" == "azure" ]]; then
 else
   if [[ "${IPv6}" == "0000::0000" || "${IPv6}" == "" ]]; then
     helm upgrade -i nginx-ingress nginx-stable/nginx-ingress \
+      --version 2.4.4 \
       --namespace nginx-ingress \
       --create-namespace \
       --timeout 600s \
@@ -91,6 +94,7 @@ else
       >/dev/null
   else
     helm upgrade -i nginx-ingress nginx-stable/nginx-ingress \
+      --version 2.4.4 \
       --namespace nginx-ingress \
       --create-namespace \
       --timeout 600s \
