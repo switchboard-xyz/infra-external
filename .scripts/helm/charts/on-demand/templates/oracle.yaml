@@ -183,4 +183,29 @@ spec:
       targetPort: {{ $.Values.components.oracle.port }}
       name: oracle
 
+{{- if $.Values.components.oracle.ingress.enabled }}
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: oracle
+  namespace: {{ $.Values.namespace | quote }}
+  annotations:
+    nginx.org/mergeable-ingress-type: "minion"
+    nginx.org/rewrites: "serviceName=oracle rewrite=/oracle"
+spec:
+  ingressClassName: {{ $.Values.components.oracle.ingress.class | quote }}
+  rules:
+  - host: {{ $.Values.host | quote }}
+    http:
+      paths:
+      - path: /{{ $.Values.cluster }}/oracle
+        pathType: Prefix
+        backend:
+          service:
+            name: oracle
+            port:
+              number: {{ $.Values.components.oracle.port }}
+{{- end }}
+
 {{ end }} ## end Oracle enable check
