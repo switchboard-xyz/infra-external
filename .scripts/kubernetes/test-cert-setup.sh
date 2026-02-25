@@ -1,35 +1,10 @@
 #!/usr/bin/env bash
 set -u -e
 
-cluster="${1:-devnet}"
-
-set +u
-if [[ -z "${1}" ]]; then
-  printf "No cluster specified, using default: 'devnet'\n"
-fi
-set -u
-
-if [[ "${cluster}" != "devnet" &&
-  "${cluster}" != "mainnet" ]]; then
-  printf "Only valid cluster values are 'devnet' and 'mainnet'.\n"
-  exit 1
-fi
+# import vars
+source ../../../cfg/00-common-vars.cfg
 
 ingressClass="nginx"
-
-cfg_dir="../../../cfg"
-cfg_common_file="${cfg_dir}/00-common-vars.cfg"
-cfg_cluster_file="${cfg_dir}/00-${cluster}-vars.cfg"
-
-# import vars
-source "${cfg_common_file}"
-source "${cfg_cluster_file}"
-
-if [[ "$(kubectl get ns | grep -e '^'${NAMESPACE}'\W')" == "" ]]; then
-  printf "KUBECTL: creating namespace ${NAMESPACE}\n"
-  kubectl create namespace "${NAMESPACE}" >/dev/null
-  printf "KUBECTL: namespace ${NAMESPACE} created\n"
-fi
 
 TMP_FILE="./testcert.yml"
 
@@ -39,37 +14,33 @@ cat >"${TMP_FILE}" <<-EOF
 	kind: Ingress
 	metadata:
 	  name: nginx
+	  namespace: default
 	  annotations:
-	    cert-manager.io/cluster-issuer: letsencrypt-staging
-	    acme.cert-manager.io/http01-edit-in-place: "true"
-	    cert-manager.io/issue-temporary-certificate: "true"
+	    nginx.org/mergeable-ingress-type: "minion"
 	spec:
 	  ingressClassName: ${ingressClass}
-	  tls:
-	  - hosts:
-	    - ${CLUSTER_DOMAIN}
-	    secretName: letsencrypt-staging
 	  rules:
-	    - host: ${CLUSTER_DOMAIN}
-	      http:
-	        paths:
-	          - path: /
-	            pathType: Prefix
-	            backend:
-	              service:
-	                name: nginx
-	                port:
-	                  number: 80
+	  - host: ${CLUSTER_DOMAIN}
+	    http:
+	      paths:
+	      - path: /
+	        pathType: Prefix
+	        backend:
+	          service:
+	            name: nginx
+	            port:
+	              number: 80
 	---
 	apiVersion: v1
 	kind: Service
 	metadata:
 	  name: nginx
+	  namespace: default
 	spec:
 	  type: ClusterIP
 	  ports:
-	    - port: 80
-	      targetPort: 80
+	  - port: 80
+	    targetPort: 80
 	  selector:
 	    app: nginx
 	---
@@ -77,6 +48,7 @@ cat >"${TMP_FILE}" <<-EOF
 	kind: Deployment
 	metadata:
 	  name: nginx
+	  namespace: default
 	spec:
 	  selector:
 	    matchLabels:
@@ -87,15 +59,15 @@ cat >"${TMP_FILE}" <<-EOF
 	        app: nginx
 	    spec:
 	      containers:
-	        - image: nginx
-	          name: nginx
-	          ports:
-	            - containerPort: 80
+	      - image: nginx
+	        name: nginx
+	        ports:
+	        - containerPort: 80
 EOF
 
-printf "KUBECTL: Creating Test Ingress + Staging Cert\n"
-kubectl apply -f "${TMP_FILE}" -n "${NAMESPACE}" >/dev/null
-printf "KUBECTL: Test Ingress + Staging Cert done\n"
+printf "KUBECTL: Creating test minion Ingress + nginx service\n"
+kubectl apply -f "${TMP_FILE}" >/dev/null
+printf "KUBECTL: Test resources created\n"
 
 printf "\n"
 printf "==========================================================================\n"
@@ -110,6 +82,9 @@ printf "|| If that's the case, everything worked correctly.                     
 printf "|| If you get a certificate from 'Kubernetes Local Issuer',             ||\n"
 printf "|| give it a few more minutes and try from a different browser          ||\n"
 printf "|| (for caching reasons).                                               ||\n"
+printf "||                                                                      ||\n"
+printf "|| Once verified, run test-cert-cleanup.sh then                         ||\n"
+printf "|| 82-master-ingress-letsencrypt-prod.sh to promote to production.      ||\n"
 printf "||                                                                      ||\n"
 printf "==========================================================================\n"
 printf "\n"

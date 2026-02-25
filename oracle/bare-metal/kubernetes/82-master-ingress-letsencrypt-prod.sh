@@ -1,0 +1,1 @@
+../../../.scripts/kubernetes/master-ingress-letsencrypt-prod.sh
