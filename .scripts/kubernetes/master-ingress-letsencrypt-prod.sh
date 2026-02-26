@@ -14,24 +14,24 @@ ingressClass="nginx"
 TMP_FILE="./ingress-master.yml"
 
 cat >"${TMP_FILE}" <<-EOF
-	---
-	apiVersion: networking.k8s.io/v1
-	kind: Ingress
-	metadata:
-	  name: ingress-master
-	  namespace: default
-	  annotations:
-	    cert-manager.io/cluster-issuer: letsencrypt-prod
+  ---
+  apiVersion: networking.k8s.io/v1
+  kind: Ingress
+  metadata:
+    name: ingress-master
+    namespace: default
+    annotations:
+      cert-manager.io/cluster-issuer: letsencrypt-prod
       nginx.org/server-tokens: "false"
-	    nginx.org/mergeable-ingress-type: "master"
-	spec:
-	  ingressClassName: ${ingressClass}
-	  tls:
-	  - hosts:
-	    - ${CLUSTER_DOMAIN}
-	    secretName: ingress-tls
-	  rules:
-	  - host: ${CLUSTER_DOMAIN}
+      nginx.org/mergeable-ingress-type: "master"
+  spec:
+    ingressClassName: ${ingressClass}
+    tls:
+    - hosts:
+      - ${CLUSTER_DOMAIN}
+      secretName: ingress-tls
+    rules:
+    - host: ${CLUSTER_DOMAIN}
 EOF
 
 printf "KUBECTL: Promoting master Ingress to letsencrypt-prod\n"

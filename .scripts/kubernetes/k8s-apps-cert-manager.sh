@@ -35,49 +35,49 @@ echo "HELM: cert-manager installed"
 
 echo "KUBECTL: creating CertIssuer configuration via kubectl in your cluster"
 cat <<-EOF |
-	---
-	apiVersion: cert-manager.io/v1
-	kind: ClusterIssuer
-	metadata:
-	  name: internal-issuer
-	spec:
-	  selfSigned: {}
-	---
-	apiVersion: cert-manager.io/v1
-	kind: ClusterIssuer
-	metadata:
-	  name: letsencrypt-staging
-	spec:
-	  acme:
-	    server: https://acme-staging-v02.api.letsencrypt.org/directory
-	    email: ${EMAIL}
-	    privateKeySecretRef:
-	      name: letsencrypt-staging
-	    solvers:
-	      - http01:
-	          ingress:
-	            ingressClassName: ${ingressClass}
-	            serviceType: ClusterIP
+  ---
+  apiVersion: cert-manager.io/v1
+  kind: ClusterIssuer
+  metadata:
+    name: internal-issuer
+  spec:
+    selfSigned: {}
+  ---
+  apiVersion: cert-manager.io/v1
+  kind: ClusterIssuer
+  metadata:
+    name: letsencrypt-staging
+  spec:
+    acme:
+      server: https://acme-staging-v02.api.letsencrypt.org/directory
+      email: ${EMAIL}
+      privateKeySecretRef:
+        name: letsencrypt-staging
+      solvers:
+        - http01:
+            ingress:
+              ingressClassName: ${ingressClass}
+              serviceType: ClusterIP
               ingressTemplate:
                 metadata:
                   annotations:
                     "nginx.org/mergeable-ingress-type": "minion"
-	---
-	apiVersion: cert-manager.io/v1
-	kind: ClusterIssuer
-	metadata:
-	  name: letsencrypt-production
-	spec:
-	  acme:
-	    server: https://acme-v02.api.letsencrypt.org/directory
-	    email: ${EMAIL}
-	    privateKeySecretRef:
-	      name: letsencrypt-production
-	    solvers:
-	      - http01:
-	          ingress:
-	            ingressClassName: ${ingressClass}
-	            serviceType: ClusterIP
+  ---
+  apiVersion: cert-manager.io/v1
+  kind: ClusterIssuer
+  metadata:
+    name: letsencrypt-production
+  spec:
+    acme:
+      server: https://acme-v02.api.letsencrypt.org/directory
+      email: ${EMAIL}
+      privateKeySecretRef:
+        name: letsencrypt-production
+      solvers:
+        - http01:
+            ingress:
+              ingressClassName: ${ingressClass}
+              serviceType: ClusterIP
               ingressTemplate:
                 metadata:
                   annotations:
