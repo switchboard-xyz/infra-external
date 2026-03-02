@@ -21,7 +21,7 @@ cat >"${TMP_FILE}" <<-EOF
     name: ingress-master
     namespace: default
     annotations:
-      cert-manager.io/cluster-issuer: letsencrypt-prod
+      cert-manager.io/cluster-issuer: letsencrypt-production
       nginx.org/server-tokens: "false"
       nginx.org/mergeable-ingress-type: "master"
   spec:
