@@ -17,7 +17,7 @@ cat >"${TMP_FILE}" <<-EOF
 	  namespace: default
 	  annotations:
 	    nginx.org/mergeable-ingress-type: "minion"
-	    nginx.org/server-tokens: ""
+	    nginx.org/server-tokens: "False"
 	spec:
 	  ingressClassName: ${ingressClass}
 	  rules:

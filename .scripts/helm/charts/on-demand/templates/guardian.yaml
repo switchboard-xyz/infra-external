@@ -186,7 +186,7 @@ metadata:
   annotations:
     nginx.org/mergeable-ingress-type: "minion"
     nginx.org/rewrites: "serviceName=guardian rewrite=/guardian"
-    nginx.org/server-tokens: ""
+    nginx.org/server-tokens: "False"
 spec:
   ingressClassName: {{ $.Values.components.guardian.ingress.class | quote }}
   rules:
