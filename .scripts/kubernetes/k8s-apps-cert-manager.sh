@@ -58,6 +58,10 @@ cat <<-EOF |
 	          ingress:
 	            ingressClassName: ${ingressClass}
 	            serviceType: ClusterIP
+	            ingressTemplate:
+	              metadata:
+	                annotations:
+	                  "nginx.org/mergeable-ingress-type": "minion"
 	---
 	apiVersion: cert-manager.io/v1
 	kind: ClusterIssuer
@@ -74,6 +78,10 @@ cat <<-EOF |
 	          ingress:
 	            ingressClassName: ${ingressClass}
 	            serviceType: ClusterIP
+	            ingressTemplate:
+	              metadata:
+	                annotations:
+	                  "nginx.org/mergeable-ingress-type": "minion"
 EOF
   kubectl apply -f - >/dev/null
 echo "KUBECTL: CertIssuer configuration created"

@@ -176,7 +176,7 @@ spec:
       targetPort: {{ $.Values.components.guardian.port }}
       name: guardian
 
-{{ if $.Values.components.guardian.ingress.enabled }}
+{{- if $.Values.components.guardian.ingress.enabled }}
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
@@ -184,25 +184,22 @@ metadata:
   name: guardian
   namespace: {{ $.Values.namespace | quote }}
   annotations:
-    cert-manager.io/cluster-issuer: {{ $.Values.components.guardian.ingress.issuer | quote }}
-    nginx.ingress.kubernetes.io/use-regex: "true"
-    nginx.ingress.kubernetes.io/rewrite-target: /$1/$3
+    nginx.org/mergeable-ingress-type: "minion"
+    nginx.org/rewrites: "serviceName=guardian rewrite=/guardian"
+    nginx.org/server-tokens: "False"
 spec:
   ingressClassName: {{ $.Values.components.guardian.ingress.class | quote }}
-  tls:
-  - hosts:
-    - {{ $.Values.host | quote }}
-    secretName: ingress-tls
   rules:
   - host: {{ $.Values.host | quote }}
     http:
       paths:
-      - path: /{{ $.Values.cluster }}/(guardian)(/|$)(.*)
-        pathType: ImplementationSpecific
+      - path: /{{ $.Values.cluster }}/guardian
+        pathType: Prefix
         backend:
           service:
             name: guardian
             port:
               number: {{ $.Values.components.guardian.port }}
-{{ end }} ## end Ingress IF
+{{- end }}
+
 {{ end }} ## end Guardian enable check

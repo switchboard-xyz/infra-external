@@ -139,13 +139,10 @@ metadata:
   name: oracle-landing-page
   namespace: {{ $.Values.oracle_landing_page.namespace | quote }}
   annotations:
-    cert-manager.io/cluster-issuer: {{ $.Values.oracle_landing_page.ingress.issuer | quote }}
+    nginx.org/mergeable-ingress-type: "minion"
+    nginx.org/server-tokens: "False"
 spec:
   ingressClassName: {{ $.Values.oracle_landing_page.ingress.class | quote }}
-  tls:
-  - hosts:
-    - {{ $.Values.oracle_landing_page.ingress.host | quote }}
-    secretName: ingress-tls
   rules:
   - host: {{ $.Values.oracle_landing_page.ingress.host | quote }}
     http:
