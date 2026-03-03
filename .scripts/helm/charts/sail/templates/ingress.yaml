@@ -10,6 +10,7 @@ metadata:
     acme.cert-manager.io/http01-edit-in-place: "true"
     cert-manager.io/cluster-issuer: {{ $tlsIssuer | quote }}
     cert-manager.io/issue-temporary-certificate: "true"
+    nginx.org/server-tokens: ""
   name: sail
   namespace: {{ $namespace }}
 spec:

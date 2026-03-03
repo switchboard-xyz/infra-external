@@ -186,6 +186,7 @@ metadata:
   annotations:
     nginx.org/mergeable-ingress-type: "minion"
     nginx.org/rewrites: "serviceName=gateway rewrite=/gateway"
+    nginx.org/server-tokens: ""
 spec:
   ingressClassName: {{ $.Values.components.gateway.ingress.class | quote }}
   rules:

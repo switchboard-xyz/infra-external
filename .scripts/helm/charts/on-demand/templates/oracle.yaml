@@ -193,6 +193,7 @@ metadata:
   annotations:
     nginx.org/mergeable-ingress-type: "minion"
     nginx.org/rewrites: "serviceName=oracle rewrite=/oracle"
+    nginx.org/server-tokens: ""
 spec:
   ingressClassName: {{ $.Values.components.oracle.ingress.class | quote }}
   rules:

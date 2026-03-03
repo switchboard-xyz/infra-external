@@ -140,6 +140,7 @@ metadata:
   namespace: {{ $.Values.oracle_landing_page.namespace | quote }}
   annotations:
     nginx.org/mergeable-ingress-type: "minion"
+    nginx.org/server-tokens: ""
 spec:
   ingressClassName: {{ $.Values.oracle_landing_page.ingress.class | quote }}
   rules:
