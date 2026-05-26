@@ -21,7 +21,7 @@ flannel-backend: wireguard-native
 EOM
 
 # Install k3s
-wget 'https://github.com/k3s-io/k3s/releases/download/v1.31.5%2Bk3s1/k3s' -O /usr/local/bin/k3s
+wget 'https://github.com/k3s-io/k3s/releases/download/v1.33.1%2Bk3s1/k3s' -O /usr/local/bin/k3s
 chmod 700 /usr/local/bin/k3s
 
 curl -sfL https://get.k3s.io | INSTALL_K3S_SKIP_DOWNLOAD=true sh -s - server --config /etc/rancher/k3s/config.yaml
@@ -63,9 +63,9 @@ kubectl label node "$(hostname)" node.kubernetes.io/worker=""
 mkdir /opt/snp && snphost fetch vcek der /opt/snp/
 snphost import /opt/snp/ /opt/snp/cert_chain.cert
 
-kubectl apply -k github.com/confidential-containers/operator/config/release?ref=v0.11.0
+kubectl apply -k github.com/confidential-containers/operator/config/release?ref=v0.15.0
 
-kubectl apply -k github.com/confidential-containers/operator/config/samples/ccruntime/default?ref=v0.11.0
+kubectl apply -k github.com/confidential-containers/operator/config/samples/ccruntime/default?ref=v0.15.0
 
 sleep_time=65
 echo "waiting ${sleep_time}s"
