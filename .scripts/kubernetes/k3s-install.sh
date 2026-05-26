@@ -1,13 +1,23 @@
 #!/usr/bin/env bash
 set -u -e -o pipefail
 
-apt install -y wireguard
+K3S_BINARY_URL='https://github.com/k3s-io/k3s/releases/download/v1.33.1%2Bk3s1/k3s'
 
-# Create directory for k3s configuration
-mkdir -p /etc/rancher/k3s
+if systemctl is-active --quiet k3s; then
+  echo "K3s is already installed and running. Upgrading..."
+  wget "${K3S_BINARY_URL}" -O /usr/local/bin/k3s
+  chmod 700 /usr/local/bin/k3s
+  systemctl restart k3s
+  timeout 60 bash -c 'until sudo k3s kubectl get node | grep -q " Ready"; do sleep 1; done'
+  echo "K3s upgraded and restarted successfully."
+else
+  apt install -y wireguard
 
-# Create k3s configuration file
-cat <<EOM >/etc/rancher/k3s/config.yaml
+  # Create directory for k3s configuration
+  mkdir -p /etc/rancher/k3s
+
+  # Create k3s configuration file
+  cat <<EOM >/etc/rancher/k3s/config.yaml
 write-kubeconfig-mode: "0600"
 tls-san:
   - $(hostname -f)
@@ -20,23 +30,24 @@ cluster-init: true
 flannel-backend: wireguard-native
 EOM
 
-# Install k3s
-wget 'https://github.com/k3s-io/k3s/releases/download/v1.33.1%2Bk3s1/k3s' -O /usr/local/bin/k3s
-chmod 700 /usr/local/bin/k3s
+  # Install k3s
+  wget "${K3S_BINARY_URL}" -O /usr/local/bin/k3s
+  chmod 700 /usr/local/bin/k3s
 
-curl -sfL https://get.k3s.io | INSTALL_K3S_SKIP_DOWNLOAD=true sh -s - server --config /etc/rancher/k3s/config.yaml
+  curl -sfL https://get.k3s.io | INSTALL_K3S_SKIP_DOWNLOAD=true sh -s - server --config /etc/rancher/k3s/config.yaml
 
-# Wait for k3s to be ready
-timeout 30 bash -c 'until sudo k3s kubectl get node | grep -q " Ready"; do sleep 1; done'
+  # Wait for k3s to be ready
+  timeout 30 bash -c 'until sudo k3s kubectl get node | grep -q " Ready"; do sleep 1; done'
 
-echo "K3s is now setup and responsive! Configuring .kube/config file."
+  echo "K3s is now setup and responsive! Configuring .kube/config file."
 
-# Setup kubeconfig with proper permissions
-mkdir -p "$HOME/.kube"
-ln -sf /etc/rancher/k3s/k3s.yaml "$HOME/.kube/config"
+  # Setup kubeconfig with proper permissions
+  mkdir -p "$HOME/.kube"
+  ln -sf /etc/rancher/k3s/k3s.yaml "$HOME/.kube/config"
 
-echo "K3s .kube/config file in place."
-echo "Enjoy!"
+  echo "K3s .kube/config file in place."
+  echo "Enjoy!"
+fi
 
 ln -sf /var/lib/rancher/k3s/agent/etc/containerd /etc/
 touch /etc/containerd/config.toml
