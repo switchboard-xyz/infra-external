@@ -8,6 +8,7 @@ if systemctl is-active --quiet k3s; then
   wget "${K3S_BINARY_URL}" -O /usr/local/bin/k3s
   chmod 700 /usr/local/bin/k3s
   systemctl restart k3s
+  echo "Waiting for k3s to be ready..."
   timeout 60 bash -c 'until sudo k3s kubectl get node | grep -q " Ready"; do sleep 1; done'
   echo "K3s upgraded and restarted successfully."
 else
@@ -36,7 +37,7 @@ EOM
 
   curl -sfL https://get.k3s.io | INSTALL_K3S_SKIP_DOWNLOAD=true sh -s - server --config /etc/rancher/k3s/config.yaml
 
-  # Wait for k3s to be ready
+  echo "Waiting for k3s to be ready..."
   timeout 30 bash -c 'until sudo k3s kubectl get node | grep -q " Ready"; do sleep 1; done'
 
   echo "K3s is now setup and responsive! Configuring .kube/config file."
