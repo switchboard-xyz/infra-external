@@ -36,7 +36,7 @@ spec:
       serviceAccountName: oracle-updater
       containers:
       - image: {{ printf "%s:%s" $.Values.oracle_updater.image $.Values.oracle_updater.image_tag | quote }}
-        imagePullPolicy: IfNotPresent
+        imagePullPolicy: Always
         name: oracle-updater
 
         resources:
