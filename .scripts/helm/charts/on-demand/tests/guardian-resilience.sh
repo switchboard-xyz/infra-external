@@ -64,6 +64,30 @@ if rg -q 'verbs:.*delete|PAYER_SECRET|RPC_URL|runtimeClassName' "${remediator_re
   exit 1
 fi
 
+install_script="$(dirname "${chart_dir}")/../../kubernetes/k8s-oracle-install.sh"
+fleet_script="$(dirname "${chart_dir}")/../../kubernetes/guardian-fleet-health.sh"
+rollout_script="$(dirname "${chart_dir}")/../../kubernetes/guardian-rollout-one.sh"
+rg -q 'verify_fleet_health_attestation' "${install_script}"
+rg -q 'validate_secret_inputs' "${install_script}"
+rg -q 'StrictHostKeyChecking=yes' "${fleet_script}" "${rollout_script}"
+rg -q 'k3s kubectl' "${fleet_script}"
+rg -F -q "go-template='{{len .items}}'" "${fleet_script}"
+rg -q 'GUARDIAN_FLEET_CLUSTER=.*cluster' "${rollout_script}"
+rg -q 'deployed_cluster.*expected_cluster' "${fleet_script}"
+rg -q 'heartbeat_interval.*expected_heartbeat_interval' "${fleet_script}"
+rg -q '\$1 == target && \$2 == expected_cluster' "${rollout_script}"
+if rg -q 'kubectl --context' "${fleet_script}"; then
+  printf "fleet health checker must use the bare-metal SSH/k3s access path\n" >&2
+  exit 1
+fi
+preflight_line="$(rg -n '^validate_secret_inputs$' "${install_script}" | cut -d: -f1)"
+lint_line="$(rg -n '^helm lint ' "${install_script}" | cut -d: -f1)"
+mutation_line="$(rg -n '^ensure_namespace$' "${install_script}" | cut -d: -f1)"
+if ((preflight_line >= mutation_line || lint_line >= mutation_line)); then
+  printf "installer mutates Kubernetes before completing read-only preflights\n" >&2
+  exit 1
+fi
+
 rg -q 'keel\.sh/trigger: "poll"' "${tag_render}"
 rg -q 'image: "docker.io/switchboardlabs/guardian:devnet"' "${tag_render}"
 if rg -q 'ephemeral-storage:' "${guardian_render}"; then

@@ -99,10 +99,37 @@ ensure_namespace() {
   fi
 }
 
-ensure_payer_secret() {
+validate_secret_inputs() {
+  if [[ -n "${PAYER_SECRET_KEY:-}" ]]; then
+    local payer_file="${repo_dir}/data/${cluster}_payer.json"
+    [[ -r "${payer_file}" ]] || fail "payer key file is missing or unreadable"
+  fi
+
+  if [[ -n "${JUPITER_SWAP_API_KEY_FILE:-}" ]]; then
+    [[ -r "${JUPITER_SWAP_API_KEY_FILE}" ]] ||
+      fail "JUPITER_SWAP_API_KEY_FILE is unreadable"
+  else
+    kubectl -n "${NAMESPACE}" get secret "${JUPITER_SWAP_API_KEY_SECRET_NAME}" \
+      -o "jsonpath={.data.${JUPITER_SWAP_API_KEY_SECRET_KEY}}" 2>/dev/null |
+      grep -q . ||
+      fail "${JUPITER_SWAP_API_KEY_SECRET_NAME} is missing or lacks the configured key; set JUPITER_SWAP_API_KEY_FILE"
+  fi
+
+  [[ "${GUARDIAN_ENABLED}" == "true" ]] || return 0
+  if [[ -n "${PAGERDUTY_ROUTING_KEY_FILE:-}" ]]; then
+    [[ -r "${PAGERDUTY_ROUTING_KEY_FILE}" ]] ||
+      fail "PAGERDUTY_ROUTING_KEY_FILE is unreadable"
+  else
+    kubectl -n "${NAMESPACE}" get secret "${PAGERDUTY_SECRET_NAME}" \
+      -o "jsonpath={.data.${PAGERDUTY_SECRET_KEY}}" 2>/dev/null |
+      grep -q . ||
+      fail "${PAGERDUTY_SECRET_NAME} is missing or lacks the configured key; set PAGERDUTY_ROUTING_KEY_FILE"
+  fi
+}
+
+provision_payer_secret() {
   [[ -n "${PAYER_SECRET_KEY:-}" ]] || return 0
   local payer_file="${repo_dir}/data/${cluster}_payer.json"
-  [[ -r "${payer_file}" ]] || fail "payer key file is missing or unreadable"
   kubectl -n "${NAMESPACE}" create secret generic payer-secret \
     --from-file="${PAYER_SECRET_KEY}=${payer_file}" \
     --dry-run=client -o yaml |
@@ -112,37 +139,27 @@ ensure_payer_secret() {
     grep -q . || fail "payer-secret does not contain the configured key"
 }
 
-ensure_jupiter_secret() {
+provision_jupiter_secret() {
   if [[ -n "${JUPITER_SWAP_API_KEY_FILE:-}" ]]; then
-    [[ -r "${JUPITER_SWAP_API_KEY_FILE}" ]] ||
-      fail "JUPITER_SWAP_API_KEY_FILE is unreadable"
     kubectl -n "${NAMESPACE}" create secret generic \
       "${JUPITER_SWAP_API_KEY_SECRET_NAME}" \
       --from-file="${JUPITER_SWAP_API_KEY_SECRET_KEY}=${JUPITER_SWAP_API_KEY_FILE}" \
       --dry-run=client -o yaml |
       kubectl apply -f -
-  elif ! kubectl -n "${NAMESPACE}" get secret "${JUPITER_SWAP_API_KEY_SECRET_NAME}" \
-    >/dev/null 2>&1; then
-    fail "${JUPITER_SWAP_API_KEY_SECRET_NAME} is missing; set JUPITER_SWAP_API_KEY_FILE to a replacement credential file"
   fi
   kubectl -n "${NAMESPACE}" get secret "${JUPITER_SWAP_API_KEY_SECRET_NAME}" \
     -o "jsonpath={.data.${JUPITER_SWAP_API_KEY_SECRET_KEY}}" |
     grep -q . || fail "Jupiter API Secret does not contain the configured key"
 }
 
-ensure_pagerduty_secret() {
+provision_pagerduty_secret() {
   [[ "${GUARDIAN_ENABLED}" == "true" ]] || return 0
   if [[ -n "${PAGERDUTY_ROUTING_KEY_FILE:-}" ]]; then
-    [[ -r "${PAGERDUTY_ROUTING_KEY_FILE}" ]] ||
-      fail "PAGERDUTY_ROUTING_KEY_FILE is unreadable"
     kubectl -n "${NAMESPACE}" create secret generic \
       "${PAGERDUTY_SECRET_NAME}" \
       --from-file="${PAGERDUTY_SECRET_KEY}=${PAGERDUTY_ROUTING_KEY_FILE}" \
       --dry-run=client -o yaml |
       kubectl apply -f -
-  elif ! kubectl -n "${NAMESPACE}" get secret "${PAGERDUTY_SECRET_NAME}" \
-    >/dev/null 2>&1; then
-    fail "${PAGERDUTY_SECRET_NAME} is missing; set PAGERDUTY_ROUTING_KEY_FILE to provision it"
   fi
   kubectl -n "${NAMESPACE}" get secret "${PAGERDUTY_SECRET_NAME}" \
     -o "jsonpath={.data.${PAGERDUTY_SECRET_KEY}}" |
@@ -177,15 +194,21 @@ check_guardian_release_safety() {
   fi
 }
 
-run_fleet_health_gate() {
+verify_fleet_health_attestation() {
   [[ "${GUARDIAN_ENABLED}" == "true" ]] || return 0
-  local checker="${GUARDIAN_FLEET_HEALTH_COMMAND:-${script_dir}/guardian-fleet-health.sh}"
-  [[ -x "${checker}" ]] ||
-    fail "GUARDIAN_FLEET_HEALTH_COMMAND must name an executable health checker"
-  local healthy
-  healthy="$("${checker}")"
-  [[ "${healthy}" =~ ^[0-9]+$ ]] || fail "fleet health checker did not return an integer"
-  ((healthy >= 5)) || fail "only ${healthy} fleet-healthy guardians; at least 5 are required"
+  local healthy="${GUARDIAN_FLEET_HEALTH_COUNT:-}"
+  local attested_at="${GUARDIAN_FLEET_HEALTH_ATTESTED_AT:-}"
+  local now age
+  [[ "${healthy}" =~ ^[0-9]+$ ]] ||
+    fail "guardian rollout requires a fleet-health assertion from guardian-rollout-one.sh"
+  ((healthy >= 5)) ||
+    fail "fleet-health assertion contains only ${healthy} healthy guardians"
+  [[ "${attested_at}" =~ ^[0-9]+$ ]] ||
+    fail "guardian rollout requires a timestamped fleet-health assertion"
+  now="$(date +%s)"
+  age=$((now - attested_at))
+  ((age >= 0 && age <= 180)) ||
+    fail "fleet-health assertion is stale; rerun guardian-rollout-one.sh"
 }
 
 check_repo_drift
@@ -206,18 +229,20 @@ load_vars "${landing_tmp_helm_file}"
 set -u
 
 check_cluster_access
-ensure_namespace
-ensure_payer_secret
-ensure_jupiter_secret
-ensure_pagerduty_secret
 check_guardian_release_safety
-run_fleet_health_gate
+verify_fleet_health_attestation
+validate_secret_inputs
 
 helm lint "${helm_on_demand_chart_dir}" -f "${tmp_helm_file}" \
   --set-string "heartbeatRpcFallbackUrls=${heartbeat_rpc_fallback_urls}" \
   --set-string "components.guardian.imageDigest=${GUARDIAN_IMAGE_DIGEST}" \
   --set "components.guardian.remediator.enabled=${GUARDIAN_REMEDIATOR_ENABLED}" \
   --set "components.guardian.ephemeralStorage.enabled=${GUARDIAN_EPHEMERAL_STORAGE_ENABLED}"
+
+ensure_namespace
+provision_payer_secret
+provision_jupiter_secret
+provision_pagerduty_secret
 
 printf "HELM: installing Switchboard Oracle under namespace %s\n" "${NAMESPACE}"
 helm upgrade --install "sb-oracle-${NETWORK}" \
@@ -245,7 +270,6 @@ printf "HELM: Switchboard Oracle installed under namespace %s\n" "${NAMESPACE}"
 
 if [[ "${GUARDIAN_ENABLED}" == "true" ]]; then
   kubectl rollout status deployment/guardian -n "${NAMESPACE}" --timeout=10m
-  run_fleet_health_gate
 fi
 
 if [[ "${LANDING_ENABLED:-}" == "true" ]]; then

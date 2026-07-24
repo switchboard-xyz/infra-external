@@ -63,6 +63,13 @@ subjects:
   - kind: ServiceAccount
     name: guardian-remediator
 ---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: guardian-startup-config
+data:
+  value: present-for-initial-start
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -82,12 +89,12 @@ spec:
       containers:
         - name: guardian
           image: ${image}
-          command: ["/bin/sh", "-c", "sleep 600"]
+          command: ["/bin/sh", "-ec", "sleep 60; exit 1"]
           env:
-            - name: INTENTIONAL_CREATE_ERROR
+            - name: REQUIRED_STARTUP_CONFIG
               valueFrom:
                 configMapKeyRef:
-                  name: intentionally-missing
+                  name: guardian-startup-config
                   key: value
 ---
 apiVersion: v1
@@ -107,6 +114,26 @@ YAML
 for _ in $(seq 1 60); do
   pod_uid="$(kubectl --context "${context}" -n "${namespace}" get pods \
     -l app=guardian -o jsonpath='{.items[0].metadata.uid}' 2>/dev/null || true)"
+  ready="$(kubectl --context "${context}" -n "${namespace}" get deployment guardian \
+    -o jsonpath='{.status.readyReplicas}' 2>/dev/null || true)"
+  available="$(kubectl --context "${context}" -n "${namespace}" get deployment guardian \
+    -o jsonpath='{.status.availableReplicas}' 2>/dev/null || true)"
+  progressing_reason="$(kubectl --context "${context}" -n "${namespace}" get deployment guardian \
+    -o 'jsonpath={.status.conditions[?(@.type=="Progressing")].reason}' 2>/dev/null || true)"
+  if [[ -n "${pod_uid}" && "${ready}" == "1" && "${available}" == "1" &&
+    "${progressing_reason}" == "NewReplicaSetAvailable" ]]; then
+    break
+  fi
+  sleep 2
+done
+[[ -n "${pod_uid:-}" && "${ready:-}" == "1" && "${available:-}" == "1" ]] || {
+  printf "guardian test deployment did not complete its initial healthy rollout\n" >&2
+  exit 1
+}
+
+kubectl --context "${context}" -n "${namespace}" delete configmap guardian-startup-config
+
+for _ in $(seq 1 60); do
   create_reason="$(kubectl --context "${context}" -n "${namespace}" get pods \
     -l app=guardian -o jsonpath='{.items[0].status.containerStatuses[0].state.waiting.reason}' \
     2>/dev/null || true)"
@@ -116,14 +143,18 @@ for _ in $(seq 1 60); do
     -o jsonpath='{.status.observedGeneration}' 2>/dev/null || true)"
   updated="$(kubectl --context "${context}" -n "${namespace}" get deployment guardian \
     -o jsonpath='{.status.updatedReplicas}' 2>/dev/null || true)"
+  progressing_reason="$(kubectl --context "${context}" -n "${namespace}" get deployment guardian \
+    -o 'jsonpath={.status.conditions[?(@.type=="Progressing")].reason}' 2>/dev/null || true)"
   if [[ -n "${pod_uid}" && "${create_reason}" == "CreateContainerConfigError" &&
-    "${generation}" == "${observed}" && "${updated}" == "1" ]]; then
+    "${generation}" == "${observed}" && "${updated}" == "1" &&
+    "${progressing_reason}" == "NewReplicaSetAvailable" ]]; then
     break
   fi
   sleep 2
 done
-[[ -n "${pod_uid:-}" && "${create_reason:-}" == "CreateContainerConfigError" ]] || {
-  printf "guardian test pod did not reach the expected harmless create error\n" >&2
+[[ -n "${pod_uid:-}" && "${create_reason:-}" == "CreateContainerConfigError" &&
+  "${progressing_reason:-}" == "NewReplicaSetAvailable" ]] || {
+  printf "guardian test pod did not reach the expected post-rollout create error\n" >&2
   exit 1
 }
 
