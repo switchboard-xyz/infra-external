@@ -16,6 +16,8 @@ if [[ "${cluster}" != "devnet" &&
 fi
 
 export GUARDIAN_ENABLED="true"
+export JUPITER_SWAP_API_KEY_SECRET_NAME="${JUPITER_SWAP_API_KEY_SECRET_NAME:-jupiter-swap-api}"
+export JUPITER_SWAP_API_KEY_SECRET_KEY="${JUPITER_SWAP_API_KEY_SECRET_KEY:-api-key}"
 
 # defaults - these variables can be changed via `cfg/` files
 export DEVNET_DOCKER_IMAGE_TAG="devnet"
@@ -45,6 +47,47 @@ if [[ "$(kubectl get ns | grep -e '^'${NAMESPACE}'\W')" == "" ]]; then
   kubectl create namespace "${NAMESPACE}"
   printf "KUBECTL: Namespace ${NAMESPACE} created\n"
 fi
+
+if [[ "${PAYER_SECRET_KEY}" != "" ]]; then
+  payer_file="${repo_dir}/data/${cluster}_payer.json"
+  [[ -r "${payer_file}" ]] || {
+    printf "payer key file is missing or unreadable\n" >&2
+    exit 1
+  }
+  kubectl -n "${NAMESPACE}" create secret generic payer-secret \
+    --from-file="${PAYER_SECRET_KEY}=${payer_file}" \
+    --dry-run=client -o yaml |
+    kubectl apply -f -
+  kubectl -n "${NAMESPACE}" get secret payer-secret \
+    -o "jsonpath={.data.${PAYER_SECRET_KEY}}" |
+    grep -q . || {
+    printf "payer-secret does not contain the configured key\n" >&2
+    exit 1
+  }
+fi
+
+if [[ -n "${JUPITER_SWAP_API_KEY_FILE:-}" ]]; then
+  [[ -r "${JUPITER_SWAP_API_KEY_FILE}" ]] || {
+    printf "JUPITER_SWAP_API_KEY_FILE is unreadable\n" >&2
+    exit 1
+  }
+  kubectl -n "${NAMESPACE}" create secret generic \
+    "${JUPITER_SWAP_API_KEY_SECRET_NAME}" \
+    --from-file="${JUPITER_SWAP_API_KEY_SECRET_KEY}=${JUPITER_SWAP_API_KEY_FILE}" \
+    --dry-run=client -o yaml |
+    kubectl apply -f -
+elif ! kubectl -n "${NAMESPACE}" get secret "${JUPITER_SWAP_API_KEY_SECRET_NAME}" \
+  >/dev/null 2>&1; then
+  printf "%s is missing; set JUPITER_SWAP_API_KEY_FILE to provision the replacement credential\n" \
+    "${JUPITER_SWAP_API_KEY_SECRET_NAME}" >&2
+  exit 1
+fi
+kubectl -n "${NAMESPACE}" get secret "${JUPITER_SWAP_API_KEY_SECRET_NAME}" \
+  -o "jsonpath={.data.${JUPITER_SWAP_API_KEY_SECRET_KEY}}" |
+  grep -q . || {
+  printf "Jupiter API Secret does not contain the configured key\n" >&2
+  exit 1
+}
 
 helm_dir="${repo_dir}/.scripts/helm/"
 helm_charts_dir="${helm_dir}/charts/"
@@ -80,26 +123,10 @@ helm upgrade -i "sb-oracle-${NETWORK}" \
   --set components.guardian.image="${GUARDIAN_DOCKER_IMAGE}" \
   --set components.gateway.enabled=${GATEWAY_ENABLED} \
   --set components.gateway.image="${GATEWAY_DOCKER_IMAGE}" \
+  --set-string jupiterSwapApiKeySecret.name="${JUPITER_SWAP_API_KEY_SECRET_NAME}" \
+  --set-string jupiterSwapApiKeySecret.key="${JUPITER_SWAP_API_KEY_SECRET_KEY}" \
   "${helm_on_demand_chart_dir}" >/dev/null
 printf "HELM: Switchboard Oracle installed under namespace ${NAMESPACE}\n"
-
-if [[ "${PAYER_SECRET_KEY}" != "" ]]; then
-  printf "KUBECTL: creating secret ${NAMESPACE}/payer-secret\n"
-  # delete pre-existing secret
-  set +e
-  kubectl \
-    -n "${NAMESPACE}" \
-    delete secret payer-secret >/dev/null 2>&1
-  set -e
-
-  # re-create secret
-  kubectl \
-    -n "${NAMESPACE}" \
-    create secret generic \
-    --from-file="${PAYER_SECRET_KEY}=../../../data/${cluster}_payer.json" \
-    payer-secret >/dev/null
-  printf "KUBECTL: secret ${NAMESPACE}/payer-secret created\n"
-fi
 
 if [[ "${LANDING_ENABLED}" != "" && "${LANDING_ENABLED}" == "true" ]]; then
   printf "HELM: Installing Switchboard Landing page under namespace ${LANDING_NAMESPACE}\n"
