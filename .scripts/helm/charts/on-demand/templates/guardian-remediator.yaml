@@ -1,0 +1,96 @@
+{{- if and $.Values.components.guardian.enabled $.Values.components.guardian.remediator.enabled }}
+{{- $guardianDigest := required "guardian remediator requires components.guardian.imageDigest" $.Values.components.guardian.imageDigest -}}
+{{- if not (regexMatch "^sha256:[a-f0-9]{64}$" $guardianDigest) -}}
+{{- fail "components.guardian.imageDigest must be a sha256 digest when the remediator is enabled" -}}
+{{- end }}
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: guardian-remediator
+  namespace: {{ $.Values.namespace | quote }}
+automountServiceAccountToken: true
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: guardian-remediator
+  namespace: {{ $.Values.namespace | quote }}
+rules:
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["get", "list"]
+  - apiGroups: ["apps"]
+    resources: ["deployments"]
+    resourceNames: ["guardian"]
+    verbs: ["get", "patch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: guardian-remediator
+  namespace: {{ $.Values.namespace | quote }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: guardian-remediator
+subjects:
+  - kind: ServiceAccount
+    name: guardian-remediator
+    namespace: {{ $.Values.namespace | quote }}
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: guardian-remediator
+  namespace: {{ $.Values.namespace | quote }}
+spec:
+  schedule: {{ $.Values.components.guardian.remediator.schedule | quote }}
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: {{ $.Values.components.guardian.remediator.successfulJobsHistoryLimit }}
+  failedJobsHistoryLimit: {{ $.Values.components.guardian.remediator.failedJobsHistoryLimit }}
+  jobTemplate:
+    spec:
+      backoffLimit: 0
+      activeDeadlineSeconds: 50
+      template:
+        metadata:
+          labels:
+            app: guardian-remediator
+        spec:
+          serviceAccountName: guardian-remediator
+          automountServiceAccountToken: true
+          restartPolicy: Never
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 65532
+            runAsGroup: 65532
+            fsGroup: 65532
+            seccompProfile:
+              type: RuntimeDefault
+          containers:
+            - name: guardian-remediator
+              image: {{ printf "%s@%s" $.Values.components.guardian.image $guardianDigest | quote }}
+              imagePullPolicy: IfNotPresent
+              command: ["/app/guardian-remediator"]
+              env:
+                - name: K8S_NAMESPACE
+                  valueFrom:
+                    fieldRef:
+                      fieldPath: metadata.namespace
+                - name: GUARDIAN_DEPLOYMENT
+                  value: guardian
+                - name: RUST_LOG
+                  value: info
+              securityContext:
+                allowPrivilegeEscalation: false
+                readOnlyRootFilesystem: true
+                capabilities:
+                  drop: ["ALL"]
+              resources:
+                limits:
+                  cpu: {{ $.Values.components.guardian.remediator.resources.limits.cpu }}
+                  memory: {{ $.Values.components.guardian.remediator.resources.limits.memory }}
+                requests:
+                  cpu: {{ $.Values.components.guardian.remediator.resources.requests.cpu }}
+                  memory: {{ $.Values.components.guardian.remediator.resources.requests.memory }}
+{{- end }}

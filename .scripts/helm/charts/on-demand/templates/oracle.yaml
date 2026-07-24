@@ -97,6 +97,8 @@ spec:
           value: {{ $.Values.rpcUrl | quote }}
         - name: WSS_RPC_URL
           value: {{ $.Values.wssRpcUrl | quote }}
+        - name: HEARTBEAT_RPC_FALLBACK_URLS
+          value: {{ $.Values.heartbeatRpcFallbackUrls | quote }}
         - name: TASK_RUNNER_SOLANA_RPC
           value: {{ $.Values.solanaMainnetRpc | quote }}
         - name: KEYPAIR_PATH

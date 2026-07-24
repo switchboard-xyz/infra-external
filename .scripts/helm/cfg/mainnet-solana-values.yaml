@@ -29,6 +29,7 @@ solanaMainnetRpc: "__TASK_RUNNER_SOLANA_RPC__"
 
 rpcUrl: "__RPC_URL__"
 wssRpcUrl: "__WSS_RPC_URL__"
+heartbeatRpcFallbackUrls: "https://api.mainnet-beta.solana.com"
 
 jupiterSwapApiKeySecret:
   name: "jupiter-swap-api"
