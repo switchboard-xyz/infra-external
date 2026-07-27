@@ -97,23 +97,22 @@ spec:
           value: {{ $.Values.rpcUrl | quote }}
         - name: WSS_RPC_URL
           value: {{ $.Values.wssRpcUrl | quote }}
+        - name: HEARTBEAT_RPC_FALLBACK_URLS
+          value: {{ $.Values.heartbeatRpcFallbackUrls | quote }}
         - name: TASK_RUNNER_SOLANA_RPC
           value: {{ $.Values.solanaMainnetRpc | quote }}
         - name: KEYPAIR_PATH
           value: "/data/protected_files/keypair.bin"
         - name: PAYER_SECRET
-          {{ if or (ne $.Values.payerSecretKey "") }}
           valueFrom:
             secretKeyRef:
-              {{ if $.Values.payerSecretKey }}
               name: payer-secret
-              key: {{  $.Values.payerSecretKey | quote }}
-              {{ end }}
-          {{ else }}
-          value: {{ $.Values.payerSecret }}
-          {{ end }}
+              key: {{ required "payerSecretKey is required" $.Values.payerSecretKey | quote }}
         - name: JUPITER_SWAP_API_KEY
-          value: {{ $.Values.jupiterSwapApiKey | quote }}
+          valueFrom:
+            secretKeyRef:
+              name: {{ required "jupiterSwapApiKeySecret.name is required" $.Values.jupiterSwapApiKeySecret.name | quote }}
+              key: {{ required "jupiterSwapApiKeySecret.key is required" $.Values.jupiterSwapApiKeySecret.key | quote }}
         # METRICS
         - name: METRICS_EXPORTER
           value: {{ $.Values.components.oracle.metrics.exporter | quote }}

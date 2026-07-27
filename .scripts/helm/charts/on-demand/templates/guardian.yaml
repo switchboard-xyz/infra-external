@@ -1,4 +1,11 @@
-{{ if $.Values.components.guardian.enabled }}
+{{- if $.Values.components.guardian.enabled }}
+{{- $guardianDigest := $.Values.components.guardian.imageDigest | default "" -}}
+{{- if and $guardianDigest (not (regexMatch "^sha256:[a-f0-9]{64}$" $guardianDigest)) -}}
+{{- fail "components.guardian.imageDigest must be empty or a sha256 digest" -}}
+{{- end -}}
+{{- if and $.Values.components.guardian.remediator.enabled (not $guardianDigest) -}}
+{{- fail "components.guardian.remediator.enabled requires components.guardian.imageDigest" -}}
+{{- end }}
 apiVersion: apps/v1
 kind: Deployment
 
@@ -8,15 +15,17 @@ metadata:
 
   labels:
     chain: {{ $.Values.chain | quote }}
-    cluster: {{ $.Values.cluter | quote }}
+    cluster: {{ $.Values.cluster | quote }}
     app: guardian
 
+  {{- if not $guardianDigest }}
   annotations:
     keel.sh/approvals: "0"
     keel.sh/trigger: "poll"                                 # enable active repository checking (webhooks and GCR would still work)
     keel.sh/match-tag: "true"                               # only makes a difference when used with 'force' policy, will only update if tag matches :dev->:dev, :prod->:prod
     keel.sh/policy: "force"
     #keel.sh/pollSchedule: "@every 1m"
+  {{- end }}
 
 spec:
   replicas: 1
@@ -26,9 +35,7 @@ spec:
       app: guardian
 
   strategy:
-    rollingUpdate:
-      maxSurge: 1
-      maxUnavailable: 0
+    type: Recreate
 
   template:
     metadata:
@@ -45,7 +52,7 @@ spec:
       dnsPolicy: ClusterFirst # TODO: probably not needed.. to be removed
 
       containers:
-      - image: {{ printf "%s:%s" $.Values.components.guardian.image $.Values.components.docker_image_tag | quote }}
+      - image: {{ ternary (printf "%s@%s" $.Values.components.guardian.image $guardianDigest) (printf "%s:%s" $.Values.components.guardian.image $.Values.components.docker_image_tag) (ne $guardianDigest "") | quote }}
         imagePullPolicy: Always #IfNotPresent
         name: guardian
 
@@ -58,7 +65,7 @@ spec:
         - name: SEV_SNP_CACHE_PATH
           value: "/tmp/certs"
         - name: DOCKER_IMAGE_TAG
-          value: {{ $.Values.components.docker_image_tag | quote }}
+          value: {{ ternary $guardianDigest $.Values.components.docker_image_tag (ne $guardianDigest "") | quote }}
         - name: CHAIN
           value: {{ $.Values.chain | quote }}
         - name: CLUSTER
@@ -97,21 +104,27 @@ spec:
           value: {{ $.Values.rpcUrl | quote }}
         - name: WSS_RPC_URL
           value: {{ $.Values.wssRpcUrl | quote }}
+        - name: HEARTBEAT_RPC_FALLBACK_URLS
+          value: {{ $.Values.heartbeatRpcFallbackUrls | quote }}
         - name: TASK_RUNNER_SOLANA_RPC
           value: {{ $.Values.solanaMainnetRpc | quote }}
         - name: PAYER_SECRET
-          {{ if or (ne $.Values.payerSecretKey "") }}
           valueFrom:
             secretKeyRef:
-              {{ if $.Values.payerSecretKey }}
               name: payer-secret
-              key: {{  $.Values.payerSecretKey | quote }}
-              {{ end }}
-          {{ else }}
-          value: {{ $.Values.payerSecret | quote }}
-          {{ end }}
+              key: {{ required "payerSecretKey is required" $.Values.payerSecretKey | quote }}
         - name: JUPITER_SWAP_API_KEY
-          value: {{ $.Values.jupiterSwapApiKey | quote }}
+          valueFrom:
+            secretKeyRef:
+              name: {{ required "jupiterSwapApiKeySecret.name is required" $.Values.jupiterSwapApiKeySecret.name | quote }}
+              key: {{ required "jupiterSwapApiKeySecret.key is required" $.Values.jupiterSwapApiKeySecret.key | quote }}
+        {{- if $.Values.pagerDutySecret.name }}
+        - name: PAGERDUTY_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: {{ $.Values.pagerDutySecret.name | quote }}
+              key: {{ required "pagerDutySecret.key is required when pagerDutySecret.name is set" $.Values.pagerDutySecret.key | quote }}
+        {{- end }}
         # METRICS
         - name: METRICS_EXPORTER
           value: {{ $.Values.components.guardian.metrics.exporter | quote }}
@@ -153,15 +166,29 @@ spec:
           failureThreshold: 10
           periodSeconds: 10
           timeoutSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: {{ $.Values.components.guardian.metrics.port }}
+          initialDelaySeconds: 15
+          failureThreshold: 3
+          periodSeconds: 10
+          timeoutSeconds: 3
         {{ end }}
 
         resources:
           limits:
             cpu: {{ $.Values.components.guardian.resources.limits.cpu }}
             memory: {{ $.Values.components.guardian.resources.limits.memory }}
+            {{- if $.Values.components.guardian.ephemeralStorage.enabled }}
+            ephemeral-storage: {{ $.Values.components.guardian.ephemeralStorage.limit }}
+            {{- end }}
           requests:
             cpu: {{ $.Values.components.guardian.resources.requests.cpu }}
             memory: {{ $.Values.components.guardian.resources.requests.memory }}
+            {{- if $.Values.components.guardian.ephemeralStorage.enabled }}
+            ephemeral-storage: {{ $.Values.components.guardian.ephemeralStorage.request }}
+            {{- end }}
 
 ---
 apiVersion: v1
