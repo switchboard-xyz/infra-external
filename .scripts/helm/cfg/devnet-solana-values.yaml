@@ -7,6 +7,10 @@ host: "__CLUSTER_DOMAIN__"
 
 payerSecretKey: "__PAYER_SECRET_KEY__"
 
+taskRunnerRpc:
+  secretName: "__TASK_RUNNER_RPC_SECRET_NAME__"
+  suiMainnetRpcKey: "__TASK_RUNNER_SUI_RPC_SECRET_KEY__"
+
 components:
     oracle:
       image: "__ORACLE_DOCKER_IMAGE__"

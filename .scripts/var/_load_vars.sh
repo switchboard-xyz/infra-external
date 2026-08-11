@@ -14,6 +14,8 @@ function load_vars() {
   sed -E -i 's;(__|\$\{)RPC_URL(\}|__);'"${RPC_URL}"';g' "${tmp_helm_file}"
   sed -E -i 's;(__|\$\{)WSS_RPC_URL(\}|__);'"${WSS_RPC_URL}"';g' "${tmp_helm_file}"
   sed -E -i 's;(__|\$\{)TASK_RUNNER_SOLANA_RPC(\}|__);'"${TASK_RUNNER_SOLANA_RPC}"';g' "${tmp_helm_file}"
+  sed -E -i 's;(__|\$\{)TASK_RUNNER_RPC_SECRET_NAME(\}|__);'"${TASK_RUNNER_RPC_SECRET_NAME}"';g' "${tmp_helm_file}"
+  sed -E -i 's;(__|\$\{)TASK_RUNNER_SUI_RPC_SECRET_KEY(\}|__);'"${TASK_RUNNER_SUI_RPC_SECRET_KEY}"';g' "${tmp_helm_file}"
   sed -E -i 's;(__|\$\{)PULL_QUEUE(\}|__);'"${PULL_QUEUE}"';g' "${tmp_helm_file}"
   sed -E -i 's;(__|\$\{)PULL_ORACLE(\}|__);'"${PULL_ORACLE}"';g' "${tmp_helm_file}"
   sed -E -i 's;(__|\$\{)ORACLE_ENABLED(\}|__);'"${ORACLE_ENABLED}"';g' "${tmp_helm_file}"
