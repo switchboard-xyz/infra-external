@@ -45,7 +45,14 @@ spec:
       dnsPolicy: ClusterFirst # TODO: probably not needed.. to be removed
 
       containers:
+      {{- if $.Values.components.oracle.imageDigest }}
+      {{- if not (regexMatch "^sha256:[a-f0-9]{64}$" $.Values.components.oracle.imageDigest) }}
+      {{- fail "components.oracle.imageDigest must be a sha256 digest" }}
+      {{- end }}
+      - image: {{ printf "%s@%s" $.Values.components.oracle.image $.Values.components.oracle.imageDigest | quote }}
+      {{- else }}
       - image: {{ printf "%s:%s" $.Values.components.oracle.image $.Values.components.docker_image_tag | quote }}
+      {{- end }}
         imagePullPolicy: Always #IfNotPresent
         name: oracle
 
@@ -99,6 +106,13 @@ spec:
           value: {{ $.Values.wssRpcUrl | quote }}
         - name: TASK_RUNNER_SOLANA_RPC
           value: {{ $.Values.solanaMainnetRpc | quote }}
+        {{- if $.Values.taskRunnerRpc.secretName }}
+        - name: SUI_MAINNET_RPC
+          valueFrom:
+            secretKeyRef:
+              name: {{ $.Values.taskRunnerRpc.secretName | quote }}
+              key: {{ required "taskRunnerRpc.suiMainnetRpcKey is required when taskRunnerRpc.secretName is set" $.Values.taskRunnerRpc.suiMainnetRpcKey | quote }}
+        {{- end }}
         - name: KEYPAIR_PATH
           value: "/data/protected_files/keypair.bin"
         - name: PAYER_SECRET
