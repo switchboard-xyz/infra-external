@@ -7,7 +7,7 @@ if [[ "${network}" != "devnet" && "${network}" != "mainnet" ]]; then
   exit 2
 fi
 
-for command_name in helm kubectl; do
+for command_name in helm kubectl python3; do
   if ! command -v "${command_name}" >/dev/null 2>&1; then
     printf 'required command is unavailable: %s\n' "${command_name}" >&2
     exit 1
@@ -17,11 +17,12 @@ done
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 repo_dir="$(readlink -f "${script_dir}/../..")"
 chart_dir="${repo_dir}/.scripts/helm/charts/on-demand"
+policy_tool="${script_dir}/k8s-oracle-agent-policy.py"
 values_file="${repo_dir}/.scripts/helm/cfg/${network}-solana-values.yaml"
 common_cfg="${repo_dir}/cfg/00-common-vars.cfg"
 network_cfg="${repo_dir}/cfg/00-${network}-vars.cfg"
 
-for required_file in "${values_file}" "${common_cfg}" "${network_cfg}"; do
+for required_file in "${values_file}" "${common_cfg}" "${network_cfg}" "${policy_tool}"; do
   if [[ ! -f "${required_file}" ]]; then
     printf 'required rollout input is unavailable: %s\n' "${required_file}" >&2
     exit 1
@@ -84,6 +85,7 @@ gateway_image_before="$(read_deployment_field gateway '{.spec.template.spec.cont
 gateway_replicas_before="$(read_deployment_field gateway '{.spec.replicas}')"
 payer_ref_before="$(read_deployment_field oracle '{range .spec.template.spec.containers[0].env[?(@.name=="PAYER_SECRET")]}{.valueFrom.secretKeyRef.name}/{.valueFrom.secretKeyRef.key}{end}')"
 sui_ref_before="$(read_deployment_field oracle '{range .spec.template.spec.containers[0].env[?(@.name=="SUI_MAINNET_RPC")]}{.valueFrom.secretKeyRef.name}/{.valueFrom.secretKeyRef.key}{end}')"
+policy_before="$(read_deployment_field oracle '{.spec.template.metadata.annotations.io\.katacontainers\.config\.runtime\.cc_init_data}')"
 
 # --reuse-values does not merge newly added chart defaults into an older Helm
 # release. Pass the existing Sui Secret reference explicitly so the
@@ -108,17 +110,22 @@ if [[ ! "${oracle_replicas_before}" =~ ^[0-9]+$ ]]; then
   exit 1
 fi
 
+expected_image="${oracle_image}@${desired_digest}"
+policy_after="$(printf '%s' "${policy_before}" | python3 "${policy_tool}" \
+  --current-image "${oracle_image_before}" \
+  --desired-image "${expected_image}")"
+
 helm upgrade "${release}" "${chart_dir}" \
   -n "${NAMESPACE}" \
   --reuse-values \
   --set-string components.oracle.image="${oracle_image}" \
   --set-string components.oracle.imageDigest="${desired_digest}" \
+  --set-string components.oracle.ccInitData="${policy_after}" \
   --set-string taskRunnerRpc.secretName="${sui_secret_name}" \
   --set-string taskRunnerRpc.suiMainnetRpcKey="${sui_secret_key}" \
   --set components.oracle.replicas="${oracle_replicas_before}" \
   --wait >/dev/null
 
-expected_image="${oracle_image}@${desired_digest}"
 oracle_image_after="$(read_deployment_field oracle '{.spec.template.spec.containers[0].image}')"
 oracle_replicas_after="$(read_deployment_field oracle '{.spec.replicas}')"
 guardian_image_after="$(read_deployment_field guardian '{.spec.template.spec.containers[0].image}')"
@@ -127,6 +134,7 @@ gateway_image_after="$(read_deployment_field gateway '{.spec.template.spec.conta
 gateway_replicas_after="$(read_deployment_field gateway '{.spec.replicas}')"
 payer_ref_after="$(read_deployment_field oracle '{range .spec.template.spec.containers[0].env[?(@.name=="PAYER_SECRET")]}{.valueFrom.secretKeyRef.name}/{.valueFrom.secretKeyRef.key}{end}')"
 sui_ref_after="$(read_deployment_field oracle '{range .spec.template.spec.containers[0].env[?(@.name=="SUI_MAINNET_RPC")]}{.valueFrom.secretKeyRef.name}/{.valueFrom.secretKeyRef.key}{end}')"
+policy_deployed="$(read_deployment_field oracle '{.spec.template.metadata.annotations.io\.katacontainers\.config\.runtime\.cc_init_data}')"
 
 [[ "${oracle_image_after}" == "${expected_image}" ]] || {
   printf 'Oracle image mismatch after rollout\n' >&2
@@ -158,6 +166,10 @@ sui_ref_after="$(read_deployment_field oracle '{range .spec.template.spec.contai
 }
 [[ "${sui_ref_after}" == "${sui_ref_before}" ]] || {
   printf 'Oracle Sui RPC Secret reference changed during rollout\n' >&2
+  exit 1
+}
+[[ "${policy_deployed}" == "${policy_after}" ]] || {
+  printf 'Oracle confidential-container policy changed during rollout\n' >&2
   exit 1
 }
 
