@@ -80,6 +80,10 @@ alloy:
     extraArgs:
     - --server.http.disable-support-bundle=true
     - --server.http.enable-pprof=false
+    mounts:
+      # The node syslog source below reads this host path. Keep the mount
+      # read-only through the upstream Alloy chart's dedicated option.
+      varlog: true
     extraPorts:
     - name: otlp-grpc # The default port for otlp-grpc is 4317, so you need to add this port to the service related to your alloy instance
       port: 4317
