@@ -35,6 +35,9 @@ spec:
       annotations:
         io.katacontainers.config.hypervisor.kernel_params: " agent.guest_components_rest_api=all"
         io.containerd.cri.runtime-handler: kata-qemu-snp
+        {{- if $.Values.components.gateway.ccInitData }}
+        io.katacontainers.config.runtime.cc_init_data: {{ $.Values.components.gateway.ccInitData | quote }}
+        {{- end }}
       labels:
         chain: {{ $.Values.chain | quote }}
         cluster: {{ $.Values.cluster | quote }}
@@ -45,7 +48,14 @@ spec:
       dnsPolicy: ClusterFirst # TODO: probably not needed.. to be removed
 
       containers:
+      {{- if $.Values.components.gateway.imageDigest }}
+      {{- if not (regexMatch "^sha256:[a-f0-9]{64}$" $.Values.components.gateway.imageDigest) }}
+      {{- fail "components.gateway.imageDigest must be a sha256 digest" }}
+      {{- end }}
+      - image: {{ printf "%s@%s" $.Values.components.gateway.image $.Values.components.gateway.imageDigest | quote }}
+      {{- else }}
       - image: {{ printf "%s:%s" $.Values.components.gateway.image $.Values.components.docker_image_tag | quote }}
+      {{- end }}
         imagePullPolicy: Always #IfNotPresent
         name: gateway
 
