@@ -79,6 +79,7 @@ read_deployment_field() {
 }
 
 oracle_replicas_before="$(read_deployment_field oracle '{.spec.replicas}')"
+oracle_image_before="$(read_deployment_field oracle '{.spec.template.spec.containers[0].image}')"
 guardian_image_before="$(read_deployment_field guardian '{.spec.template.spec.containers[0].image}')"
 guardian_replicas_before="$(read_deployment_field guardian '{.spec.replicas}')"
 gateway_image_before="$(read_deployment_field gateway '{.spec.template.spec.containers[0].image}')"
