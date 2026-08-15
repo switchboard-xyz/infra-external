@@ -34,6 +34,7 @@ components:
 
   oracle:
     enabled: true
+    replicas: 1
     image: "docker.io/switchboardlabs/oracle"
     imageDigest: ""
     queue: ""
