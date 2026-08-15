@@ -37,6 +37,7 @@ components:
     replicas: 1
     image: "docker.io/switchboardlabs/oracle"
     imageDigest: ""
+    ccInitData: ""
     queue: ""
     key: ""
     port: 8081

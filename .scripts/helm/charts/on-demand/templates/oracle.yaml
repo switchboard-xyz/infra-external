@@ -35,6 +35,9 @@ spec:
       annotations:
         io.katacontainers.config.hypervisor.kernel_params: " agent.guest_components_rest_api=all"
         io.containerd.cri.runtime-handler: kata-qemu-snp
+        {{- if $.Values.components.oracle.ccInitData }}
+        io.katacontainers.config.runtime.cc_init_data: {{ $.Values.components.oracle.ccInitData | quote }}
+        {{- end }}
       labels:
         chain: {{ $.Values.chain | quote }}
         cluster: {{ $.Values.cluster | quote }}
