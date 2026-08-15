@@ -63,6 +63,8 @@ components:
   guardian:
     enabled: true
     image: "docker.io/switchboardlabs/guardian"
+    imageDigest: ""
+    ccInitData: ""
     queue: ""
     key: ""
     port: 8083
@@ -88,6 +90,8 @@ components:
   gateway:
     enabled: true
     image: "docker.io/switchboardlabs/gateway"
+    imageDigest: ""
+    ccInitData: ""
     port: 8082
     ingress:
       enabled: true

@@ -87,6 +87,8 @@ gateway_replicas_before="$(read_deployment_field gateway '{.spec.replicas}')"
 payer_ref_before="$(read_deployment_field oracle '{range .spec.template.spec.containers[0].env[?(@.name=="PAYER_SECRET")]}{.valueFrom.secretKeyRef.name}/{.valueFrom.secretKeyRef.key}{end}')"
 sui_ref_before="$(read_deployment_field oracle '{range .spec.template.spec.containers[0].env[?(@.name=="SUI_MAINNET_RPC")]}{.valueFrom.secretKeyRef.name}/{.valueFrom.secretKeyRef.key}{end}')"
 policy_before="$(read_deployment_field oracle '{.spec.template.metadata.annotations.io\.katacontainers\.config\.runtime\.cc_init_data}')"
+guardian_policy_before="$(read_deployment_field guardian '{.spec.template.metadata.annotations.io\.katacontainers\.config\.runtime\.cc_init_data}')"
+gateway_policy_before="$(read_deployment_field gateway '{.spec.template.metadata.annotations.io\.katacontainers\.config\.runtime\.cc_init_data}')"
 
 # --reuse-values does not merge newly added chart defaults into an older Helm
 # release. Pass the existing Sui Secret reference explicitly so the
@@ -116,16 +118,40 @@ policy_after="$(printf '%s' "${policy_before}" | python3 "${policy_tool}" \
   --current-image "${oracle_image_before}" \
   --desired-image "${expected_image}")"
 
+guardian_image="docker.io/switchboardlabs/guardian"
+gateway_image="docker.io/switchboardlabs/gateway"
+guardian_digest="${guardian_image_before#"${guardian_image}@"}"
+gateway_digest="${gateway_image_before#"${gateway_image}@"}"
+if [[ "${guardian_image_before}" != "${guardian_image}@${guardian_digest}" || ! "${guardian_digest}" =~ ^sha256:[a-f0-9]{64}$ ]]; then
+  printf 'Guardian image is not pinned to the expected immutable repository\n' >&2
+  exit 1
+fi
+if [[ "${gateway_image_before}" != "${gateway_image}@${gateway_digest}" || ! "${gateway_digest}" =~ ^sha256:[a-f0-9]{64}$ ]]; then
+  printf 'Gateway image is not pinned to the expected immutable repository\n' >&2
+  exit 1
+fi
+if [[ -z "${guardian_policy_before}" || -z "${gateway_policy_before}" ]]; then
+  printf 'Guardian or Gateway confidential-container policy is absent\n' >&2
+  exit 1
+fi
+
 helm upgrade "${release}" "${chart_dir}" \
   -n "${NAMESPACE}" \
   --reuse-values \
   --set-string components.oracle.image="${oracle_image}" \
   --set-string components.oracle.imageDigest="${desired_digest}" \
   --set-string components.oracle.ccInitData="${policy_after}" \
+  --set-string components.guardian.image="${guardian_image}" \
+  --set-string components.guardian.imageDigest="${guardian_digest}" \
+  --set-string components.guardian.ccInitData="${guardian_policy_before}" \
+  --set-string components.gateway.image="${gateway_image}" \
+  --set-string components.gateway.imageDigest="${gateway_digest}" \
+  --set-string components.gateway.ccInitData="${gateway_policy_before}" \
   --set-string taskRunnerRpc.secretName="${sui_secret_name}" \
   --set-string taskRunnerRpc.suiMainnetRpcKey="${sui_secret_key}" \
-  --set components.oracle.replicas="${oracle_replicas_before}" \
-  --wait >/dev/null
+  --set components.oracle.replicas="${oracle_replicas_before}" >/dev/null
+
+kubectl -n "${NAMESPACE}" rollout status deployment/oracle --timeout=5m >/dev/null
 
 oracle_image_after="$(read_deployment_field oracle '{.spec.template.spec.containers[0].image}')"
 oracle_replicas_after="$(read_deployment_field oracle '{.spec.replicas}')"
@@ -136,6 +162,8 @@ gateway_replicas_after="$(read_deployment_field gateway '{.spec.replicas}')"
 payer_ref_after="$(read_deployment_field oracle '{range .spec.template.spec.containers[0].env[?(@.name=="PAYER_SECRET")]}{.valueFrom.secretKeyRef.name}/{.valueFrom.secretKeyRef.key}{end}')"
 sui_ref_after="$(read_deployment_field oracle '{range .spec.template.spec.containers[0].env[?(@.name=="SUI_MAINNET_RPC")]}{.valueFrom.secretKeyRef.name}/{.valueFrom.secretKeyRef.key}{end}')"
 policy_deployed="$(read_deployment_field oracle '{.spec.template.metadata.annotations.io\.katacontainers\.config\.runtime\.cc_init_data}')"
+guardian_policy_after="$(read_deployment_field guardian '{.spec.template.metadata.annotations.io\.katacontainers\.config\.runtime\.cc_init_data}')"
+gateway_policy_after="$(read_deployment_field gateway '{.spec.template.metadata.annotations.io\.katacontainers\.config\.runtime\.cc_init_data}')"
 
 [[ "${oracle_image_after}" == "${expected_image}" ]] || {
   printf 'Oracle image mismatch after rollout\n' >&2
@@ -171,6 +199,14 @@ policy_deployed="$(read_deployment_field oracle '{.spec.template.metadata.annota
 }
 [[ "${policy_deployed}" == "${policy_after}" ]] || {
   printf 'Oracle confidential-container policy changed during rollout\n' >&2
+  exit 1
+}
+[[ "${guardian_policy_after}" == "${guardian_policy_before}" ]] || {
+  printf 'Guardian confidential-container policy changed during Oracle rollout\n' >&2
+  exit 1
+}
+[[ "${gateway_policy_after}" == "${gateway_policy_before}" ]] || {
+  printf 'Gateway confidential-container policy changed during Oracle rollout\n' >&2
   exit 1
 }
 

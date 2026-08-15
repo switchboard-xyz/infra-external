@@ -8,13 +8,19 @@ oracle_image="docker.io/switchboardlabs/oracle"
 devnet_digest="sha256:c53c7fdefb4e9632cb1877e0792abab7750106897336cf7bdf530c2a5770aa88"
 mainnet_digest="sha256:5b4ac97eaad16f81d181ec458324fad5cbe51a7aafff35e926f083610677446b"
 cc_init_data="confidential-container-policy"
+guardian_digest="sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+gateway_digest="sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
 
 render_network() {
   local network="$1"
   helm template "oracle-rollout-${network}" "${chart_dir}" \
     -f "${cfg_dir}/${network}-solana-values.yaml" \
     --set-string components.oracle.image="${oracle_image}" \
-    --set-string components.oracle.ccInitData="${cc_init_data}"
+    --set-string components.oracle.ccInitData="${cc_init_data}" \
+    --set-string components.guardian.imageDigest="${guardian_digest}" \
+    --set-string components.guardian.ccInitData="${cc_init_data}" \
+    --set-string components.gateway.imageDigest="${gateway_digest}" \
+    --set-string components.gateway.ccInitData="${cc_init_data}"
 }
 
 devnet_render="$(render_network devnet)"
@@ -24,6 +30,10 @@ stopped_mainnet_render="$(
     -f "${cfg_dir}/mainnet-solana-values.yaml" \
     --set-string components.oracle.image="${oracle_image}" \
     --set-string components.oracle.ccInitData="${cc_init_data}" \
+    --set-string components.guardian.imageDigest="${guardian_digest}" \
+    --set-string components.guardian.ccInitData="${cc_init_data}" \
+    --set-string components.gateway.imageDigest="${gateway_digest}" \
+    --set-string components.gateway.ccInitData="${cc_init_data}" \
     --set components.oracle.replicas=0
 )"
 
@@ -38,8 +48,9 @@ for render in "${devnet_render}" "${mainnet_render}"; do
   grep -q 'name: PAYER_SECRET' <<<"${render}"
   grep -q 'name: payer-secret' <<<"${render}"
   grep -q 'io.katacontainers.config.runtime.cc_init_data: "confidential-container-policy"' <<<"${render}"
-  grep -q 'image: "__GUARDIAN_DOCKER_IMAGE__:' <<<"${render}"
-  grep -q 'image: "__GATEWAY_DOCKER_IMAGE__:' <<<"${render}"
+  grep -q 'image: "__GUARDIAN_DOCKER_IMAGE__@sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"' <<<"${render}"
+  grep -q 'image: "__GATEWAY_DOCKER_IMAGE__@sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"' <<<"${render}"
+  [[ "$(grep -c 'io.katacontainers.config.runtime.cc_init_data: "confidential-container-policy"' <<<"${render}")" -eq 3 ]]
   [[ "$(grep -c '^kind: Deployment$' <<<"${render}")" -eq 3 ]]
 done
 
