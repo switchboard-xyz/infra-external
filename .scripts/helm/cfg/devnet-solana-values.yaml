@@ -13,6 +13,7 @@ taskRunnerRpc:
 components:
     oracle:
       image: "__ORACLE_DOCKER_IMAGE__"
+      imageDigest: "sha256:c53c7fdefb4e9632cb1877e0792abab7750106897336cf7bdf530c2a5770aa88"
       key: "__PULL_ORACLE__"
       queue: "__PULL_QUEUE__"
       ingress:
