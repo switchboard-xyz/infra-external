@@ -85,6 +85,20 @@ gateway_replicas_before="$(read_deployment_field gateway '{.spec.replicas}')"
 payer_ref_before="$(read_deployment_field oracle '{range .spec.template.spec.containers[0].env[?(@.name=="PAYER_SECRET")]}{.valueFrom.secretKeyRef.name}/{.valueFrom.secretKeyRef.key}{end}')"
 sui_ref_before="$(read_deployment_field oracle '{range .spec.template.spec.containers[0].env[?(@.name=="SUI_MAINNET_RPC")]}{.valueFrom.secretKeyRef.name}/{.valueFrom.secretKeyRef.key}{end}')"
 
+# --reuse-values does not merge newly added chart defaults into an older Helm
+# release. Pass the existing Sui Secret reference explicitly so the
+# taskRunnerRpc object is present without reading or changing the Secret value.
+sui_secret_name=""
+sui_secret_key="SUI_MAINNET_RPC"
+if [[ -n "${sui_ref_before}" ]]; then
+  sui_secret_name="${sui_ref_before%%/*}"
+  sui_secret_key="${sui_ref_before#*/}"
+  if [[ -z "${sui_secret_name}" || -z "${sui_secret_key}" || "${sui_secret_key}" == "${sui_ref_before}" || "${sui_secret_key}" == */* ]]; then
+    printf 'Oracle Sui RPC Secret reference is invalid before rollout\n' >&2
+    exit 1
+  fi
+fi
+
 if [[ "${oracle_replicas_before}" == "__absent__" ]]; then
   printf 'Oracle Deployment is absent in namespace %s\n' "${NAMESPACE}" >&2
   exit 1
@@ -99,6 +113,8 @@ helm upgrade "${release}" "${chart_dir}" \
   --reuse-values \
   --set-string components.oracle.image="${oracle_image}" \
   --set-string components.oracle.imageDigest="${desired_digest}" \
+  --set-string taskRunnerRpc.secretName="${sui_secret_name}" \
+  --set-string taskRunnerRpc.suiMainnetRpcKey="${sui_secret_key}" \
   --set components.oracle.replicas="${oracle_replicas_before}" \
   --wait >/dev/null
 
