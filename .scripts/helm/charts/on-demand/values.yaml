@@ -62,6 +62,7 @@ components:
 
   guardian:
     enabled: true
+    replicas: 1
     image: "docker.io/switchboardlabs/guardian"
     imageDigest: ""
     ccInitData: ""
@@ -89,6 +90,7 @@ components:
 
   gateway:
     enabled: true
+    replicas: 1
     image: "docker.io/switchboardlabs/gateway"
     imageDigest: ""
     ccInitData: ""
@@ -104,6 +106,8 @@ components:
       endpoint: "remote-write.switchboard.xyz/write"
       port: 9090
       path: "/metrics"
+    readinessProbe:
+      enabled: false
     resources:
       limits:
         cpu: "4000m"
