@@ -163,7 +163,7 @@ spec:
           failureThreshold: 10
           periodSeconds: 10
           timeoutSeconds: 10
-        {{- if $.Values.components.gateway.readinessProbe.enabled }}
+        {{- if (get ($.Values.components.gateway.readinessProbe | default dict) "enabled") }}
         readinessProbe:
           httpGet:
             path: {{ $.Values.components.gateway.metrics.path }}

@@ -49,6 +49,19 @@ guardian_default_hash="f555dd99131820be7432284645812c4a490c3ac816826c08a4c71a734
 gateway_default_render="$(render_component gateway)"
 ! grep -q '^        readinessProbe:$' <<<"${gateway_default_render}"
 
+# An older Helm release reused with the new chart has no readinessProbe parent
+# object. A null override exercises the same nil lookup without merging in the
+# new chart default.
+gateway_missing_readiness_render="$(
+  render_component gateway \
+    --set-json components.gateway.readinessProbe=null
+)"
+! grep -q '^        readinessProbe:$' <<<"${gateway_missing_readiness_render}"
+[[ "$(
+  render_component_hash gateway \
+    --set-json components.gateway.readinessProbe=null
+)" == "${gateway_default_hash}" ]]
+
 gateway_opt_in_render="$(
   render_component gateway \
     --set components.gateway.readinessProbe.enabled=true \
