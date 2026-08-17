@@ -126,9 +126,20 @@ if [[ ! "${gateway_replicas_before}" =~ ^[0-9]+$ ]]; then
 fi
 
 expected_image="${oracle_image}@${desired_digest}"
+
+# Older releases predate the optional cc_init_data chart values. Preserve that
+# live state exactly instead of turning an Oracle image rollout into an agent
+# policy migration. If any component already has a policy, the policy tool
+# requires all three and updates only the Oracle image allowlist.
+guardian_policy_state="absent"
+gateway_policy_state="absent"
+[[ -n "${guardian_policy_before}" ]] && guardian_policy_state="present"
+[[ -n "${gateway_policy_before}" ]] && gateway_policy_state="present"
 policy_after="$(printf '%s' "${policy_before}" | python3 "${policy_tool}" \
   --current-image "${oracle_image_before}" \
-  --desired-image "${expected_image}")"
+  --desired-image "${expected_image}" \
+  --guardian-policy-state "${guardian_policy_state}" \
+  --gateway-policy-state "${gateway_policy_state}")"
 
 guardian_image="docker.io/switchboardlabs/guardian"
 gateway_image="docker.io/switchboardlabs/gateway"
@@ -142,11 +153,6 @@ if [[ "${gateway_image_before}" != "${gateway_image}@${gateway_digest}" || ! "${
   printf 'Gateway image is not pinned to the expected immutable repository\n' >&2
   exit 1
 fi
-if [[ -z "${guardian_policy_before}" || -z "${gateway_policy_before}" ]]; then
-  printf 'Guardian or Gateway confidential-container policy is absent\n' >&2
-  exit 1
-fi
-
 helm upgrade "${release}" "${chart_dir}" \
   -n "${NAMESPACE}" \
   --reuse-values \

@@ -68,6 +68,45 @@ class OracleAgentPolicyTest(unittest.TestCase):
         decoded = gzip.decompress(base64.b64decode(encoded)).decode("utf-8")
         self.assertEqual(decoded, POLICY)
 
+    def test_preserves_uniformly_absent_policy_state(self):
+        self.assertEqual(
+            MODULE.resolve_policy("", CURRENT, DESIRED, False, False), ""
+        )
+
+    def test_updates_policy_when_all_components_have_one(self):
+        encoded = MODULE.encode_policy(POLICY)
+        resolved = MODULE.resolve_policy(encoded, CURRENT, DESIRED, True, True)
+        updated = MODULE.decode_policy(resolved)
+
+        self.assertIn(f'"{CURRENT}"', updated)
+        self.assertIn(f'"{DESIRED}"', updated)
+        self.assertNotIn(STALE, updated)
+
+    def test_rejects_mixed_policy_state(self):
+        encoded = MODULE.encode_policy(POLICY)
+        cases = (
+            ("", True, False),
+            ("", False, True),
+            ("", True, True),
+            (encoded, False, False),
+            (encoded, True, False),
+            (encoded, False, True),
+        )
+        for oracle_policy, guardian_present, gateway_present in cases:
+            with self.subTest(
+                oracle_policy=bool(oracle_policy),
+                guardian_present=guardian_present,
+                gateway_present=gateway_present,
+            ):
+                with self.assertRaisesRegex(ValueError, "policy state is inconsistent"):
+                    MODULE.resolve_policy(
+                        oracle_policy,
+                        CURRENT,
+                        DESIRED,
+                        guardian_present,
+                        gateway_present,
+                    )
+
 
 if __name__ == "__main__":
     unittest.main()
