@@ -65,19 +65,53 @@ def update_policy(policy: str, current_image: str, desired_image: str) -> str:
     return updated
 
 
+def resolve_policy(
+    encoded: str,
+    current_image: str,
+    desired_image: str,
+    guardian_policy_present: bool,
+    gateway_policy_present: bool,
+) -> str:
+    oracle_policy_present = bool(encoded)
+    policy_states = (
+        oracle_policy_present,
+        guardian_policy_present,
+        gateway_policy_present,
+    )
+    if not any(policy_states):
+        return ""
+    if not all(policy_states):
+        raise ValueError(
+            "confidential-container policy state is inconsistent across "
+            "Oracle, Guardian, and Gateway"
+        )
+
+    policy = decode_policy(encoded)
+    return encode_policy(update_policy(policy, current_image, desired_image))
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--current-image", required=True, type=image_ref)
     parser.add_argument("--desired-image", required=True, type=image_ref)
+    parser.add_argument(
+        "--guardian-policy-state", required=True, choices=("present", "absent")
+    )
+    parser.add_argument(
+        "--gateway-policy-state", required=True, choices=("present", "absent")
+    )
     args = parser.parse_args()
 
     encoded = sys.stdin.read().strip()
-    if not encoded:
-        raise ValueError("existing confidential-container policy is absent")
-
-    policy = decode_policy(encoded)
-    updated = update_policy(policy, args.current_image, args.desired_image)
-    sys.stdout.write(encode_policy(updated))
+    sys.stdout.write(
+        resolve_policy(
+            encoded,
+            args.current_image,
+            args.desired_image,
+            args.guardian_policy_state == "present",
+            args.gateway_policy_state == "present",
+        )
+    )
     return 0
 
 
