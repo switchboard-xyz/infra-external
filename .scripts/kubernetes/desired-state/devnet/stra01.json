@@ -1,0 +1,11 @@
+{
+  "applyEnabled": true,
+  "component": "guardian",
+  "hostId": "stra01",
+  "image": "docker.io/switchboardlabs/guardian",
+  "imageDigest": "sha256:3645615c8fe758b4f84813958af114e1492627bce4373490781073ce20da698d",
+  "network": "devnet",
+  "namespace": "switchboard-oracle-devnet",
+  "nodeName": "ovh-stra-01",
+  "replicas": 0
+}
