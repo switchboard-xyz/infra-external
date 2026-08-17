@@ -112,6 +112,18 @@ if [[ ! "${oracle_replicas_before}" =~ ^[0-9]+$ ]]; then
   printf 'Oracle replica count is invalid before rollout\n' >&2
   exit 1
 fi
+if [[ "${oracle_replicas_before}" == "0" ]]; then
+  printf 'Stopped Oracle is excluded from rollout selection; dormant desired state was not rewritten\n' >&2
+  exit 1
+fi
+if [[ ! "${guardian_replicas_before}" =~ ^[0-9]+$ ]]; then
+  printf 'Guardian replica count is invalid before rollout\n' >&2
+  exit 1
+fi
+if [[ ! "${gateway_replicas_before}" =~ ^[0-9]+$ ]]; then
+  printf 'Gateway replica count is invalid before rollout\n' >&2
+  exit 1
+fi
 
 expected_image="${oracle_image}@${desired_digest}"
 policy_after="$(printf '%s' "${policy_before}" | python3 "${policy_tool}" \
@@ -149,7 +161,9 @@ helm upgrade "${release}" "${chart_dir}" \
   --set-string components.gateway.ccInitData="${gateway_policy_before}" \
   --set-string taskRunnerRpc.secretName="${sui_secret_name}" \
   --set-string taskRunnerRpc.suiMainnetRpcKey="${sui_secret_key}" \
-  --set components.oracle.replicas="${oracle_replicas_before}" >/dev/null
+  --set components.oracle.replicas="${oracle_replicas_before}" \
+  --set components.guardian.replicas="${guardian_replicas_before}" \
+  --set components.gateway.replicas="${gateway_replicas_before}" >/dev/null
 
 kubectl -n "${NAMESPACE}" rollout status deployment/oracle --timeout=5m >/dev/null
 

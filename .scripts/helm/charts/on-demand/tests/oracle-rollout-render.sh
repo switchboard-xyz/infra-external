@@ -36,10 +36,23 @@ stopped_mainnet_render="$(
     --set-string components.gateway.ccInitData="${cc_init_data}" \
     --set components.oracle.replicas=0
 )"
+stopped_siblings_render="$(
+  helm template oracle-rollout-stopped-siblings "${chart_dir}" \
+    -f "${cfg_dir}/devnet-solana-values.yaml" \
+    --set-string components.oracle.image="${oracle_image}" \
+    --set-string components.oracle.ccInitData="${cc_init_data}" \
+    --set-string components.guardian.imageDigest="${guardian_digest}" \
+    --set-string components.guardian.ccInitData="${cc_init_data}" \
+    --set-string components.gateway.imageDigest="${gateway_digest}" \
+    --set-string components.gateway.ccInitData="${cc_init_data}" \
+    --set components.guardian.replicas=0 \
+    --set components.gateway.replicas=0
+)"
 
 grep -q "image: \"${oracle_image}@${devnet_digest}\"" <<<"${devnet_render}"
 grep -q "image: \"${oracle_image}@${mainnet_digest}\"" <<<"${mainnet_render}"
 grep -q '^  replicas: 0$' <<<"${stopped_mainnet_render}"
+[[ "$(grep -c '^  replicas: 0$' <<<"${stopped_siblings_render}")" -eq 2 ]]
 
 for render in "${devnet_render}" "${mainnet_render}"; do
   grep -q 'name: SUI_MAINNET_RPC' <<<"${render}"
