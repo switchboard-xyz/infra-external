@@ -1478,6 +1478,28 @@ def prove_helm_patch_deletion_freedom(
                 )
                 stored_values["cpu"] = candidate_cpu
 
+        stored_metadata = require_mapping(
+            stored_deployment, "metadata", "stored Deployment metadata"
+        )
+        candidate_metadata = require_mapping(
+            candidate_deployment, "metadata", "candidate Deployment metadata"
+        )
+        stored_labels = require_mapping(
+            stored_metadata, "labels", "stored Deployment labels"
+        )
+        candidate_labels = require_mapping(
+            candidate_metadata, "labels", "candidate Deployment labels"
+        )
+        stored_cluster = stored_labels.get("cluster")
+        candidate_cluster = candidate_labels.get("cluster")
+        if stored_cluster != candidate_cluster:
+            if stored_cluster not in (None, "") or candidate_cluster != "devnet":
+                raise BaselineError(
+                    "stored Helm manifest contains an unsupported old-to-new change"
+                )
+            allowed_paths.append(f"Deployment/{component}/metadata/labels/cluster")
+            stored_labels["cluster"] = candidate_cluster
+
     if normalized_stored != normalized_candidate:
         raise BaselineError(
             "stored Helm manifest contains an unsupported old-to-new change"

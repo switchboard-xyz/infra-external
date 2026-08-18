@@ -73,6 +73,8 @@ def deployment(
     *,
     policy: str | None = None,
 ) -> dict[str, object]:
+    metadata = owned_metadata(component, resource_version)
+    metadata["labels"].update({"chain": "solana", "cluster": "devnet"})
     annotations: dict[str, str] = {
         "io.containerd.cri.runtime-handler": "kata-qemu-snp",
     }
@@ -89,7 +91,7 @@ def deployment(
     return {
         "apiVersion": "apps/v1",
         "kind": "Deployment",
-        "metadata": owned_metadata(component, resource_version),
+        "metadata": metadata,
         "spec": {
             "replicas": replicas,
             "selector": {"matchLabels": {"app": component}},
@@ -694,6 +696,33 @@ raise SystemExit(64)
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertIn("helmPatchDeletionFree=true hash=", result.stdout)
         self.assertIn("action=planned", result.stdout)
+        self.assertEqual(self.applied_upgrade_lines(), [])
+
+    def test_stored_manifest_allows_only_empty_to_devnet_cluster_label(self) -> None:
+        stored = resources()
+        for component in COMPONENTS:
+            self.deployment_resource(stored, component)["metadata"]["labels"][
+                "cluster"
+            ] = ""
+        self.write_stored(stored)
+
+        result = self.run_script()
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("helmPatchDeletionFree=true hash=", result.stdout)
+        self.assertIn("action=planned", result.stdout)
+
+    def test_stored_manifest_rejects_other_cluster_label_change(self) -> None:
+        stored = resources()
+        self.deployment_resource(stored, "oracle")["metadata"]["labels"][
+            "cluster"
+        ] = "unexpected"
+        self.write_stored(stored)
+
+        result = self.run_script("--apply")
+
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("unsupported old-to-new change", result.stderr)
         self.assertEqual(self.applied_upgrade_lines(), [])
 
     def test_stored_manifest_old_only_map_field_blocks_before_server_dry_run(
