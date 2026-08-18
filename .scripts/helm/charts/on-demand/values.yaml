@@ -38,6 +38,7 @@ components:
     image: "docker.io/switchboardlabs/oracle"
     imageDigest: ""
     ccInitData: ""
+    keelDeploymentAnnotationsEnabled: true
     keelUpdateTime:
       enabled: false
       value: ""

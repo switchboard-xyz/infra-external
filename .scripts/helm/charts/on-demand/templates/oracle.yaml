@@ -1,4 +1,7 @@
 {{ if $.Values.components.oracle.enabled }}
+{{ if and (hasKey $.Values.components.oracle "keelDeploymentAnnotationsEnabled") (not (kindIs "bool" $.Values.components.oracle.keelDeploymentAnnotationsEnabled)) }}
+{{ fail "components.oracle.keelDeploymentAnnotationsEnabled must be a boolean" }}
+{{ end }}
 apiVersion: apps/v1
 kind: Deployment
 
@@ -11,12 +14,16 @@ metadata:
     cluster: {{ $.Values.cluster | quote }}
     app: oracle
 
+  {{ if or (not (hasKey $.Values.components.oracle "keelDeploymentAnnotationsEnabled")) $.Values.components.oracle.keelDeploymentAnnotationsEnabled }}
   annotations:
     keel.sh/approvals: "0"
     keel.sh/trigger: "poll"                                 # enable active repository checking (webhooks and GCR would still work)
     keel.sh/match-tag: "true"                               # only makes a difference when used with 'force' policy, will only update if tag matches :dev->:dev, :prod->:prod
     keel.sh/policy: "force"
     #keel.sh/pollSchedule: "@every 1m"
+  {{ else }}
+  annotations: {}
+  {{ end }}
 
 spec:
   replicas: {{ $.Values.components.oracle.replicas }}
