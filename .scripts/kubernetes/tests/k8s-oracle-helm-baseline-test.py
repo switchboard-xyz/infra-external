@@ -21,7 +21,14 @@ NAMESPACE = "switchboard-oracle-devnet"
 RELEASE = "sb-oracle-devnet"
 CONTEXT = "test-context"
 NODE_NAME = "ovh-stra-01"
+RBX_NODE_NAME = "ovh-rbx-01"
 COMPONENTS = ("oracle", "guardian", "gateway")
+ORACLE_KEEL_DEPLOYMENT_ANNOTATIONS = {
+    "keel.sh/approvals": "0",
+    "keel.sh/trigger": "poll",
+    "keel.sh/match-tag": "true",
+    "keel.sh/policy": "force",
+}
 ORACLE_IMAGE = f"docker.io/switchboardlabs/oracle@sha256:{'a' * 64}"
 GUARDIAN_IMAGE = f"docker.io/switchboardlabs/guardian@sha256:{'b' * 64}"
 GATEWAY_IMAGE = f"docker.io/switchboardlabs/gateway@sha256:{'c' * 64}"
@@ -76,6 +83,7 @@ def deployment(
 ) -> dict[str, object]:
     metadata = owned_metadata(component, resource_version)
     metadata["labels"].update({"chain": "solana", "cluster": "devnet"})
+    metadata["generation"] = 1
     annotations: dict[str, str] = {
         "io.containerd.cri.runtime-handler": "kata-qemu-snp",
     }
@@ -444,6 +452,10 @@ if args and args[0] == "upgrade" and "--values" in args:
     values_path = Path(args[args.index("--values") + 1])
     values = json.loads(values_path.read_text(encoding="utf-8"))
     oracle = values["components"]["oracle"]
+    if oracle["keelDeploymentAnnotationsEnabled"] != (
+        os.environ["EXPECTED_KEEL_DEPLOYMENT_ANNOTATIONS_ENABLED"] == "true"
+    ):
+        raise SystemExit(71)
     if oracle["candleCollection"] != {
         "enabled": True,
         "value": os.environ["CANDLE_SENTINEL"],
@@ -477,6 +489,21 @@ if args[:3] == ["get", "manifest", "sb-oracle-devnet"]:
 if args and args[0] == "upgrade" and "--dry-run=client" in args:
     if os.environ.get("HELM_RENDER_SECRET") == "1":
         print("MANIFEST:\n---\napiVersion: v1\nkind: Secret\nmetadata:\n  name: forbidden\n")
+    elif os.environ["EXPECTED_KEEL_DEPLOYMENT_ANNOTATIONS_ENABLED"] == "false":
+        shape = os.environ.get("HELM_KEEL_OPT_OUT_MANIFEST_SHAPE", "empty")
+        annotation_shape = {
+            "empty": "  annotations: {}\n",
+            "absent": "",
+            "null": "  annotations:\n",
+            "retained": "  annotations:\n    keel.sh/policy: force\n",
+        }.get(shape)
+        if annotation_shape is None:
+            raise SystemExit(73)
+        print(
+            "MANIFEST:\n---\napiVersion: apps/v1\nkind: Deployment\n"
+            "metadata:\n  name: oracle\n"
+            + annotation_shape
+        )
     else:
         print("MANIFEST:\n---\napiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: oracle\n")
     raise SystemExit(0)
@@ -488,6 +515,42 @@ if args and args[0] == "upgrade":
         live_path = Path(os.environ["LIVE_PATH"])
         live = json.loads(live_path.read_text(encoding="utf-8"))
         live[0]["metadata"]["resourceVersion"] = "post-helm-drift"
+        live_path.write_text(json.dumps(live), encoding="utf-8")
+    mutation = os.environ.get("POST_HELM_MUTATION")
+    if mutation:
+        live_path = Path(os.environ["LIVE_PATH"])
+        live = json.loads(live_path.read_text(encoding="utf-8"))
+        deployments = {
+            item["metadata"]["name"]: item
+            for item in live
+            if item["kind"] == "Deployment"
+        }
+        if mutation == "oracle-generation":
+            deployments["oracle"]["metadata"]["generation"] += 1
+        elif mutation == "oracle-spec":
+            deployments["oracle"]["spec"]["minReadySeconds"] = 1
+        elif mutation == "oracle-template":
+            deployments["oracle"]["spec"]["template"]["metadata"]["annotations"][
+                "example.com/unexpected"
+            ] = "changed"
+        elif mutation == "oracle-finalizer":
+            deployments["oracle"]["metadata"]["finalizers"] = [
+                "example.com/unexpected"
+            ]
+        elif mutation == "guardian-resource-version":
+            deployments["guardian"]["metadata"]["resourceVersion"] = "changed"
+        elif mutation == "oracle-pod":
+            pod_path = Path(os.environ["POD_DIR"]) / "oracle.json"
+            pods = json.loads(pod_path.read_text(encoding="utf-8"))
+            pods[0]["status"]["containerStatuses"][0]["restartCount"] += 1
+            pod_path.write_text(json.dumps(pods), encoding="utf-8")
+        elif mutation == "oracle-endpoint":
+            endpoint_path = Path(os.environ["ENDPOINT_DIR"]) / "oracle.json"
+            endpoints = json.loads(endpoint_path.read_text(encoding="utf-8"))
+            endpoints[0]["endpoints"][0]["conditions"]["ready"] = False
+            endpoint_path.write_text(json.dumps(endpoints), encoding="utf-8")
+        else:
+            raise SystemExit(74)
         live_path.write_text(json.dumps(live), encoding="utf-8")
     print("upgrade output must stay suppressed")
     raise SystemExit(0)
@@ -522,6 +585,7 @@ raise SystemExit(64)
                 "EXPECTED_ENVIRONMENT_SECRET_OPTIONAL": "false",
                 "EXPECTED_KEEL_UPDATE_TIME_ENABLED": "false",
                 "EXPECTED_KEEL_UPDATE_TIME_VALUE": "",
+                "EXPECTED_KEEL_DEPLOYMENT_ANNOTATIONS_ENABLED": "true",
             }
         )
 
@@ -580,6 +644,78 @@ raise SystemExit(64)
         deployment_value = self.deployment_resource(value, component)
         return deployment_value["spec"]["template"]["metadata"]["annotations"]
 
+    def component_deployment_annotations(
+        self, value: list[dict[str, object]], component: str
+    ) -> dict[str, object]:
+        deployment_value = self.deployment_resource(value, component)
+        return deployment_value["metadata"]["annotations"]
+
+    def add_oracle_keel_deployment_annotations(
+        self, value: list[dict[str, object]]
+    ) -> None:
+        self.component_deployment_annotations(value, "oracle").update(
+            ORACLE_KEEL_DEPLOYMENT_ANNOTATIONS
+        )
+
+    def select_target_host(self, host_id: str) -> None:
+        node_name = {
+            "stra01": NODE_NAME,
+            "rbx01": RBX_NODE_NAME,
+        }[host_id]
+        self.nodes_path.write_text(
+            json.dumps(
+                {
+                    "apiVersion": "v1",
+                    "kind": "NodeList",
+                    "items": [{"metadata": {"name": node_name}}],
+                }
+            ),
+            encoding="utf-8",
+        )
+        for component in COMPONENTS:
+            path = self.pod_dir / f"{component}.json"
+            pods = json.loads(path.read_text(encoding="utf-8"))
+            for pod_value in pods:
+                pod_value["spec"]["nodeName"] = node_name
+            path.write_text(json.dumps(pods), encoding="utf-8")
+
+    def rbx_keel_opt_out_resources(
+        self,
+    ) -> tuple[
+        list[dict[str, object]],
+        list[dict[str, object]],
+        list[dict[str, object]],
+        list[dict[str, object]],
+    ]:
+        self.select_target_host("rbx01")
+        self.environment["EXPECTED_KEEL_DEPLOYMENT_ANNOTATIONS_ENABLED"] = (
+            "false"
+        )
+        live = resources()
+        client = resources()
+        stored = resources()
+        self.remove_helm_ownership_metadata(client)
+        self.remove_helm_ownership_metadata(stored)
+        for component in COMPONENTS:
+            annotations = self.component_deployment_annotations(live, component)
+            annotations["deployment.kubernetes.io/revision"] = "7"
+            annotations["kubernetes.io/change-cause"] = "rbx-baseline"
+        server = copy.deepcopy(live)
+        self.add_oracle_keel_deployment_annotations(stored)
+        return live, client, stored, server
+
+    def write_rbx_keel_opt_out_state(
+        self,
+        live: list[dict[str, object]],
+        client: list[dict[str, object]],
+        stored: list[dict[str, object]],
+        server: list[dict[str, object]],
+    ) -> None:
+        self.write_live(live)
+        self.write_client(client)
+        self.write_stored(stored)
+        self.write_server(server)
+
     def legacy_guardian_resources(
         self,
     ) -> tuple[
@@ -634,15 +770,20 @@ raise SystemExit(64)
             ] = "7"
         return live, client, stored, copy.deepcopy(live)
 
-    def run_script(self, *extra: str) -> subprocess.CompletedProcess[str]:
+    def run_script(
+        self,
+        *extra: str,
+        network: str = "devnet",
+        host_id: str = "stra01",
+    ) -> subprocess.CompletedProcess[str]:
         return subprocess.run(
             [
                 sys.executable,
                 str(self.script_dir / SCRIPT.name),
                 "--network",
-                "devnet",
+                network,
                 "--host-id",
-                "stra01",
+                host_id,
                 "--expected-current-oracle-image",
                 ORACLE_IMAGE,
                 "--coordinator-exclusive-window-confirmed",
@@ -1190,6 +1331,297 @@ raise SystemExit(64)
                 self.assertEqual(
                     self.revision_path.read_text(encoding="utf-8"), "21"
                 )
+
+    def test_default_rbx_keel_deployment_annotations_remain_enabled(self) -> None:
+        self.select_target_host("rbx01")
+
+        result = self.run_script(host_id="rbx01")
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("action=planned", result.stdout)
+        self.assertFalse(
+            any(
+                " patch " in line
+                for line in self.kubectl_log.read_text(encoding="utf-8").splitlines()
+            )
+        )
+        self.assertEqual(self.applied_upgrade_lines(), [])
+
+    def test_keel_deployment_annotation_opt_out_is_rbx01_devnet_only(
+        self,
+    ) -> None:
+        cases = (
+            ("mainnet", "rbx01", "devnet-only"),
+            ("devnet", "stra01", "restricted to rbx01 devnet"),
+        )
+        for network, host_id, expected_error in cases:
+            with self.subTest(network=network, host_id=host_id):
+                result = self.run_script(
+                    "--disable-oracle-keel-deployment-annotations",
+                    network=network,
+                    host_id=host_id,
+                )
+
+                self.assertNotEqual(result.returncode, 0)
+                self.assertIn(expected_error, result.stderr)
+                self.assertEqual(self.helm_lines(), [])
+                self.assertFalse(self.kubectl_log.exists())
+
+    def test_keel_opt_out_requires_all_live_annotations_absent(self) -> None:
+        for annotation, value in ORACLE_KEEL_DEPLOYMENT_ANNOTATIONS.items():
+            with self.subTest(annotation=annotation):
+                live, client, stored, server = self.rbx_keel_opt_out_resources()
+                self.component_deployment_annotations(live, "oracle")[
+                    annotation
+                ] = value
+                self.write_rbx_keel_opt_out_state(live, client, stored, server)
+                self.revision_path.write_text("21", encoding="utf-8")
+
+                result = self.run_script(
+                    "--disable-oracle-keel-deployment-annotations",
+                    "--apply",
+                    host_id="rbx01",
+                )
+
+                self.assertNotEqual(result.returncode, 0)
+                self.assertIn(
+                    "Oracle Keel Deployment annotations must already be absent",
+                    result.stderr,
+                )
+                self.assertEqual(self.applied_upgrade_lines(), [])
+                self.assertEqual(
+                    self.revision_path.read_text(encoding="utf-8"), "21"
+                )
+
+    def test_rbx_keel_opt_out_apply_is_a_metadata_only_record(self) -> None:
+        live, client, stored, server = self.rbx_keel_opt_out_resources()
+        self.deployment_resource(client, "oracle")["metadata"].pop(
+            "annotations"
+        )
+        for value in (live, client, server):
+            self.component_template_annotations(value, "oracle")[
+                "keel.sh/update-time"
+            ] = KEEL_UPDATE_TIME_SENTINEL
+        self.environment["EXPECTED_KEEL_UPDATE_TIME_ENABLED"] = "true"
+        self.environment["EXPECTED_KEEL_UPDATE_TIME_VALUE"] = (
+            KEEL_UPDATE_TIME_SENTINEL
+        )
+        self.environment["POST_HELM_RESOURCE_VERSION_DRIFT"] = "1"
+        self.write_rbx_keel_opt_out_state(live, client, stored, server)
+
+        result = self.run_script(
+            "--disable-oracle-keel-deployment-annotations",
+            "--apply",
+            host_id="rbx01",
+        )
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn(
+            "oracleKeelStoredDeletionRestricted=true hash=", result.stdout
+        )
+        self.assertIn(
+            "postApplyOracleResourceVersionChanged=true", result.stdout
+        )
+        self.assertIn(
+            "postApplyOtherResourceVersionsUnchanged=true", result.stdout
+        )
+        self.assertIn("postApplyOracleMetadataOnlyRecord=true", result.stdout)
+        self.assertIn(
+            "postApplyDeploymentGenerationsUnchanged=true", result.stdout
+        )
+        self.assertIn(
+            "postApplyNonvolatileMetadataUnchanged=true", result.stdout
+        )
+        self.assertIn(
+            "postApplyPodUidsRestartsReadinessUnchanged=true", result.stdout
+        )
+        self.assertIn("postApplyEndpointsUnchanged=true", result.stdout)
+        self.assertEqual(len(self.applied_upgrade_lines()), 1)
+        self.assertEqual(self.revision_path.read_text(encoding="utf-8"), "22")
+        combined = result.stdout + result.stderr
+        for forbidden in (
+            PAYER_KEY,
+            SUI_NAME,
+            SUI_KEY,
+            POLICY_SENTINEL,
+            CANDLE_SENTINEL,
+            ENVIRONMENT_SECRET_SENTINEL,
+            KEEL_UPDATE_TIME_SENTINEL,
+        ):
+            self.assertNotIn(forbidden, combined)
+
+    def assert_rbx_post_helm_mutation_rejected(
+        self,
+        mutation: str,
+        expected_error: str,
+    ) -> None:
+        live, client, stored, server = self.rbx_keel_opt_out_resources()
+        self.write_rbx_keel_opt_out_state(live, client, stored, server)
+        self.environment["POST_HELM_RESOURCE_VERSION_DRIFT"] = "1"
+        self.environment["POST_HELM_MUTATION"] = mutation
+
+        result = self.run_script(
+            "--disable-oracle-keel-deployment-annotations",
+            "--apply",
+            host_id="rbx01",
+        )
+
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn(expected_error, result.stderr)
+        self.assertIn(
+            "requires-secret-safe-Helm-revision-readback", result.stderr
+        )
+        self.assertEqual(self.revision_path.read_text(encoding="utf-8"), "22")
+        self.assertEqual(len(self.applied_upgrade_lines()), 1)
+
+    def test_keel_opt_out_rejects_post_helm_generation_drift(self) -> None:
+        self.assert_rbx_post_helm_mutation_rejected(
+            "oracle-generation",
+            "Deployment generation changed",
+        )
+
+    def test_keel_opt_out_rejects_post_helm_spec_drift(self) -> None:
+        self.assert_rbx_post_helm_mutation_rejected(
+            "oracle-spec",
+            "protected resource spec changed",
+        )
+
+    def test_keel_opt_out_rejects_post_helm_template_drift(self) -> None:
+        self.assert_rbx_post_helm_mutation_rejected(
+            "oracle-template",
+            "protected resource spec changed",
+        )
+
+    def test_keel_opt_out_rejects_post_helm_metadata_drift(self) -> None:
+        self.assert_rbx_post_helm_mutation_rejected(
+            "oracle-finalizer",
+            "protected resource metadata changed",
+        )
+
+    def test_keel_opt_out_rejects_other_resource_version_drift(self) -> None:
+        self.assert_rbx_post_helm_mutation_rejected(
+            "guardian-resource-version",
+            "non-Oracle resourceVersion changed",
+        )
+
+    def test_keel_opt_out_rejects_post_helm_pod_drift(self) -> None:
+        self.assert_rbx_post_helm_mutation_rejected(
+            "oracle-pod",
+            "active pod identity or health changed",
+        )
+
+    def test_keel_opt_out_rejects_post_helm_endpoint_drift(self) -> None:
+        self.assert_rbx_post_helm_mutation_rejected(
+            "oracle-endpoint",
+            "ready endpoint count does not equal Deployment replicas",
+        )
+
+    def test_keel_opt_out_rejects_noncanonical_stored_annotations(self) -> None:
+        for case in ("missing", "wrong-value"):
+            with self.subTest(case=case):
+                live, client, stored, server = self.rbx_keel_opt_out_resources()
+                annotations = self.component_deployment_annotations(
+                    stored, "oracle"
+                )
+                if case == "missing":
+                    annotations.pop("keel.sh/policy")
+                else:
+                    annotations["keel.sh/policy"] = "unexpected"
+                self.write_rbx_keel_opt_out_state(live, client, stored, server)
+                self.revision_path.write_text("21", encoding="utf-8")
+
+                result = self.run_script(
+                    "--disable-oracle-keel-deployment-annotations",
+                    "--apply",
+                    host_id="rbx01",
+                )
+
+                self.assertNotEqual(result.returncode, 0)
+                self.assertIn(
+                    "unsupported Oracle Keel annotation transition",
+                    result.stderr,
+                )
+                self.assertEqual(self.applied_upgrade_lines(), [])
+                self.assertEqual(
+                    self.revision_path.read_text(encoding="utf-8"), "21"
+                )
+
+    def test_keel_opt_out_rejects_rendered_or_server_readdition(self) -> None:
+        for source in ("rendered", "server"):
+            with self.subTest(source=source):
+                live, client, stored, server = self.rbx_keel_opt_out_resources()
+                target = client if source == "rendered" else server
+                self.component_deployment_annotations(target, "oracle")[
+                    "keel.sh/policy"
+                ] = "force"
+                self.write_rbx_keel_opt_out_state(live, client, stored, server)
+                self.revision_path.write_text("21", encoding="utf-8")
+
+                result = self.run_script(
+                    "--disable-oracle-keel-deployment-annotations",
+                    "--apply",
+                    host_id="rbx01",
+                )
+
+                self.assertNotEqual(result.returncode, 0)
+                self.assertIn("would change protected resource metadata", result.stderr)
+                self.assertEqual(self.applied_upgrade_lines(), [])
+                self.assertEqual(
+                    self.revision_path.read_text(encoding="utf-8"), "21"
+                )
+
+    def test_keel_opt_out_raw_empty_annotation_map_is_required(self) -> None:
+        for shape in ("absent", "null", "retained"):
+            with self.subTest(shape=shape):
+                live, client, stored, server = self.rbx_keel_opt_out_resources()
+                self.write_rbx_keel_opt_out_state(live, client, stored, server)
+                self.environment["HELM_KEEL_OPT_OUT_MANIFEST_SHAPE"] = shape
+                self.revision_path.write_text("21", encoding="utf-8")
+
+                result = self.run_script(
+                    "--disable-oracle-keel-deployment-annotations",
+                    "--apply",
+                    host_id="rbx01",
+                )
+
+                self.assertNotEqual(result.returncode, 0)
+                self.assertIn("Oracle Keel annotation opt-out manifest", result.stderr)
+                self.assertEqual(self.applied_upgrade_lines(), [])
+                self.assertEqual(
+                    self.revision_path.read_text(encoding="utf-8"), "21"
+                )
+
+    def test_keel_opt_out_does_not_allow_arbitrary_annotation_deletion(
+        self,
+    ) -> None:
+        live, client, stored, server = self.rbx_keel_opt_out_resources()
+        self.component_deployment_annotations(stored, "guardian")[
+            "example.com/old-only"
+        ] = "present"
+        self.write_rbx_keel_opt_out_state(live, client, stored, server)
+
+        result = self.run_script(
+            "--disable-oracle-keel-deployment-annotations",
+            "--apply",
+            host_id="rbx01",
+        )
+
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("unsupported old-to-new change", result.stderr)
+        self.assertEqual(self.applied_upgrade_lines(), [])
+        self.assertEqual(self.revision_path.read_text(encoding="utf-8"), "21")
+
+    def test_keel_annotation_deletion_without_opt_out_blocks(self) -> None:
+        stored = resources()
+        self.add_oracle_keel_deployment_annotations(stored)
+        self.write_stored(stored)
+
+        result = self.run_script("--apply")
+
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("unsupported old-to-new change", result.stderr)
+        self.assertEqual(self.applied_upgrade_lines(), [])
+        self.assertEqual(self.revision_path.read_text(encoding="utf-8"), "21")
 
     def test_exact_live_only_helm_and_controller_metadata_is_preserved(
         self,

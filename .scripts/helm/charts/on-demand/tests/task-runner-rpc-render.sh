@@ -25,6 +25,10 @@ oracle_default_render="$(
   helm template task-runner-rpc "${chart_dir}" \
     --show-only templates/oracle.yaml
 )"
+for annotation in approvals trigger match-tag policy; do
+  grep -q "keel.sh/${annotation}:" <<<"${oracle_default_render}"
+done
+[[ "$(grep -c 'keel.sh/' <<<"${oracle_default_render}")" -eq 4 ]]
 ! grep -q 'SUI_MAINNET_RPC' <<<"${oracle_default_render}"
 ! grep -q 'CANDLE_COLLECTION_ENABLED' <<<"${oracle_default_render}"
 ! grep -q '^        envFrom:$' <<<"${oracle_default_render}"
@@ -40,6 +44,29 @@ oracle_keel_update_time_render="$(
 grep -q "^        keel.sh/update-time: \"${keel_update_time}\"$" \
   <<<"${oracle_keel_update_time_render}"
 [[ "$(grep -c 'keel.sh/update-time' <<<"${oracle_keel_update_time_render}")" -eq 1 ]]
+
+oracle_keel_opt_out_render="$(
+  helm template task-runner-rpc "${chart_dir}" \
+    --show-only templates/oracle.yaml \
+    --set components.oracle.keelDeploymentAnnotationsEnabled=false \
+    --set components.oracle.keelUpdateTime.enabled=true \
+    --set-string components.oracle.keelUpdateTime.value="${keel_update_time}"
+)"
+for annotation in approvals trigger match-tag policy; do
+  ! grep -q "keel.sh/${annotation}:" <<<"${oracle_keel_opt_out_render}"
+done
+grep -q '^  annotations: {}$' <<<"${oracle_keel_opt_out_render}"
+grep -q "^        keel.sh/update-time: \"${keel_update_time}\"$" \
+  <<<"${oracle_keel_opt_out_render}"
+[[ "$(grep -c 'keel.sh/' <<<"${oracle_keel_opt_out_render}")" -eq 1 ]]
+
+if helm template task-runner-rpc "${chart_dir}" \
+  --show-only templates/oracle.yaml \
+  --set-string components.oracle.keelDeploymentAnnotationsEnabled=false \
+  >/dev/null 2>&1; then
+  printf "expected a non-boolean Oracle Keel annotation value to fail rendering\n" >&2
+  exit 1
+fi
 
 oracle_environment_render="$(
   helm template task-runner-rpc "${chart_dir}" \

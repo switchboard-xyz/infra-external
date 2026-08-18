@@ -50,6 +50,12 @@ DIGEST_PATTERN = re.compile(r"sha256:[a-f0-9]{64}")
 SECRET_KIND_PATTERN = re.compile(r"(?m)^kind:[ \t]*Secret[ \t]*$")
 CC_INIT_DATA_ANNOTATION = "io.katacontainers.config.runtime.cc_init_data"
 KEEL_UPDATE_TIME_ANNOTATION = "keel.sh/update-time"
+ORACLE_KEEL_DEPLOYMENT_ANNOTATIONS = {
+    "keel.sh/approvals": "0",
+    "keel.sh/trigger": "poll",
+    "keel.sh/match-tag": "true",
+    "keel.sh/policy": "force",
+}
 HELM_RELEASE_NAME_ANNOTATION = "meta.helm.sh/release-name"
 HELM_RELEASE_NAMESPACE_ANNOTATION = "meta.helm.sh/release-namespace"
 HELM_MANAGED_BY_LABEL = "app.kubernetes.io/managed-by"
@@ -87,7 +93,15 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--apply",
         action="store_true",
-        help="Create the no-diff Helm baseline revision after every gate passes.",
+        help="Record the validated Helm baseline revision after every gate passes.",
+    )
+    parser.add_argument(
+        "--disable-oracle-keel-deployment-annotations",
+        action="store_true",
+        help=(
+            "Use the rbx01-devnet-only Oracle Keel Deployment annotation "
+            "opt-out after the live annotations were removed explicitly."
+        ),
     )
     return parser.parse_args()
 
@@ -316,12 +330,20 @@ def parse_json_documents(output: str, label: str) -> list[dict[str, Any]]:
     return documents
 
 
-def validate_target(network: str, host_id: str) -> str:
+def validate_target(
+    network: str,
+    host_id: str,
+    disable_oracle_keel_deployment_annotations: bool,
+) -> str:
     if network != "devnet":
         raise BaselineError("Helm baseline creation is devnet-only")
     node_name = AUTHORIZED_HOSTS.get(host_id)
     if node_name is None:
         raise BaselineError("unknown or excluded devnet host ID")
+    if disable_oracle_keel_deployment_annotations and host_id != "rbx01":
+        raise BaselineError(
+            "Oracle Keel Deployment annotation opt-out is restricted to rbx01 devnet"
+        )
     return node_name
 
 
@@ -559,9 +581,29 @@ def replica_count(deployment: dict[str, Any], component: str) -> int:
 def validate_live_resources(
     resources: dict[tuple[str, str], dict[str, Any]],
     expected_oracle_image: str,
+    disable_oracle_keel_deployment_annotations: bool,
 ) -> dict[str, Any]:
     for resource in resources.values():
         validate_helm_ownership(resource)
+
+    if disable_oracle_keel_deployment_annotations:
+        oracle_metadata = require_mapping(
+            resources[("Deployment", "oracle")],
+            "metadata",
+            "Oracle Deployment metadata",
+        )
+        oracle_annotations = require_mapping(
+            oracle_metadata,
+            "annotations",
+            "Oracle Deployment annotations",
+        )
+        if any(
+            key in oracle_annotations
+            for key in ORACLE_KEEL_DEPLOYMENT_ANNOTATIONS
+        ):
+            raise BaselineError(
+                "Oracle Keel Deployment annotations must already be absent"
+            )
 
     images: dict[str, dict[str, str]] = {}
     replicas: dict[str, int] = {}
@@ -969,6 +1011,45 @@ def resource_version_guard(
     return result
 
 
+def nonvolatile_resource_metadata(
+    resources: dict[tuple[str, str], dict[str, Any]]
+) -> dict[str, Any]:
+    result: dict[str, Any] = {}
+    for (kind, name), resource in sorted(resources.items()):
+        metadata = copy.deepcopy(
+            require_mapping(resource, "metadata", "resource metadata")
+        )
+        metadata.pop("resourceVersion", None)
+        metadata.pop("managedFields", None)
+        annotations = metadata.get("annotations", {})
+        if not isinstance(annotations, dict):
+            raise BaselineError("protected resource metadata is invalid")
+        annotations.pop(KUBECTL_LAST_APPLIED_ANNOTATION, None)
+        result[f"{kind}/{name}"] = metadata
+    return result
+
+
+def deployment_generation_guard(
+    resources: dict[tuple[str, str], dict[str, Any]]
+) -> dict[str, int]:
+    result: dict[str, int] = {}
+    for component in COMPONENTS:
+        metadata = require_mapping(
+            resources[("Deployment", component)],
+            "metadata",
+            "Deployment metadata",
+        )
+        generation = metadata.get("generation")
+        if (
+            isinstance(generation, bool)
+            or not isinstance(generation, int)
+            or generation < 1
+        ):
+            raise BaselineError("Deployment generation is missing or invalid")
+        result[component] = generation
+    return result
+
+
 def fetch_pod_snapshot(
     context: str, node_name: str, replicas: dict[str, int]
 ) -> dict[str, Any]:
@@ -1178,7 +1259,10 @@ def require_apply_permissions(
             raise BaselineError("current identity lacks a required baseline permission")
 
 
-def write_override_file(live: dict[str, Any]) -> str:
+def write_override_file(
+    live: dict[str, Any],
+    disable_oracle_keel_deployment_annotations: bool,
+) -> str:
     components: dict[str, Any] = {}
     for component in COMPONENTS:
         components[component] = {
@@ -1206,6 +1290,9 @@ def write_override_file(live: dict[str, Any]) -> str:
         ),
     }
     oracle_keel_update_time = live["oracleKeelUpdateTime"]
+    components["oracle"]["keelDeploymentAnnotationsEnabled"] = (
+        not disable_oracle_keel_deployment_annotations
+    )
     components["oracle"]["keelUpdateTime"] = {
         "enabled": oracle_keel_update_time is not None,
         "value": (
@@ -1274,6 +1361,36 @@ def validate_manifest_content(manifest: str, label: str) -> None:
         raise BaselineError(f"{label} returned an empty manifest")
     if SECRET_KIND_PATTERN.search(manifest) is not None:
         raise BaselineError(f"{label} unexpectedly contained a Secret")
+
+
+def require_oracle_keel_opt_out_manifest_shape(manifest: str) -> None:
+    oracle_documents = [
+        document
+        for document in re.split(r"(?m)^---[ \t]*$", manifest)
+        if re.search(r"(?m)^kind:[ \t]*Deployment[ \t]*$", document)
+        and re.search(r"(?m)^  name:[ \t]*oracle[ \t]*$", document)
+    ]
+    if len(oracle_documents) != 1:
+        raise BaselineError(
+            "Oracle Keel annotation opt-out manifest shape is invalid"
+        )
+    oracle_document = oracle_documents[0]
+    if (
+        len(
+            re.findall(
+                r"(?m)^  annotations:[ \t]*\{\}[ \t]*$",
+                oracle_document,
+            )
+        )
+        != 1
+    ):
+        raise BaselineError(
+            "Oracle Keel annotation opt-out manifest must render an empty metadata map"
+        )
+    if any(key in oracle_document for key in ORACLE_KEEL_DEPLOYMENT_ANNOTATIONS):
+        raise BaselineError(
+            "Oracle Keel annotation opt-out manifest retained a protected annotation"
+        )
 
 
 def parse_protected_resources(
@@ -1754,9 +1871,10 @@ def manifest_replica_scalar(deployment: dict[str, Any]) -> int:
     return replicas
 
 
-def prove_helm_patch_deletion_freedom(
+def prove_stored_manifest_transition(
     stored: dict[tuple[str, str], dict[str, Any]],
     candidate: dict[tuple[str, str], dict[str, Any]],
+    disable_oracle_keel_deployment_annotations: bool,
 ) -> str:
     if set(stored) != set(candidate):
         raise BaselineError(
@@ -1832,6 +1950,37 @@ def prove_helm_patch_deletion_freedom(
         candidate_metadata = require_mapping(
             candidate_deployment, "metadata", "candidate Deployment metadata"
         )
+        if component == "oracle" and disable_oracle_keel_deployment_annotations:
+            stored_annotations = require_mapping(
+                stored_metadata,
+                "annotations",
+                "stored Oracle Deployment annotations",
+            )
+            candidate_annotations = candidate_metadata.get("annotations", {})
+            if not isinstance(candidate_annotations, dict):
+                raise BaselineError(
+                    "candidate Oracle Deployment annotations are invalid"
+                )
+            for annotation, expected_value in (
+                ORACLE_KEEL_DEPLOYMENT_ANNOTATIONS.items()
+            ):
+                if (
+                    stored_annotations.get(annotation) != expected_value
+                    or annotation in candidate_annotations
+                ):
+                    raise BaselineError(
+                        "stored Helm manifest contains an unsupported Oracle Keel annotation transition"
+                    )
+                del stored_annotations[annotation]
+                allowed_paths.append(
+                    "Deployment/oracle/metadata/annotations/"
+                    + annotation.replace("/", "~1")
+                )
+            if not stored_annotations and "annotations" not in candidate_metadata:
+                # kubectl may omit an empty annotations map from its JSON form. The
+                # raw Helm manifest was separately required to contain
+                # `annotations: {}`, so this is representation-only normalization.
+                del stored_metadata["annotations"]
         stored_labels = require_mapping(
             stored_metadata, "labels", "stored Deployment labels"
         )
@@ -1976,7 +2125,7 @@ def race_guard(
         {
             "resourceVersions": resource_version_guard(resources),
             "specs": resource_specs(resources),
-            "metadata": resource_metadata_contract(resources),
+            "metadata": nonvolatile_resource_metadata(resources),
             "pods": pods,
             "endpoints": endpoints,
         }
@@ -2003,7 +2152,11 @@ def main() -> int:
     operation_lock: int | None = None
     helm_invocation_started = False
     try:
-        node_name = validate_target(args.network, args.host_id)
+        node_name = validate_target(
+            args.network,
+            args.host_id,
+            args.disable_oracle_keel_deployment_annotations,
+        )
         operation_lock = acquire_operation_lock()
         validate_tool_capabilities()
         context = run_kubectl(
@@ -2016,7 +2169,9 @@ def main() -> int:
 
         resources_before = fetch_resources(context)
         live = validate_live_resources(
-            resources_before, args.expected_current_oracle_image
+            resources_before,
+            args.expected_current_oracle_image,
+            args.disable_oracle_keel_deployment_annotations,
         )
         pods_before = fetch_pod_snapshot(context, node_name, live["replicas"])
         endpoints_before = fetch_endpoint_snapshot(
@@ -2025,8 +2180,13 @@ def main() -> int:
         revision_before = helm_revision(context)
         guard_before = race_guard(resources_before, pods_before, endpoints_before)
 
-        override_path = write_override_file(live)
+        override_path = write_override_file(
+            live,
+            args.disable_oracle_keel_deployment_annotations,
+        )
         manifest, client_resources = render_client_manifest(context, override_path)
+        if args.disable_oracle_keel_deployment_annotations:
+            require_oracle_keel_opt_out_manifest_shape(manifest)
         stored_resources = fetch_stored_release_resources(context, revision_before)
         proof = equivalence_proof(
             resources_before,
@@ -2034,9 +2194,10 @@ def main() -> int:
             client_resources,
             "Helm client manifest",
         )
-        helm_patch_hash = prove_helm_patch_deletion_freedom(
+        stored_transition_hash = prove_stored_manifest_transition(
             stored_resources,
             client_resources,
+            args.disable_oracle_keel_deployment_annotations,
         )
         server_resources = render_server_dry_run(context, manifest)
         require_server_semantic_equivalence(
@@ -2045,7 +2206,6 @@ def main() -> int:
             client_resources,
             server_resources,
         )
-
         print(
             f"target=devnet/{args.host_id} namespace={DEVNET_NAMESPACE} "
             f"release={DEVNET_RELEASE}"
@@ -2053,7 +2213,13 @@ def main() -> int:
         print("coordinatorExclusiveWindowAsserted=true")
         print("hostLocalOperationLockHeld=true")
         print_proof(proof)
-        print(f"helmPatchDeletionFree=true hash={helm_patch_hash}")
+        if args.disable_oracle_keel_deployment_annotations:
+            print(
+                "oracleKeelStoredDeletionRestricted=true "
+                f"hash={stored_transition_hash}"
+            )
+        else:
+            print(f"helmPatchDeletionFree=true hash={stored_transition_hash}")
         print(f"activePodsStable=true hash={canonical_hash(pods_before)}")
         print(f"endpointsStable=true hash={canonical_hash(endpoints_before)}")
 
@@ -2064,8 +2230,14 @@ def main() -> int:
 
         resources_guarded = fetch_resources(context)
         protected_versions_before_helm = resource_version_guard(resources_guarded)
+        nonvolatile_metadata_before_helm = nonvolatile_resource_metadata(
+            resources_guarded
+        )
+        generations_before_helm = deployment_generation_guard(resources_guarded)
         guarded_live = validate_live_resources(
-            resources_guarded, args.expected_current_oracle_image
+            resources_guarded,
+            args.expected_current_oracle_image,
+            args.disable_oracle_keel_deployment_annotations,
         )
         pods_guarded = fetch_pod_snapshot(
             context, node_name, guarded_live["replicas"]
@@ -2083,30 +2255,46 @@ def main() -> int:
         helm_invocation_started = True
         run_helm(
             helm_upgrade_arguments(context, override_path),
-            error_message="no-diff Helm baseline upgrade failed",
+            error_message="Helm baseline upgrade failed",
         )
         revision_after = helm_revision(context)
         if revision_after != revision_before + 1:
             raise BaselineError("Helm baseline revision was not recorded exactly once")
 
         resources_after = fetch_resources(context)
-        if resource_version_guard(resources_after) != protected_versions_before_helm:
+        protected_versions_after = resource_version_guard(resources_after)
+        if args.disable_oracle_keel_deployment_annotations:
+            for identity, resource_version in protected_versions_before_helm.items():
+                if (
+                    identity != "Deployment/oracle"
+                    and protected_versions_after.get(identity) != resource_version
+                ):
+                    raise BaselineError(
+                        "non-Oracle resourceVersion changed during Keel opt-out baseline creation"
+                    )
+        elif protected_versions_after != protected_versions_before_helm:
             raise BaselineError(
                 "protected resourceVersion changed during baseline creation"
             )
-        after_live = validate_live_resources(
-            resources_after, args.expected_current_oracle_image
-        )
-        if resource_specs(resources_after) != resource_specs(resources_before):
-            raise BaselineError("protected resource spec changed during baseline creation")
-        if resource_metadata_contract(resources_after) != resource_metadata_contract(
-            resources_before
-        ):
+        if deployment_generation_guard(resources_after) != generations_before_helm:
+            raise BaselineError(
+                "Deployment generation changed during baseline creation"
+            )
+        if nonvolatile_resource_metadata(
+            resources_after
+        ) != nonvolatile_metadata_before_helm:
             raise BaselineError(
                 "protected resource metadata changed during baseline creation"
             )
+        after_live = validate_live_resources(
+            resources_after,
+            args.expected_current_oracle_image,
+            args.disable_oracle_keel_deployment_annotations,
+        )
+        if resource_specs(resources_after) != resource_specs(resources_guarded):
+            raise BaselineError("protected resource spec changed during baseline creation")
         if collect_secret_references(resource_specs(resources_after)) != collect_secret_references(
-            resource_specs(resources_before)
+            resource_specs(resources_guarded)
         ):
             raise BaselineError("Secret reference changed during baseline creation")
         if after_live["replicas"] != live["replicas"]:
@@ -2116,15 +2304,29 @@ def main() -> int:
         endpoints_after = fetch_endpoint_snapshot(
             context, live["replicas"], pods_after
         )
-        if pods_after != pods_before:
+        if pods_after != pods_guarded:
             raise BaselineError("active pod identity or health changed during baseline creation")
-        if endpoints_after != endpoints_before:
+        if endpoints_after != endpoints_guarded:
             raise BaselineError("service endpoints changed during baseline creation")
 
         print(f"baselineHelmRevision={revision_after}")
         print(f"rollbackRevision={revision_after}")
         print("postApplyResourceSpecsUnchanged=true")
-        print("postApplyResourceVersionsUnchanged=true")
+        if args.disable_oracle_keel_deployment_annotations:
+            oracle_resource_version_changed = (
+                protected_versions_after["Deployment/oracle"]
+                != protected_versions_before_helm["Deployment/oracle"]
+            )
+            print(
+                "postApplyOracleResourceVersionChanged="
+                f"{str(oracle_resource_version_changed).lower()}"
+            )
+            print("postApplyOtherResourceVersionsUnchanged=true")
+            print("postApplyOracleMetadataOnlyRecord=true")
+        else:
+            print("postApplyResourceVersionsUnchanged=true")
+        print("postApplyDeploymentGenerationsUnchanged=true")
+        print("postApplyNonvolatileMetadataUnchanged=true")
         print("postApplyPodUidsRestartsReadinessUnchanged=true")
         print("postApplyEndpointsUnchanged=true")
         print("action=baseline-recorded")
