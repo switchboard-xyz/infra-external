@@ -26,6 +26,24 @@ oracle_default_render="$(
     --show-only templates/oracle.yaml
 )"
 ! grep -q 'SUI_MAINNET_RPC' <<<"${oracle_default_render}"
+! grep -q 'CANDLE_COLLECTION_ENABLED' <<<"${oracle_default_render}"
+! grep -q '^        envFrom:$' <<<"${oracle_default_render}"
+
+oracle_environment_render="$(
+  helm template task-runner-rpc "${chart_dir}" \
+    --show-only templates/oracle.yaml \
+    --set components.oracle.candleCollection.enabled=true \
+    --set-string components.oracle.candleCollection.value=enabled \
+    --set components.oracle.environmentSecret.enabled=true \
+    --set-string components.oracle.environmentSecret.name=oracle-environment \
+    --set components.oracle.environmentSecret.optionalSet=true \
+    --set components.oracle.environmentSecret.optional=true
+)"
+grep -q 'name: CANDLE_COLLECTION_ENABLED' <<<"${oracle_environment_render}"
+grep -q 'value: "enabled"' <<<"${oracle_environment_render}"
+grep -q '^        envFrom:$' <<<"${oracle_environment_render}"
+grep -q 'name: "oracle-environment"' <<<"${oracle_environment_render}"
+grep -q 'optional: true' <<<"${oracle_environment_render}"
 
 guardian_render="$(
   helm template task-runner-rpc "${chart_dir}" \
@@ -52,6 +70,14 @@ if helm template task-runner-rpc "${chart_dir}" \
   --set-string taskRunnerRpc.secretName=task-runner-rpc \
   --set-string taskRunnerRpc.suiMainnetRpcKey= >/dev/null 2>&1; then
   printf "expected a configured Secret without a key to fail rendering\n" >&2
+  exit 1
+fi
+
+if helm template task-runner-rpc "${chart_dir}" \
+  --show-only templates/oracle.yaml \
+  --set components.oracle.environmentSecret.enabled=true \
+  --set-string components.oracle.environmentSecret.name= >/dev/null 2>&1; then
+  printf "expected an enabled Oracle environment Secret without a name to fail rendering\n" >&2
   exit 1
 fi
 

@@ -38,6 +38,14 @@ components:
     image: "docker.io/switchboardlabs/oracle"
     imageDigest: ""
     ccInitData: ""
+    candleCollection:
+      enabled: false
+      value: ""
+    environmentSecret:
+      enabled: false
+      name: ""
+      optionalSet: false
+      optional: false
     queue: ""
     key: ""
     port: 8081

@@ -24,8 +24,8 @@ render_component_hash() {
 }
 
 gateway_default_hash="c58f0509140ba830fb4ec39e461f84197318353c326aaa7c0864a3c46ebcb476"
-mainnet_default_hash="94fe0830efe0c96cc768c96e03fb94a19020b6bd8107c841f7b8b4a5a3547584"
-oracle_default_hash="00f6a207575fd62f5fbd928c5c3666449a84e549159617b367a3599f4607ae8a"
+mainnet_default_hash="bf555d3e30cdee6e8425a8ac12c980bf0af49be1efa6b9ea793861e536b680d6"
+oracle_default_hash="d15ffa5a43940a55074cf6ae3818ff050dcfcdc5bcc9a1f86997816f2989e66a"
 guardian_default_hash="f555dd99131820be7432284645812c4a490c3ac816826c08a4c71a734f8f624f"
 
 [[ "$(render_component_hash gateway)" == "${gateway_default_hash}" ]]

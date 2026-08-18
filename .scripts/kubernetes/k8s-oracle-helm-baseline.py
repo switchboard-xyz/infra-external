@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import argparse
 import copy
+from decimal import Decimal, InvalidOperation
 import fcntl
 import hashlib
 import json
@@ -422,6 +423,39 @@ def env_literal(container: dict[str, Any], name: str) -> str:
     return matches[0]["value"]
 
 
+def optional_env_literal(container: dict[str, Any], name: str) -> str | None:
+    matches = matching_env(container, name)
+    if not matches:
+        return None
+    if len(matches) != 1 or not isinstance(matches[0].get("value"), str):
+        raise BaselineError(f"{name} environment identity is invalid")
+    if "valueFrom" in matches[0]:
+        raise BaselineError(f"{name} environment identity is invalid")
+    return matches[0]["value"]
+
+
+def optional_environment_secret(
+    container: dict[str, Any],
+) -> tuple[str, bool | None] | None:
+    if "envFrom" not in container:
+        return None
+    sources = require_list(container, "envFrom", "Oracle environment sources")
+    if len(sources) != 1 or not isinstance(sources[0], dict):
+        raise BaselineError("Oracle environment source cannot be reproduced by this chart")
+    if set(sources[0]) != {"secretRef"}:
+        raise BaselineError("Oracle environment source cannot be reproduced by this chart")
+    reference = require_mapping(
+        sources[0], "secretRef", "Oracle environment Secret reference"
+    )
+    if not set(reference).issubset({"name", "optional"}):
+        raise BaselineError("Oracle environment Secret reference is invalid")
+    name = reference.get("name")
+    optional = reference.get("optional")
+    if not isinstance(name, str) or not name or optional not in (None, False, True):
+        raise BaselineError("Oracle environment Secret reference is invalid")
+    return name, optional
+
+
 def replica_count(deployment: dict[str, Any], component: str) -> int:
     spec = require_mapping(deployment, "spec", "Deployment spec")
     replicas = spec.get("replicas")
@@ -441,9 +475,12 @@ def validate_live_resources(
 
     images: dict[str, dict[str, str]] = {}
     replicas: dict[str, int] = {}
+    resource_requirements: dict[str, dict[str, dict[str, str]]] = {}
     policies: dict[str, str] = {}
     payer_refs: dict[str, tuple[str, str, bool | None]] = {}
     sui_ref: tuple[str, str, bool | None] | None = None
+    candle_collection: str | None = None
+    environment_secret: tuple[str, bool | None] | None = None
 
     for component in COMPONENTS:
         deployment = resources[("Deployment", component)]
@@ -470,6 +507,26 @@ def validate_live_resources(
         repository, digest = parse_immutable_image(component, container.get("image"))
         images[component] = {"repository": repository, "digest": digest}
         replicas[component] = replica_count(deployment, component)
+        requirements = require_mapping(
+            container, "resources", "Deployment resource requirements"
+        )
+        normalized_requirements: dict[str, dict[str, str]] = {}
+        for requirement_kind in ("limits", "requests"):
+            requirement_values = require_mapping(
+                requirements,
+                requirement_kind,
+                "Deployment resource requirements",
+            )
+            if set(requirement_values) != {"cpu", "memory"} or not all(
+                isinstance(requirement_values[name], str)
+                and requirement_values[name]
+                for name in ("cpu", "memory")
+            ):
+                raise BaselineError("Deployment resource requirements are invalid")
+            normalized_requirements[requirement_kind] = {
+                name: requirement_values[name] for name in ("cpu", "memory")
+            }
+        resource_requirements[component] = normalized_requirements
         if env_literal(container, "NETWORK_ID") != "devnet":
             raise BaselineError("Deployment network identity is not devnet")
 
@@ -484,6 +541,10 @@ def validate_live_resources(
                 raise BaselineError("SUI_MAINNET_RPC environment identity is invalid")
             if sui:
                 sui_ref = secret_reference(sui[0], "SUI_MAINNET_RPC")
+            candle_collection = optional_env_literal(
+                container, "CANDLE_COLLECTION_ENABLED"
+            )
+            environment_secret = optional_environment_secret(container)
         elif sui:
             raise BaselineError("SUI_MAINNET_RPC is present on an unexpected component")
 
@@ -522,9 +583,12 @@ def validate_live_resources(
     return {
         "images": images,
         "replicas": replicas,
+        "resources": resource_requirements,
         "policies": policies,
         "payerKey": payer_key,
         "suiRef": sui_ref,
+        "candleCollection": candle_collection,
+        "environmentSecret": environment_secret,
     }
 
 
@@ -611,6 +675,25 @@ def collect_secret_references(value: Any, path: tuple[str, ...] = ()) -> list[An
                         "path": list(child_path),
                         "name": name,
                         "key": secret_key,
+                        "optional": optional,
+                    }
+                )
+            elif key == "secretRef":
+                if not isinstance(child, dict):
+                    raise BaselineError("rendered Secret reference is invalid")
+                name = child.get("name")
+                optional = child.get("optional")
+                if (
+                    not isinstance(name, str)
+                    or not name
+                    or optional not in (None, False, True)
+                    or not set(child).issubset({"name", "optional"})
+                ):
+                    raise BaselineError("rendered Secret reference is invalid")
+                result.append(
+                    {
+                        "path": list(child_path),
+                        "name": name,
                         "optional": optional,
                     }
                 )
@@ -853,7 +936,24 @@ def write_override_file(live: dict[str, Any]) -> str:
             "imageDigest": live["images"][component]["digest"],
             "replicas": live["replicas"][component],
             "ccInitData": live["policies"][component],
+            "resources": live["resources"][component],
         }
+    candle_collection = live["candleCollection"]
+    components["oracle"]["candleCollection"] = {
+        "enabled": candle_collection is not None,
+        "value": candle_collection if candle_collection is not None else "",
+    }
+    environment_secret = live["environmentSecret"]
+    components["oracle"]["environmentSecret"] = {
+        "enabled": environment_secret is not None,
+        "name": environment_secret[0] if environment_secret is not None else "",
+        "optionalSet": (
+            environment_secret is not None and environment_secret[1] is not None
+        ),
+        "optional": (
+            environment_secret[1] is True if environment_secret is not None else False
+        ),
+    }
     sui_ref = live["suiRef"]
     override = {
         "namespace": DEVNET_NAMESPACE,
@@ -1021,6 +1121,101 @@ def render_server_dry_run(
     return parse_protected_resources(server_output, "Kubernetes server dry-run")
 
 
+def cpu_millicores(value: Any) -> Decimal | None:
+    if not isinstance(value, str):
+        return None
+    match = re.fullmatch(r"([0-9]+(?:\.[0-9]+)?)(m?)", value)
+    if match is None:
+        return None
+    try:
+        quantity = Decimal(match.group(1))
+    except InvalidOperation:
+        return None
+    return quantity if match.group(2) == "m" else quantity * 1000
+
+
+def scalar_semantically_equal(path: tuple[str, ...], live: Any, candidate: Any) -> bool:
+    if live == candidate and type(live) is type(candidate):
+        return True
+    if path and path[-1] == "cpu" and "resources" in path:
+        live_cpu = cpu_millicores(live)
+        candidate_cpu = cpu_millicores(candidate)
+        return live_cpu is not None and live_cpu == candidate_cpu
+    return False
+
+
+def named_list(value: list[Any]) -> dict[str, dict[str, Any]] | None:
+    if not value or not all(isinstance(item, dict) for item in value):
+        return None
+    names = [item.get("name") for item in value]
+    if not all(isinstance(name, str) and name for name in names):
+        return None
+    if len(set(names)) != len(names):
+        raise BaselineError("protected resource contains a duplicate named list entry")
+    return {item["name"]: item for item in value}
+
+
+def require_candidate_subset(
+    live: Any,
+    candidate: Any,
+    *,
+    path: tuple[str, ...] = (),
+    error_message: str,
+) -> Any:
+    if isinstance(candidate, dict):
+        if not isinstance(live, dict):
+            raise BaselineError(error_message)
+        projected: dict[str, Any] = {}
+        for key, child in candidate.items():
+            if key not in live:
+                raise BaselineError(error_message)
+            projected[key] = require_candidate_subset(
+                live[key],
+                child,
+                path=(*path, key),
+                error_message=error_message,
+            )
+        return projected
+    if isinstance(candidate, list):
+        if not isinstance(live, list):
+            raise BaselineError(error_message)
+        candidate_named = named_list(candidate)
+        live_named = named_list(live)
+        if candidate_named is not None:
+            if live_named is None:
+                raise BaselineError(error_message)
+            projected_list: list[Any] = []
+            for item in candidate:
+                name = item["name"]
+                if name not in live_named:
+                    raise BaselineError(error_message)
+                projected_list.append(
+                    require_candidate_subset(
+                        live_named[name],
+                        item,
+                        path=(*path, name),
+                        error_message=error_message,
+                    )
+                )
+            return projected_list
+        if len(live) != len(candidate):
+            raise BaselineError(error_message)
+        return [
+            require_candidate_subset(
+                live_item,
+                candidate_item,
+                path=(*path, str(index)),
+                error_message=error_message,
+            )
+            for index, (live_item, candidate_item) in enumerate(
+                zip(live, candidate)
+            )
+        ]
+    if not scalar_semantically_equal(path, live, candidate):
+        raise BaselineError(error_message)
+    return candidate
+
+
 def equivalence_proof(
     live: dict[tuple[str, str], dict[str, Any]],
     rendered: dict[tuple[str, str], dict[str, Any]],
@@ -1031,62 +1226,54 @@ def equivalence_proof(
 
     live_specs = resource_specs(live)
     rendered_specs = resource_specs(rendered)
-    if live_specs != rendered_specs:
-        raise BaselineError(
-            f"{candidate_label} would change a protected resource spec"
-        )
+    require_candidate_subset(
+        live_specs,
+        rendered_specs,
+        error_message=f"{candidate_label} would change a protected resource spec",
+    )
 
     live_metadata = resource_metadata_contract(live)
     rendered_metadata = resource_metadata_contract(rendered)
-    if live_metadata != rendered_metadata:
-        raise BaselineError(
-            f"{candidate_label} would change protected resource metadata"
-        )
+    require_candidate_subset(
+        live_metadata,
+        rendered_metadata,
+        error_message=f"{candidate_label} would change protected resource metadata",
+    )
 
     live_templates = pod_templates(live)
     rendered_templates = pod_templates(rendered)
-    if live_templates != rendered_templates:
-        raise BaselineError(f"{candidate_label} would change an active pod template")
+    require_candidate_subset(
+        live_templates,
+        rendered_templates,
+        error_message=f"{candidate_label} would change an active pod template",
+    )
 
     live_replicas = replicas_map(live)
     rendered_replicas = replicas_map(rendered)
     if live_replicas != rendered_replicas:
         raise BaselineError(f"{candidate_label} would change a replica count")
 
-    live_secret_refs = collect_secret_references(live_specs)
-    rendered_secret_refs = collect_secret_references(rendered_specs)
-    if live_secret_refs != rendered_secret_refs:
-        raise BaselineError(f"{candidate_label} would change a Secret reference")
-
-    live_services = {
-        key: value for key, value in live_specs.items() if key.startswith("Service/")
-    }
+    normalized_rendered_specs = resource_specs(normalize_environment_lists(rendered))
+    rendered_secret_refs = collect_secret_references(normalized_rendered_specs)
     rendered_services = {
         key: value
         for key, value in rendered_specs.items()
         if key.startswith("Service/")
-    }
-    live_ingresses = {
-        key: value for key, value in live_specs.items() if key.startswith("Ingress/")
     }
     rendered_ingresses = {
         key: value
         for key, value in rendered_specs.items()
         if key.startswith("Ingress/")
     }
-    if live_services != rendered_services:
-        raise BaselineError(f"{candidate_label} would change a Service")
-    if live_ingresses != rendered_ingresses:
-        raise BaselineError(f"{candidate_label} would change an Ingress")
 
     return {
-        "resourceSpecs": canonical_hash(live_specs),
-        "resourceMetadata": canonical_hash(live_metadata),
-        "podTemplates": canonical_hash(live_templates),
-        "services": canonical_hash(live_services),
-        "ingresses": canonical_hash(live_ingresses),
-        "secretReferences": canonical_hash(live_secret_refs),
-        "replicas": canonical_hash(live_replicas),
+        "resourceSpecs": canonical_hash(rendered_specs),
+        "resourceMetadata": canonical_hash(rendered_metadata),
+        "podTemplates": canonical_hash(rendered_templates),
+        "services": canonical_hash(rendered_services),
+        "ingresses": canonical_hash(rendered_ingresses),
+        "secretReferences": canonical_hash(rendered_secret_refs),
+        "replicas": canonical_hash(rendered_replicas),
     }
 
 
@@ -1193,23 +1380,22 @@ def require_server_semantic_equivalence(
     client: dict[tuple[str, str], dict[str, Any]],
     server: dict[tuple[str, str], dict[str, Any]],
 ) -> None:
-    if set(client) != set(server):
+    if set(live) != set(client) or set(live) != set(server):
         raise BaselineError("Kubernetes server dry-run resource set differs from live")
     normalized_live = normalize_environment_lists(live)
-    normalized_client = normalize_environment_lists(client)
     normalized_server = normalize_environment_lists(
         remove_allowed_server_labels(live, client, server)
     )
-    equivalence_proof(
-        normalized_live,
-        normalized_client,
-        "Helm client manifest",
-    )
-    equivalence_proof(
-        normalized_client,
-        normalized_server,
-        "Kubernetes server dry-run",
-    )
+    if resource_specs(normalized_live) != resource_specs(normalized_server):
+        raise BaselineError(
+            "Kubernetes server dry-run would change a protected resource spec"
+        )
+    if resource_metadata_contract(normalized_live) != resource_metadata_contract(
+        normalized_server
+    ):
+        raise BaselineError(
+            "Kubernetes server dry-run would change protected resource metadata"
+        )
 
 
 def manifest_replica_scalar(deployment: dict[str, Any]) -> int:
@@ -1229,8 +1415,8 @@ def prove_helm_patch_deletion_freedom(
             "stored Helm manifest resource identities differ from the candidate"
         )
 
-    normalized_stored = copy.deepcopy(stored)
-    normalized_candidate = copy.deepcopy(candidate)
+    normalized_stored = normalize_environment_lists(stored)
+    normalized_candidate = normalize_environment_lists(candidate)
     allowed_paths: list[str] = []
     for component in COMPONENTS:
         key = ("Deployment", component)
@@ -1257,6 +1443,40 @@ def prove_helm_patch_deletion_freedom(
                 f"Deployment/{component}/spec/template/spec/containers/{component}/image"
             )
         stored_container["image"] = candidate_image
+
+        stored_requirements = require_mapping(
+            stored_container, "resources", "stored resource requirements"
+        )
+        candidate_requirements = require_mapping(
+            candidate_container, "resources", "candidate resource requirements"
+        )
+        for requirement_kind in ("limits", "requests"):
+            stored_values = require_mapping(
+                stored_requirements,
+                requirement_kind,
+                "stored resource requirements",
+            )
+            candidate_values = require_mapping(
+                candidate_requirements,
+                requirement_kind,
+                "candidate resource requirements",
+            )
+            stored_cpu = stored_values.get("cpu")
+            candidate_cpu = candidate_values.get("cpu")
+            if stored_cpu != candidate_cpu:
+                if (
+                    cpu_millicores(stored_cpu) is None
+                    or cpu_millicores(stored_cpu) != cpu_millicores(candidate_cpu)
+                ):
+                    raise BaselineError(
+                        "stored Helm manifest contains an unsupported old-to-new change"
+                    )
+                allowed_paths.append(
+                    "Deployment/"
+                    f"{component}/spec/template/spec/containers/{component}/"
+                    f"resources/{requirement_kind}/cpu"
+                )
+                stored_values["cpu"] = candidate_cpu
 
     if normalized_stored != normalized_candidate:
         raise BaselineError(
