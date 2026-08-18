@@ -4,19 +4,25 @@
 The command renders the existing release with explicit immutable images and
 live replica counts, asks the API server to dry-run the rendered resources,
 and refuses to create a Helm revision unless every protected spec is already
-equivalent. It never reads a Kubernetes Secret object or prints Secret
+equivalent. Helm's Secret driver necessarily reads and decodes its own release
+metadata internally. This wrapper never requests Kubernetes workload Secret
+objects, exposes Secret payloads, or prints Helm release values, Secret
 references, confidential-container policy contents, manifests, or command
-output.
+output. The host-local lock serializes cooperating invocations of this tool;
+it cannot fence an unrelated actor that bypasses the lock, so a root-coordinator
+exclusive-window assertion remains mandatory.
 """
 
 from __future__ import annotations
 
 import argparse
+import fcntl
 import hashlib
 import json
 import os
 import re
 import shutil
+import stat
 import subprocess
 import sys
 import tempfile
@@ -44,6 +50,7 @@ HELM_RELEASE_NAMESPACE_ANNOTATION = "meta.helm.sh/release-namespace"
 HELM_MANAGED_BY_LABEL = "app.kubernetes.io/managed-by"
 ALLOWED_RENDERED_KINDS = {"Deployment", "Service", "Ingress"}
 KUBECTL_LAST_APPLIED_ANNOTATION = "kubectl.kubernetes.io/last-applied-configuration"
+OPERATION_LOCK_PATH = Path("/run/lock/switchboard-oracle-devnet-helm-baseline.lock")
 
 
 class BaselineError(Exception):
@@ -60,6 +67,15 @@ def parse_args() -> argparse.Namespace:
         "--expected-current-oracle-image",
         required=True,
         help="Exact immutable Oracle image confirmed by the operator.",
+    )
+    parser.add_argument(
+        "--coordinator-exclusive-window-confirmed",
+        action="store_true",
+        required=True,
+        help=(
+            "Assert that the root coordinator has granted an exclusive host-operation "
+            "window for this complete plan/apply invocation."
+        ),
     )
     parser.add_argument(
         "--apply",
@@ -88,6 +104,42 @@ def canonical_hash(value: Any) -> str:
         value, sort_keys=True, separators=(",", ":"), ensure_ascii=True
     ).encode("utf-8")
     return hashlib.sha256(payload).hexdigest()
+
+
+def acquire_operation_lock() -> int:
+    if not hasattr(os, "O_NOFOLLOW"):
+        raise BaselineError("host-local operation lock is unavailable")
+    try:
+        descriptor = os.open(
+            OPERATION_LOCK_PATH,
+            os.O_RDWR | os.O_CREAT | os.O_CLOEXEC | os.O_NOFOLLOW,
+            0o600,
+        )
+    except OSError as error:
+        raise BaselineError("host-local operation lock is unavailable") from error
+    try:
+        metadata = os.fstat(descriptor)
+        if (
+            not stat.S_ISREG(metadata.st_mode)
+            or metadata.st_uid != os.geteuid()
+            or metadata.st_mode & 0o022
+        ):
+            raise BaselineError("host-local operation lock is not authoritative")
+        try:
+            fcntl.flock(descriptor, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except BlockingIOError as error:
+            raise BaselineError("another coordinated baseline operation holds the lock") from error
+        return descriptor
+    except BaseException:
+        os.close(descriptor)
+        raise
+
+
+def release_operation_lock(descriptor: int) -> None:
+    try:
+        fcntl.flock(descriptor, fcntl.LOCK_UN)
+    finally:
+        os.close(descriptor)
 
 
 def run_command(
@@ -195,6 +247,7 @@ def validate_tool_capabilities() -> None:
         "--dry-run",
         "server",
         "--hide-secret",
+        "--history-max",
         "--reuse-values",
         "--no-hooks",
     ):
@@ -824,6 +877,8 @@ def helm_upgrade_arguments(context: str, override_path: str) -> list[str]:
         "--reuse-values",
         "--values",
         override_path,
+        "--history-max",
+        "0",
         "--no-hooks",
     ]
 
@@ -985,9 +1040,11 @@ def print_proof(proof: dict[str, str]) -> None:
 def main() -> int:
     args = parse_args()
     override_path: str | None = None
+    operation_lock: int | None = None
     helm_invocation_started = False
     try:
         node_name = validate_target(args.network, args.host_id)
+        operation_lock = acquire_operation_lock()
         validate_tool_capabilities()
         context = run_kubectl(
             ["config", "current-context"],
@@ -1016,6 +1073,8 @@ def main() -> int:
             f"target=devnet/{args.host_id} namespace={DEVNET_NAMESPACE} "
             f"release={DEVNET_RELEASE}"
         )
+        print("coordinatorExclusiveWindowAsserted=true")
+        print("hostLocalOperationLockHeld=true")
         print_proof(proof)
         print(f"activePodsStable=true hash={canonical_hash(pods_before)}")
         print(f"endpointsStable=true hash={canonical_hash(endpoints_before)}")
@@ -1026,6 +1085,7 @@ def main() -> int:
             return 0
 
         resources_guarded = fetch_resources(context)
+        protected_versions_before_helm = resource_version_guard(resources_guarded)
         guarded_live = validate_live_resources(
             resources_guarded, args.expected_current_oracle_image
         )
@@ -1052,6 +1112,10 @@ def main() -> int:
             raise BaselineError("Helm baseline revision was not recorded exactly once")
 
         resources_after = fetch_resources(context)
+        if resource_version_guard(resources_after) != protected_versions_before_helm:
+            raise BaselineError(
+                "protected resourceVersion changed during baseline creation"
+            )
         after_live = validate_live_resources(
             resources_after, args.expected_current_oracle_image
         )
@@ -1082,6 +1146,7 @@ def main() -> int:
         print(f"baselineHelmRevision={revision_after}")
         print(f"rollbackRevision={revision_after}")
         print("postApplyResourceSpecsUnchanged=true")
+        print("postApplyResourceVersionsUnchanged=true")
         print("postApplyPodUidsRestartsReadinessUnchanged=true")
         print("postApplyEndpointsUnchanged=true")
         print("action=baseline-recorded")
@@ -1097,6 +1162,8 @@ def main() -> int:
     finally:
         if override_path is not None:
             Path(override_path).unlink(missing_ok=True)
+        if operation_lock is not None:
+            release_operation_lock(operation_lock)
 
 
 if __name__ == "__main__":

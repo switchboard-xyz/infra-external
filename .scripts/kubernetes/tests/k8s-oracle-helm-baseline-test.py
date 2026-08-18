@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import fcntl
 import hashlib
 import json
 import os
@@ -27,6 +28,7 @@ PAYER_KEY = "payer-key-must-not-appear"
 SUI_NAME = "sui-name-must-not-appear"
 SUI_KEY = "sui-key-must-not-appear"
 POLICY_SENTINEL = "policy-must-not-appear"
+LOCK_FILE = Path("/run/lock/switchboard-oracle-devnet-helm-baseline.lock")
 PROTECTED_FILES = [
     REPO_DIR / ".scripts/helm/charts/on-demand/values.yaml",
     REPO_DIR / ".scripts/helm/charts/on-demand/templates/oracle.yaml",
@@ -389,7 +391,7 @@ with Path(os.environ["HELM_LOG"]).open("a", encoding="utf-8") as stream:
     stream.write(" ".join(args) + "\n")
 
 if args == ["upgrade", "--help"]:
-    print("--dry-run client server --hide-secret --reuse-values --no-hooks")
+    print("--dry-run client server --hide-secret --history-max --reuse-values --no-hooks")
     raise SystemExit(0)
 if args and args[0] == "list":
     revision = int(Path(os.environ["REVISION_PATH"]).read_text(encoding="utf-8"))
@@ -405,6 +407,11 @@ if args and args[0] == "upgrade":
     revision_path = Path(os.environ["REVISION_PATH"])
     revision = int(revision_path.read_text(encoding="utf-8"))
     revision_path.write_text(str(revision + 1), encoding="utf-8")
+    if os.environ.get("POST_HELM_RESOURCE_VERSION_DRIFT") == "1":
+        live_path = Path(os.environ["LIVE_PATH"])
+        live = json.loads(live_path.read_text(encoding="utf-8"))
+        live[0]["metadata"]["resourceVersion"] = "post-helm-drift"
+        live_path.write_text(json.dumps(live), encoding="utf-8")
     print("upgrade output must stay suppressed")
     raise SystemExit(0)
 raise SystemExit(64)
@@ -455,6 +462,7 @@ raise SystemExit(64)
                 "stra01",
                 "--expected-current-oracle-image",
                 ORACLE_IMAGE,
+                "--coordinator-exclusive-window-confirmed",
                 *extra,
             ],
             stdout=subprocess.PIPE,
@@ -477,6 +485,14 @@ raise SystemExit(64)
             and "--dry-run=server" not in line
         ]
 
+    def dry_run_upgrade_lines(self) -> list[str]:
+        return [
+            line
+            for line in self.helm_lines()
+            if line.startswith("upgrade sb-oracle-devnet ")
+            and "--dry-run=server" in line
+        ]
+
     def test_guardian_zero_plan_is_secret_safe_and_non_mutating(self) -> None:
         result = self.run_script()
         self.assertEqual(result.returncode, 0, result.stderr)
@@ -497,7 +513,57 @@ raise SystemExit(64)
         self.assertIn("baselineHelmRevision=22", result.stdout)
         self.assertIn("rollbackRevision=22", result.stdout)
         self.assertIn("postApplyPodUidsRestartsReadinessUnchanged=true", result.stdout)
+        self.assertIn("postApplyResourceVersionsUnchanged=true", result.stdout)
         self.assertEqual(len(self.applied_upgrade_lines()), 1)
+        self.assertEqual(len(self.dry_run_upgrade_lines()), 1)
+        self.assertIn("--history-max 0", self.applied_upgrade_lines()[0])
+        self.assertIn("--history-max 0", self.dry_run_upgrade_lines()[0])
+        all_commands = self.helm_lines() + self.kubectl_log.read_text(
+            encoding="utf-8"
+        ).splitlines()
+        self.assertFalse(
+            any("delete" in command.split() for command in all_commands)
+        )
+
+    def test_exclusive_window_assertion_is_required_before_tool_use(self) -> None:
+        result = subprocess.run(
+            [
+                sys.executable,
+                str(self.script_dir / SCRIPT.name),
+                "--network",
+                "devnet",
+                "--host-id",
+                "stra01",
+                "--expected-current-oracle-image",
+                ORACLE_IMAGE,
+            ],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+            env=self.environment,
+            check=False,
+        )
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("--coordinator-exclusive-window-confirmed", result.stderr)
+        self.assertFalse(self.kubectl_log.exists())
+        self.assertFalse(self.helm_log.exists())
+
+    def test_host_local_lock_contention_blocks_before_tool_use(self) -> None:
+        descriptor = os.open(
+            LOCK_FILE,
+            os.O_RDWR | os.O_CREAT | os.O_CLOEXEC | os.O_NOFOLLOW,
+            0o600,
+        )
+        try:
+            fcntl.flock(descriptor, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            result = self.run_script("--apply")
+        finally:
+            fcntl.flock(descriptor, fcntl.LOCK_UN)
+            os.close(descriptor)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("holds the lock", result.stderr)
+        self.assertFalse(self.kubectl_log.exists())
+        self.assertFalse(self.helm_log.exists())
 
     def test_oracle_zero_is_rejected_before_helm_render_or_mutation(self) -> None:
         zero = resources(oracle_replicas=0)
@@ -553,6 +619,15 @@ raise SystemExit(64)
         self.assertEqual(self.revision_path.read_text(encoding="utf-8"), "21")
         self.assertEqual(self.applied_upgrade_lines(), [])
 
+    def test_post_helm_resource_version_drift_fails_closed(self) -> None:
+        self.environment["POST_HELM_RESOURCE_VERSION_DRIFT"] = "1"
+        result = self.run_script("--apply")
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("resourceVersion changed", result.stderr)
+        self.assertIn("requires-secret-safe-Helm-revision-readback", result.stderr)
+        self.assertEqual(self.revision_path.read_text(encoding="utf-8"), "22")
+        self.assertEqual(len(self.applied_upgrade_lines()), 1)
+
     def test_partial_confidential_policy_state_is_rejected_without_leakage(self) -> None:
         partial = resources(
             policies={
@@ -591,6 +666,7 @@ raise SystemExit(64)
                 "stra01",
                 "--expected-current-oracle-image",
                 f"docker.io/switchboardlabs/oracle@sha256:{'d' * 64}",
+                "--coordinator-exclusive-window-confirmed",
                 "--apply",
             ],
             stdout=subprocess.PIPE,
@@ -623,6 +699,7 @@ raise SystemExit(64)
                     host_id,
                     "--expected-current-oracle-image",
                     ORACLE_IMAGE,
+                    "--coordinator-exclusive-window-confirmed",
                     "--apply",
                 ],
                 stdout=subprocess.PIPE,
