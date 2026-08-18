@@ -1586,6 +1586,28 @@ def prove_helm_patch_deletion_freedom(
             allowed_paths.append(f"Deployment/{component}/metadata/labels/cluster")
             stored_labels["cluster"] = candidate_cluster
 
+        if component == "oracle":
+            stored_environment = require_mapping(
+                stored_container, "env", "stored Oracle environment"
+            )
+            candidate_environment = require_mapping(
+                candidate_container, "env", "candidate Oracle environment"
+            )
+            if (
+                "SUI_MAINNET_RPC" not in stored_environment
+                and "SUI_MAINNET_RPC" in candidate_environment
+            ):
+                secret_reference(
+                    candidate_environment["SUI_MAINNET_RPC"], "SUI_MAINNET_RPC"
+                )
+                allowed_paths.append(
+                    "Deployment/oracle/spec/template/spec/containers/oracle/"
+                    "env/SUI_MAINNET_RPC"
+                )
+                stored_environment["SUI_MAINNET_RPC"] = copy.deepcopy(
+                    candidate_environment["SUI_MAINNET_RPC"]
+                )
+
     if normalized_stored != normalized_candidate:
         raise BaselineError(
             "stored Helm manifest contains an unsupported old-to-new change"
