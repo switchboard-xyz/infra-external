@@ -299,8 +299,8 @@ class OracleHelmBaselineTest(unittest.TestCase):
             json.dumps(baseline_resources), encoding="utf-8"
         )
         self.stored_manifest_path.write_text(
-            "---\napiVersion: apps/v1\nkind: Deployment\nmetadata:\n"
-            "  name: stored-release-manifest\n",
+            "---\n# stored-release-manifest\napiVersion: apps/v1\n"
+            "kind: Deployment\nmetadata:\n  name: oracle\n",
             encoding="utf-8",
         )
         self.nodes_path.write_text(
@@ -856,8 +856,8 @@ raise SystemExit(64)
             "---\napiVersion: v1\nkind: Secret\nmetadata:\n"
             "  name: forbidden-stored-secret\nstringData:\n"
             f"  payload: {secret_sentinel}\n"
-            "---\napiVersion: apps/v1\nkind: Deployment\nmetadata:\n"
-            "  name: stored-release-manifest\n",
+            "---\n# stored-release-manifest\napiVersion: apps/v1\n"
+            "kind: Deployment\nmetadata:\n  name: oracle\n",
             encoding="utf-8",
         )
 
@@ -876,8 +876,8 @@ raise SystemExit(64)
             "---\napiVersion: v1\nkind: ConfigMap\nmetadata:\n"
             "  name: ignored-stored-config\ndata:\n"
             f"  payload: {unrelated_sentinel}\n"
-            "---\napiVersion: apps/v1\nkind: Deployment\nmetadata:\n"
-            "  name: stored-release-manifest\n",
+            "---\n# stored-release-manifest\napiVersion: apps/v1\n"
+            "kind: Deployment\nmetadata:\n  name: oracle\n",
             encoding="utf-8",
         )
 
@@ -888,6 +888,39 @@ raise SystemExit(64)
         self.assertNotIn(unrelated_sentinel, result.stdout + result.stderr)
         self.assertNotIn("ignored-stored-config", result.stdout + result.stderr)
         self.assertEqual(self.applied_upgrade_lines(), [])
+
+    def test_unrelated_protected_kind_is_discarded_without_raw_output(self) -> None:
+        unrelated_sentinel = "stored-deployment-payload-must-not-appear"
+        self.stored_manifest_path.write_text(
+            "---\napiVersion: apps/v1\nkind: Deployment\nmetadata:\n"
+            "  name: unrelated-deployment\nspec:\n"
+            f"  ignored: {unrelated_sentinel}\n"
+            "---\n# stored-release-manifest\napiVersion: apps/v1\n"
+            "kind: Deployment\nmetadata:\n  name: oracle\n",
+            encoding="utf-8",
+        )
+
+        result = self.run_script()
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("action=planned", result.stdout)
+        self.assertNotIn(unrelated_sentinel, result.stdout + result.stderr)
+        self.assertNotIn("unrelated-deployment", result.stdout + result.stderr)
+        self.assertEqual(self.applied_upgrade_lines(), [])
+
+    def test_protected_kind_without_metadata_name_fails_closed(self) -> None:
+        self.stored_manifest_path.write_text(
+            "---\napiVersion: apps/v1\nkind: Deployment\nmetadata:\n"
+            "  labels:\n    app: oracle\nspec:\n  replicas: 1\n",
+            encoding="utf-8",
+        )
+
+        result = self.run_script("--apply")
+
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("stored Helm manifest resource identity is unsafe", result.stderr)
+        self.assertEqual(self.applied_upgrade_lines(), [])
+        self.assertEqual(self.revision_path.read_text(encoding="utf-8"), "21")
 
     def test_sensitive_field_before_stored_kind_fails_without_raw_output(self) -> None:
         secret_sentinel = "pre-kind-secret-payload-must-not-appear"

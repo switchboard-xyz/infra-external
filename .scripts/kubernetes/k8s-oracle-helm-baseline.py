@@ -205,14 +205,20 @@ def run_helm_protected_manifest(arguments: list[str]) -> str:
     header: list[str] = []
     retained: list[str] | None = None
     document_kind: str | None = None
+    metadata_started = False
+    identity_resolved = False
 
     def finish_document() -> None:
-        nonlocal header, retained, document_kind
+        nonlocal header, retained, document_kind, metadata_started, identity_resolved
+        if document_kind in ALLOWED_RENDERED_KINDS and not identity_resolved:
+            raise BaselineError("stored Helm manifest resource identity is unsafe")
         if retained is not None:
             retained_documents.append("".join(retained))
         header = []
         retained = None
         document_kind = None
+        metadata_started = False
+        identity_resolved = False
 
     try:
         for line in process.stdout:
@@ -227,18 +233,39 @@ def run_helm_protected_manifest(arguments: list[str]) -> str:
                 if match is None:
                     continue
                 document_kind = match.group(1)
-                if document_kind in ALLOWED_RENDERED_KINDS:
-                    retained = list(header)
-                else:
+                if document_kind not in ALLOWED_RENDERED_KINDS:
                     header = []
+                    identity_resolved = True
+                continue
+            if not identity_resolved:
+                if re.match(r"^(?:data|stringData|binaryData):(?:[ \t]|$)", line):
+                    raise BaselineError("stored Helm manifest resource identity is unsafe")
+                header.append(line)
+                if re.match(r"^metadata:[ \t]*(?:#.*)?$", line):
+                    metadata_started = True
+                    continue
+                name_match = (
+                    re.match(r"^[ \t]+name:[ \t]*['\"]?([^'\" \t\r\n]+)", line)
+                    if metadata_started
+                    else None
+                )
+                if name_match is not None:
+                    identity_resolved = True
+                    if name_match.group(1) in COMPONENTS:
+                        retained = list(header)
+                    else:
+                        header = []
+                    continue
+                if metadata_started and re.match(r"^[A-Za-z]", line):
+                    raise BaselineError("stored Helm manifest resource identity is unsafe")
                 continue
             if retained is not None:
                 retained.append(line)
+        finish_document()
     except BaseException:
         process.kill()
         process.wait()
         raise
-    finish_document()
     return_code = process.wait()
     if return_code != 0:
         raise BaselineError("stored Helm release manifest lookup failed")
