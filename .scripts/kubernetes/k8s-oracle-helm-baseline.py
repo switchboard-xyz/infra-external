@@ -16,6 +16,7 @@ exclusive-window assertion remains mandatory.
 from __future__ import annotations
 
 import argparse
+import copy
 import fcntl
 import hashlib
 import json
@@ -245,6 +246,7 @@ def validate_tool_capabilities() -> None:
     helm_help = run_helm(["upgrade", "--help"], error_message="Helm help failed")
     for required_fragment in (
         "--dry-run",
+        "client",
         "server",
         "--hide-secret",
         "--history-max",
@@ -260,6 +262,12 @@ def validate_tool_capabilities() -> None:
     for required_fragment in ("--dry-run", "server"):
         if required_fragment not in kubectl_help:
             raise BaselineError("kubectl lacks a required server dry-run capability")
+    kubectl_create_help = run_kubectl(
+        ["create", "--help"], error_message="kubectl help failed"
+    )
+    for required_fragment in ("--dry-run", "client"):
+        if required_fragment not in kubectl_create_help:
+            raise BaselineError("kubectl lacks a required client parse capability")
 
 
 def validate_cluster_identity(context: str, node_name: str) -> None:
@@ -894,30 +902,108 @@ def extract_manifest(output: str) -> str:
     marker = "MANIFEST:\n"
     start = output.find(marker)
     if start < 0:
-        raise BaselineError("Helm server dry-run did not return a manifest")
+        raise BaselineError("Helm client dry-run did not return a manifest")
     manifest = output[start + len(marker) :]
     notes = manifest.find("\nNOTES:\n")
     if notes >= 0:
         manifest = manifest[:notes]
-    if not manifest.strip():
-        raise BaselineError("Helm server dry-run returned an empty manifest")
-    if SECRET_KIND_PATTERN.search(manifest) is not None:
-        raise BaselineError("Helm server dry-run unexpectedly rendered a Secret")
+    validate_manifest_content(manifest, "Helm client dry-run")
     return manifest
 
 
-def render_server_dry_run(
-    context: str, override_path: str
+def validate_manifest_content(manifest: str, label: str) -> None:
+    if not manifest.strip():
+        raise BaselineError(f"{label} returned an empty manifest")
+    if SECRET_KIND_PATTERN.search(manifest) is not None:
+        raise BaselineError(f"{label} unexpectedly contained a Secret")
+
+
+def parse_protected_resources(
+    output: str, label: str
 ) -> dict[tuple[str, str], dict[str, Any]]:
+    resources: dict[tuple[str, str], dict[str, Any]] = {}
+    for resource in parse_json_documents(output, label):
+        kind = resource.get("kind")
+        metadata = resource.get("metadata")
+        name = metadata.get("name") if isinstance(metadata, dict) else None
+        namespace = metadata.get("namespace") if isinstance(metadata, dict) else None
+        if (
+            kind not in ALLOWED_RENDERED_KINDS
+            or name not in COMPONENTS
+            or namespace != DEVNET_NAMESPACE
+        ):
+            raise BaselineError(f"{label} returned an unauthorized resource")
+        key = (kind, name)
+        if key in resources:
+            raise BaselineError(f"{label} returned a duplicate resource")
+        resources[key] = resource
+    return resources
+
+
+def parse_manifest_without_merge(
+    context: str, manifest: str, label: str
+) -> dict[tuple[str, str], dict[str, Any]]:
+    output = run_kubectl(
+        [
+            "--namespace",
+            DEVNET_NAMESPACE,
+            "create",
+            "--dry-run=client",
+            "--filename=-",
+            "--output=json",
+        ],
+        context=context,
+        input_text=manifest,
+        error_message=f"{label} parsing failed",
+    )
+    return parse_protected_resources(output, label)
+
+
+def render_client_manifest(
+    context: str, override_path: str
+) -> tuple[str, dict[tuple[str, str], dict[str, Any]]]:
     helm_output = run_helm(
         [
             *helm_upgrade_arguments(context, override_path),
-            "--dry-run=server",
+            "--dry-run=client",
             "--hide-secret",
         ],
-        error_message="Helm server dry-run failed",
+        error_message="Helm client dry-run failed",
     )
     manifest = extract_manifest(helm_output)
+    return manifest, parse_manifest_without_merge(
+        context, manifest, "Helm client manifest"
+    )
+
+
+def fetch_stored_release_resources(
+    context: str, revision: int
+) -> dict[tuple[str, str], dict[str, Any]]:
+    manifest = run_helm(
+        [
+            "get",
+            "manifest",
+            DEVNET_RELEASE,
+            "--kube-context",
+            context,
+            "--namespace",
+            DEVNET_NAMESPACE,
+            "--revision",
+            str(revision),
+        ],
+        error_message="stored Helm release manifest lookup failed",
+    )
+    validate_manifest_content(manifest, "stored Helm release manifest")
+    return parse_manifest_without_merge(
+        context,
+        manifest,
+        "stored Helm release manifest",
+    )
+
+
+def render_server_dry_run(
+    context: str, manifest: str
+) -> dict[tuple[str, str], dict[str, Any]]:
     server_output = run_kubectl(
         [
             "--namespace",
@@ -932,56 +1018,45 @@ def render_server_dry_run(
         input_text=manifest,
         error_message="Kubernetes server dry-run failed",
     )
-    rendered: dict[tuple[str, str], dict[str, Any]] = {}
-    for resource in parse_json_documents(server_output, "Kubernetes server dry-run"):
-        kind = resource.get("kind")
-        metadata = resource.get("metadata")
-        name = metadata.get("name") if isinstance(metadata, dict) else None
-        namespace = metadata.get("namespace") if isinstance(metadata, dict) else None
-        if (
-            kind not in ALLOWED_RENDERED_KINDS
-            or name not in COMPONENTS
-            or namespace != DEVNET_NAMESPACE
-        ):
-            raise BaselineError("server dry-run rendered an unauthorized resource")
-        key = (kind, name)
-        if key in rendered:
-            raise BaselineError("server dry-run rendered a duplicate resource")
-        rendered[key] = resource
-    return rendered
+    return parse_protected_resources(server_output, "Kubernetes server dry-run")
 
 
 def equivalence_proof(
     live: dict[tuple[str, str], dict[str, Any]],
     rendered: dict[tuple[str, str], dict[str, Any]],
+    candidate_label: str,
 ) -> dict[str, str]:
     if set(live) != set(rendered):
-        raise BaselineError("server dry-run resource set differs from live")
+        raise BaselineError(f"{candidate_label} resource set differs from live")
 
     live_specs = resource_specs(live)
     rendered_specs = resource_specs(rendered)
     if live_specs != rendered_specs:
-        raise BaselineError("server dry-run would change a protected resource spec")
+        raise BaselineError(
+            f"{candidate_label} would change a protected resource spec"
+        )
 
     live_metadata = resource_metadata_contract(live)
     rendered_metadata = resource_metadata_contract(rendered)
     if live_metadata != rendered_metadata:
-        raise BaselineError("server dry-run would change protected resource metadata")
+        raise BaselineError(
+            f"{candidate_label} would change protected resource metadata"
+        )
 
     live_templates = pod_templates(live)
     rendered_templates = pod_templates(rendered)
     if live_templates != rendered_templates:
-        raise BaselineError("server dry-run would change an active pod template")
+        raise BaselineError(f"{candidate_label} would change an active pod template")
 
     live_replicas = replicas_map(live)
     rendered_replicas = replicas_map(rendered)
     if live_replicas != rendered_replicas:
-        raise BaselineError("server dry-run would change a replica count")
+        raise BaselineError(f"{candidate_label} would change a replica count")
 
     live_secret_refs = collect_secret_references(live_specs)
     rendered_secret_refs = collect_secret_references(rendered_specs)
     if live_secret_refs != rendered_secret_refs:
-        raise BaselineError("server dry-run would change a Secret reference")
+        raise BaselineError(f"{candidate_label} would change a Secret reference")
 
     live_services = {
         key: value for key, value in live_specs.items() if key.startswith("Service/")
@@ -1000,9 +1075,9 @@ def equivalence_proof(
         if key.startswith("Ingress/")
     }
     if live_services != rendered_services:
-        raise BaselineError("server dry-run would change a Service")
+        raise BaselineError(f"{candidate_label} would change a Service")
     if live_ingresses != rendered_ingresses:
-        raise BaselineError("server dry-run would change an Ingress")
+        raise BaselineError(f"{candidate_label} would change an Ingress")
 
     return {
         "resourceSpecs": canonical_hash(live_specs),
@@ -1013,6 +1088,195 @@ def equivalence_proof(
         "secretReferences": canonical_hash(live_secret_refs),
         "replicas": canonical_hash(live_replicas),
     }
+
+
+def normalize_environment_lists(
+    resources: dict[tuple[str, str], dict[str, Any]]
+) -> dict[tuple[str, str], dict[str, Any]]:
+    normalized = copy.deepcopy(resources)
+    for component in COMPONENTS:
+        deployment = normalized[("Deployment", component)]
+        deployment_spec = require_mapping(deployment, "spec", "Deployment spec")
+        template = require_mapping(
+            deployment_spec, "template", "Deployment template"
+        )
+        pod_spec = require_mapping(template, "spec", "Deployment pod spec")
+        for containers_key in ("containers", "initContainers"):
+            if containers_key not in pod_spec:
+                continue
+            containers = require_list(
+                pod_spec, containers_key, f"Deployment {containers_key}"
+            )
+            for container in containers:
+                if not isinstance(container, dict):
+                    raise BaselineError("Deployment container is invalid")
+                if "env" not in container:
+                    continue
+                environment = require_list(
+                    container, "env", "Deployment container environment"
+                )
+                keyed_environment: dict[str, dict[str, Any]] = {}
+                for item in environment:
+                    if not isinstance(item, dict):
+                        raise BaselineError("Deployment environment entry is invalid")
+                    name = item.get("name")
+                    if not isinstance(name, str) or not name:
+                        raise BaselineError("Deployment environment name is invalid")
+                    if name in keyed_environment:
+                        raise BaselineError(
+                            "Deployment environment contains a duplicate name"
+                        )
+                    literal = item.get("value")
+                    if isinstance(literal, str) and "$(" in literal:
+                        raise BaselineError(
+                            "Deployment environment contains an order-sensitive literal"
+                        )
+                    keyed_environment[name] = item
+                container["env"] = keyed_environment
+    return normalized
+
+
+def remove_allowed_server_labels(
+    live: dict[tuple[str, str], dict[str, Any]],
+    client: dict[tuple[str, str], dict[str, Any]],
+    server: dict[tuple[str, str], dict[str, Any]],
+) -> dict[tuple[str, str], dict[str, Any]]:
+    normalized = copy.deepcopy(server)
+    for component in COMPONENTS:
+        key = ("Deployment", component)
+        live_metadata = require_mapping(live[key], "metadata", "resource metadata")
+        client_metadata = require_mapping(
+            client[key], "metadata", "resource metadata"
+        )
+        server_metadata = require_mapping(
+            normalized[key], "metadata", "resource metadata"
+        )
+        live_labels = live_metadata.get("labels", {})
+        client_labels = client_metadata.get("labels", {})
+        server_labels = server_metadata.get("labels", {})
+        if not all(
+            isinstance(labels, dict)
+            for labels in (live_labels, client_labels, server_labels)
+        ):
+            raise BaselineError("protected resource metadata is invalid")
+        server_spec = require_mapping(
+            normalized[key], "spec", "Deployment spec"
+        )
+        server_template = require_mapping(
+            server_spec, "template", "Deployment template"
+        )
+        server_template_metadata = require_mapping(
+            server_template, "metadata", "Deployment template metadata"
+        )
+        server_template_labels = require_mapping(
+            server_template_metadata, "labels", "Deployment template labels"
+        )
+        for label_name in ("app", "chain"):
+            if label_name in live_labels or label_name in client_labels:
+                continue
+            if label_name not in server_labels:
+                continue
+            label_value = server_labels[label_name]
+            if (
+                not isinstance(label_value, str)
+                or server_template_labels.get(label_name) != label_value
+            ):
+                raise BaselineError(
+                    "Kubernetes server dry-run added an invalid Deployment label"
+                )
+            del server_labels[label_name]
+    return normalized
+
+
+def require_server_semantic_equivalence(
+    live: dict[tuple[str, str], dict[str, Any]],
+    client: dict[tuple[str, str], dict[str, Any]],
+    server: dict[tuple[str, str], dict[str, Any]],
+) -> None:
+    if set(client) != set(server):
+        raise BaselineError("Kubernetes server dry-run resource set differs from live")
+    normalized_live = normalize_environment_lists(live)
+    normalized_client = normalize_environment_lists(client)
+    normalized_server = normalize_environment_lists(
+        remove_allowed_server_labels(live, client, server)
+    )
+    equivalence_proof(
+        normalized_live,
+        normalized_client,
+        "Helm client manifest",
+    )
+    equivalence_proof(
+        normalized_client,
+        normalized_server,
+        "Kubernetes server dry-run",
+    )
+
+
+def manifest_replica_scalar(deployment: dict[str, Any]) -> int:
+    spec = require_mapping(deployment, "spec", "stored Deployment spec")
+    replicas = spec.get("replicas")
+    if isinstance(replicas, bool) or not isinstance(replicas, int) or replicas < 0:
+        raise BaselineError("stored Helm manifest replica value is unsafe")
+    return replicas
+
+
+def prove_helm_patch_deletion_freedom(
+    stored: dict[tuple[str, str], dict[str, Any]],
+    candidate: dict[tuple[str, str], dict[str, Any]],
+) -> str:
+    if set(stored) != set(candidate):
+        raise BaselineError(
+            "stored Helm manifest resource identities differ from the candidate"
+        )
+
+    normalized_stored = copy.deepcopy(stored)
+    normalized_candidate = copy.deepcopy(candidate)
+    allowed_paths: list[str] = []
+    for component in COMPONENTS:
+        key = ("Deployment", component)
+        stored_deployment = normalized_stored[key]
+        candidate_deployment = normalized_candidate[key]
+        stored_spec = require_mapping(
+            stored_deployment, "spec", "stored Deployment spec"
+        )
+        stored_replicas = manifest_replica_scalar(stored_deployment)
+        candidate_replicas = manifest_replica_scalar(candidate_deployment)
+        if stored_replicas != candidate_replicas:
+            allowed_paths.append(f"Deployment/{component}/spec/replicas")
+        stored_spec["replicas"] = candidate_replicas
+
+        stored_container = component_container(stored_deployment, component)
+        candidate_container = component_container(candidate_deployment, component)
+        stored_image = stored_container.get("image")
+        candidate_image = candidate_container.get("image")
+        if not isinstance(stored_image, str) or not stored_image:
+            raise BaselineError("stored Helm manifest image value is unsafe")
+        parse_immutable_image(component, candidate_image)
+        if stored_image != candidate_image:
+            allowed_paths.append(
+                f"Deployment/{component}/spec/template/spec/containers/{component}/image"
+            )
+        stored_container["image"] = candidate_image
+
+    if normalized_stored != normalized_candidate:
+        raise BaselineError(
+            "stored Helm manifest contains an unsupported old-to-new change"
+        )
+    return canonical_hash(
+        {
+            "protectedResources": [
+                f"{kind}/{name}" for kind, name in sorted(candidate)
+            ],
+            "allowedScalarPaths": sorted(allowed_paths),
+            "candidate": [
+                {
+                    "identity": f"{kind}/{name}",
+                    "resource": normalized_candidate[(kind, name)],
+                }
+                for kind, name in sorted(normalized_candidate)
+            ],
+        }
+    )
 
 
 def race_guard(
@@ -1073,8 +1337,23 @@ def main() -> int:
         guard_before = race_guard(resources_before, pods_before, endpoints_before)
 
         override_path = write_override_file(live)
-        rendered = render_server_dry_run(context, override_path)
-        proof = equivalence_proof(resources_before, rendered)
+        manifest, client_resources = render_client_manifest(context, override_path)
+        proof = equivalence_proof(
+            resources_before,
+            client_resources,
+            "Helm client manifest",
+        )
+        stored_resources = fetch_stored_release_resources(context, revision_before)
+        helm_patch_hash = prove_helm_patch_deletion_freedom(
+            stored_resources,
+            client_resources,
+        )
+        server_resources = render_server_dry_run(context, manifest)
+        require_server_semantic_equivalence(
+            resources_before,
+            client_resources,
+            server_resources,
+        )
 
         print(
             f"target=devnet/{args.host_id} namespace={DEVNET_NAMESPACE} "
@@ -1083,6 +1362,7 @@ def main() -> int:
         print("coordinatorExclusiveWindowAsserted=true")
         print("hostLocalOperationLockHeld=true")
         print_proof(proof)
+        print(f"helmPatchDeletionFree=true hash={helm_patch_hash}")
         print(f"activePodsStable=true hash={canonical_hash(pods_before)}")
         print(f"endpointsStable=true hash={canonical_hash(endpoints_before)}")
 
