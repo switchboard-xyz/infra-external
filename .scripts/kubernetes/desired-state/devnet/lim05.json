@@ -1,0 +1,11 @@
+{
+  "applyEnabled": false,
+  "component": "gateway",
+  "hostId": "lim05",
+  "image": "docker.io/switchboardlabs/gateway",
+  "imageDigest": "sha256:d9f068b1b2b6558350ce2f3974b31d96ba7750f6ecc3988c914c848be068513a",
+  "network": "devnet",
+  "namespace": "switchboard-oracle-devnet",
+  "nodeName": "ovh-lim-05",
+  "replicas": 1
+}
