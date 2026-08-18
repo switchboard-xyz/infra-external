@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import copy
 import fcntl
 import hashlib
 import json
@@ -95,7 +96,11 @@ def deployment(
             },
             "template": {
                 "metadata": {
-                    "labels": {"app": component, "cluster": "devnet"},
+                    "labels": {
+                        "app": component,
+                        "chain": "solana",
+                        "cluster": "devnet",
+                    },
                     "annotations": annotations,
                 },
                 "spec": {
@@ -252,7 +257,10 @@ class OracleHelmBaselineTest(unittest.TestCase):
         self.kubectl_log = self.root / "kubectl.log"
         self.helm_log = self.root / "helm.log"
         self.live_path = self.root / "live.json"
-        self.rendered_path = self.root / "rendered.json"
+        self.client_path = self.root / "client.json"
+        self.server_path = self.root / "server.json"
+        self.stored_path = self.root / "stored.json"
+        self.stored_manifest_path = self.root / "stored-manifest.yaml"
         self.nodes_path = self.root / "nodes.json"
         self.revision_path = self.root / "revision"
         self.deployment_get_count = self.root / "deployment-get-count"
@@ -263,8 +271,17 @@ class OracleHelmBaselineTest(unittest.TestCase):
 
         baseline_resources = resources()
         self.live_path.write_text(json.dumps(baseline_resources), encoding="utf-8")
-        self.rendered_path.write_text(
+        self.client_path.write_text(
             json.dumps(baseline_resources), encoding="utf-8"
+        )
+        self.server_path.write_text(
+            json.dumps(baseline_resources), encoding="utf-8"
+        )
+        self.stored_path.write_text(
+            json.dumps(baseline_resources), encoding="utf-8"
+        )
+        self.stored_manifest_path.write_text(
+            "stored-release-manifest\n", encoding="utf-8"
         )
         self.nodes_path.write_text(
             json.dumps(
@@ -306,7 +323,10 @@ with Path(os.environ["KUBECTL_LOG"]).open("a", encoding="utf-8") as stream:
     stream.write(" ".join(args) + "\n")
 
 if args == ["apply", "--help"]:
-    print("--dry-run must be server --server-side")
+    print("--dry-run must be client or server --server-side")
+    raise SystemExit(0)
+if args == ["create", "--help"]:
+    print("--dry-run must be client")
     raise SystemExit(0)
 if args == ["config", "current-context"]:
     print(os.environ["TEST_CONTEXT"])
@@ -368,9 +388,16 @@ if len(args) >= 7 and args[:3] == ["--namespace", os.environ["NAMESPACE"], "get"
         )
         raise SystemExit(0)
 
+if "create" in args and "--dry-run=client" in args:
+    manifest = sys.stdin.read()
+    path = "STORED_PATH" if "stored-release-manifest" in manifest else "CLIENT_PATH"
+    items = json.loads(Path(os.environ[path]).read_text(encoding="utf-8"))
+    print(json.dumps({"apiVersion": "v1", "kind": "List", "items": items}))
+    raise SystemExit(0)
+
 if "apply" in args and "--dry-run=server" in args:
     sys.stdin.read()
-    items = json.loads(Path(os.environ["RENDERED_PATH"]).read_text(encoding="utf-8"))
+    items = json.loads(Path(os.environ["SERVER_PATH"]).read_text(encoding="utf-8"))
     print(json.dumps({"apiVersion": "v1", "kind": "List", "items": items}))
     raise SystemExit(0)
 
@@ -397,7 +424,10 @@ if args and args[0] == "list":
     revision = int(Path(os.environ["REVISION_PATH"]).read_text(encoding="utf-8"))
     print(json.dumps([{"name": "sb-oracle-devnet", "revision": revision, "status": "deployed"}]))
     raise SystemExit(0)
-if args and args[0] == "upgrade" and "--dry-run=server" in args:
+if args[:3] == ["get", "manifest", "sb-oracle-devnet"]:
+    print(Path(os.environ["STORED_MANIFEST_PATH"]).read_text(encoding="utf-8"), end="")
+    raise SystemExit(0)
+if args and args[0] == "upgrade" and "--dry-run=client" in args:
     if os.environ.get("HELM_RENDER_SECRET") == "1":
         print("MANIFEST:\n---\napiVersion: v1\nkind: Secret\nmetadata:\n  name: forbidden\n")
     else:
@@ -432,7 +462,10 @@ raise SystemExit(64)
                 "NAMESPACE": NAMESPACE,
                 "NODES_PATH": str(self.nodes_path),
                 "LIVE_PATH": str(self.live_path),
-                "RENDERED_PATH": str(self.rendered_path),
+                "CLIENT_PATH": str(self.client_path),
+                "SERVER_PATH": str(self.server_path),
+                "STORED_PATH": str(self.stored_path),
+                "STORED_MANIFEST_PATH": str(self.stored_manifest_path),
                 "REVISION_PATH": str(self.revision_path),
                 "DEPLOYMENT_GET_COUNT": str(self.deployment_get_count),
                 "POD_DIR": str(self.pod_dir),
@@ -448,8 +481,18 @@ raise SystemExit(64)
     def write_live(self, value: list[dict[str, object]]) -> None:
         self.live_path.write_text(json.dumps(value), encoding="utf-8")
 
+    def write_client(self, value: list[dict[str, object]]) -> None:
+        self.client_path.write_text(json.dumps(value), encoding="utf-8")
+
+    def write_server(self, value: list[dict[str, object]]) -> None:
+        self.server_path.write_text(json.dumps(value), encoding="utf-8")
+
+    def write_stored(self, value: list[dict[str, object]]) -> None:
+        self.stored_path.write_text(json.dumps(value), encoding="utf-8")
+
     def write_rendered(self, value: list[dict[str, object]]) -> None:
-        self.rendered_path.write_text(json.dumps(value), encoding="utf-8")
+        self.write_client(value)
+        self.write_server(value)
 
     def write_endpoint_slices(
         self, component: str, value: list[dict[str, object]]
@@ -457,6 +500,41 @@ raise SystemExit(64)
         (self.endpoint_dir / f"{component}.json").write_text(
             json.dumps(value), encoding="utf-8"
         )
+
+    def deployment_resource(
+        self, value: list[dict[str, object]], component: str
+    ) -> dict[str, object]:
+        return next(
+            item
+            for item in value
+            if item["kind"] == "Deployment" and item["metadata"]["name"] == component
+        )
+
+    def component_environment(
+        self, value: list[dict[str, object]], component: str
+    ) -> list[dict[str, object]]:
+        deployment_value = self.deployment_resource(value, component)
+        return deployment_value["spec"]["template"]["spec"]["containers"][0]["env"]
+
+    def component_container(
+        self, value: list[dict[str, object]], component: str
+    ) -> dict[str, object]:
+        deployment_value = self.deployment_resource(value, component)
+        return deployment_value["spec"]["template"]["spec"]["containers"][0]
+
+    def legacy_guardian_resources(
+        self,
+    ) -> tuple[
+        list[dict[str, object]],
+        list[dict[str, object]],
+        list[dict[str, object]],
+    ]:
+        live = resources()
+        guardian = self.deployment_resource(live, "guardian")
+        guardian["metadata"]["labels"].pop("app")
+        client = copy.deepcopy(live)
+        server = copy.deepcopy(live)
+        return live, client, server
 
     def run_script(self, *extra: str) -> subprocess.CompletedProcess[str]:
         return subprocess.run(
@@ -489,7 +567,7 @@ raise SystemExit(64)
             line
             for line in self.helm_lines()
             if line.startswith("upgrade sb-oracle-devnet ")
-            and "--dry-run=server" not in line
+            and "--dry-run=" not in line
         ]
 
     def dry_run_upgrade_lines(self) -> list[str]:
@@ -497,7 +575,7 @@ raise SystemExit(64)
             line
             for line in self.helm_lines()
             if line.startswith("upgrade sb-oracle-devnet ")
-            and "--dry-run=server" in line
+            and "--dry-run=client" in line
         ]
 
     def test_guardian_zero_plan_is_secret_safe_and_non_mutating(self) -> None:
@@ -512,6 +590,254 @@ raise SystemExit(64)
         combined = result.stdout + result.stderr
         for forbidden in (PAYER_KEY, SUI_NAME, SUI_KEY, POLICY_SENTINEL):
             self.assertNotIn(forbidden, combined)
+
+    def test_stored_manifest_allows_safe_image_and_replica_scalar_drift(
+        self,
+    ) -> None:
+        stored = resources()
+        for component in COMPONENTS:
+            self.component_container(stored, component)["image"] = (
+                f"docker.io/switchboardlabs/{component}:legacy"
+            )
+        self.deployment_resource(stored, "guardian")["spec"]["replicas"] = 1
+        self.write_stored(stored)
+
+        result = self.run_script()
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("helmPatchDeletionFree=true hash=", result.stdout)
+        self.assertIn("action=planned", result.stdout)
+        self.assertIn(
+            "get manifest sb-oracle-devnet --kube-context test-context "
+            "--namespace switchboard-oracle-devnet --revision 21",
+            self.helm_lines(),
+        )
+        client_parse_lines = [
+            line
+            for line in self.kubectl_log.read_text(encoding="utf-8").splitlines()
+            if "--dry-run=client" in line
+        ]
+        self.assertEqual(len(client_parse_lines), 2)
+        self.assertTrue(all(" create " in line for line in client_parse_lines))
+        self.assertEqual(self.applied_upgrade_lines(), [])
+
+    def test_stored_manifest_old_only_map_field_blocks_before_server_dry_run(
+        self,
+    ) -> None:
+        stored = resources()
+        guardian = self.deployment_resource(stored, "guardian")
+        guardian["metadata"]["annotations"]["legacy.example/old-only"] = "present"
+        self.write_stored(stored)
+
+        result = self.run_script("--apply")
+
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("unsupported old-to-new change", result.stderr)
+        self.assertFalse(
+            any(
+                "--dry-run=server" in line
+                for line in self.kubectl_log.read_text().splitlines()
+            )
+        )
+        self.assertEqual(self.applied_upgrade_lines(), [])
+        self.assertEqual(self.revision_path.read_text(encoding="utf-8"), "21")
+
+    def test_stored_manifest_old_only_merge_list_entry_blocks_before_apply(
+        self,
+    ) -> None:
+        stored = resources()
+        self.component_environment(stored, "gateway").append(
+            {"name": "OLD_ONLY", "value": "removed"}
+        )
+        self.write_stored(stored)
+
+        result = self.run_script("--apply")
+
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("unsupported old-to-new change", result.stderr)
+        self.assertEqual(self.applied_upgrade_lines(), [])
+        self.assertEqual(self.revision_path.read_text(encoding="utf-8"), "21")
+
+    def test_stored_manifest_changed_resource_identity_blocks_before_apply(
+        self,
+    ) -> None:
+        stored = resources()
+        guardian = self.deployment_resource(stored, "guardian")
+        guardian["metadata"]["name"] = "guardian-old"
+        self.write_stored(stored)
+
+        result = self.run_script("--apply")
+
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("returned an unauthorized resource", result.stderr)
+        self.assertEqual(self.applied_upgrade_lines(), [])
+        self.assertEqual(self.revision_path.read_text(encoding="utf-8"), "21")
+
+    def test_stored_secret_manifest_is_rejected_without_raw_output(self) -> None:
+        secret_sentinel = "stored-secret-payload-must-not-appear"
+        self.stored_manifest_path.write_text(
+            "---\napiVersion: v1\nkind: Secret\nmetadata:\n"
+            "  name: forbidden-stored-secret\nstringData:\n"
+            f"  payload: {secret_sentinel}\n",
+            encoding="utf-8",
+        )
+
+        result = self.run_script("--apply")
+
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn(
+            "stored Helm release manifest unexpectedly contained a Secret",
+            result.stderr,
+        )
+        self.assertNotIn(secret_sentinel, result.stdout + result.stderr)
+        self.assertNotIn("forbidden-stored-secret", result.stdout + result.stderr)
+        self.assertEqual(self.applied_upgrade_lines(), [])
+        self.assertEqual(self.revision_path.read_text(encoding="utf-8"), "21")
+
+    def test_server_accepts_35_entry_order_only_rotation_and_allowed_labels(
+        self,
+    ) -> None:
+        live, client, server = self.legacy_guardian_resources()
+        gateway_environment = self.component_environment(live, "gateway")
+        while len(gateway_environment) < 35:
+            index = len(gateway_environment)
+            gateway_environment.append(
+                {"name": f"ORDER_FIXTURE_{index:02d}", "value": str(index)}
+            )
+        client = copy.deepcopy(live)
+        server = copy.deepcopy(live)
+        server_environment = self.component_environment(server, "gateway")
+        server_environment[:] = server_environment[17:] + server_environment[:17]
+        server_guardian = self.deployment_resource(server, "guardian")
+        server_guardian["metadata"]["labels"].update(
+            {"app": "guardian", "chain": "solana"}
+        )
+        self.assertEqual(len(gateway_environment), 35)
+        self.write_live(live)
+        self.write_client(client)
+        self.write_server(server)
+        self.write_stored(copy.deepcopy(client))
+
+        result = self.run_script()
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("action=planned", result.stdout)
+        self.assertEqual(self.applied_upgrade_lines(), [])
+
+    def test_duplicate_environment_name_is_rejected_before_helm_mutation(
+        self,
+    ) -> None:
+        server = resources()
+        environment = self.component_environment(server, "gateway")
+        environment.append(copy.deepcopy(environment[0]))
+        self.write_server(server)
+
+        result = self.run_script("--apply")
+
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("environment contains a duplicate name", result.stderr)
+        self.assertEqual(self.revision_path.read_text(encoding="utf-8"), "21")
+        self.assertEqual(self.applied_upgrade_lines(), [])
+
+    def test_order_sensitive_environment_literal_is_rejected_before_mutation(
+        self,
+    ) -> None:
+        live = resources()
+        self.component_environment(live, "gateway").append(
+            {"name": "ORDER_SENSITIVE", "value": "prefix-$(NETWORK_ID)"}
+        )
+        self.write_live(live)
+        self.write_rendered(copy.deepcopy(live))
+        self.write_stored(copy.deepcopy(live))
+
+        result = self.run_script("--apply")
+
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("order-sensitive literal", result.stderr)
+        self.assertEqual(self.revision_path.read_text(encoding="utf-8"), "21")
+        self.assertEqual(self.applied_upgrade_lines(), [])
+
+    def test_altered_server_environment_entry_is_rejected(self) -> None:
+        server = resources()
+        environment = self.component_environment(server, "gateway")
+        next(item for item in environment if item["name"] == "NETWORK_ID")[
+            "value"
+        ] = "other-network"
+        self.write_server(server)
+
+        result = self.run_script("--apply")
+
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn(
+            "Kubernetes server dry-run would change a protected resource spec",
+            result.stderr,
+        )
+        self.assertEqual(self.revision_path.read_text(encoding="utf-8"), "21")
+        self.assertEqual(self.applied_upgrade_lines(), [])
+
+    def test_unexpected_server_label_is_rejected(self) -> None:
+        server = resources()
+        guardian = self.deployment_resource(server, "guardian")
+        guardian["metadata"]["labels"]["unexpected"] = "value"
+        self.write_server(server)
+
+        result = self.run_script("--apply")
+
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("would change protected resource metadata", result.stderr)
+        self.assertEqual(self.applied_upgrade_lines(), [])
+
+    def test_allowed_server_label_with_wrong_value_is_rejected(self) -> None:
+        live, client, server = self.legacy_guardian_resources()
+        guardian = self.deployment_resource(server, "guardian")
+        guardian["metadata"]["labels"]["app"] = "wrong"
+        self.write_live(live)
+        self.write_client(client)
+        self.write_server(server)
+        self.write_stored(copy.deepcopy(client))
+
+        result = self.run_script("--apply")
+
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("added an invalid Deployment label", result.stderr)
+        self.assertEqual(self.applied_upgrade_lines(), [])
+
+    def test_server_label_at_unexpected_path_is_rejected(self) -> None:
+        server = resources()
+        service_value = next(
+            item
+            for item in server
+            if item["kind"] == "Service" and item["metadata"]["name"] == "guardian"
+        )
+        service_value["metadata"]["labels"]["chain"] = "solana"
+        self.write_server(server)
+
+        result = self.run_script("--apply")
+
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("would change protected resource metadata", result.stderr)
+        self.assertEqual(self.applied_upgrade_lines(), [])
+
+    def test_client_live_mismatch_blocks_before_server_dry_run(self) -> None:
+        client = resources()
+        environment = self.component_environment(client, "gateway")
+        next(item for item in environment if item["name"] == "NETWORK_ID")[
+            "value"
+        ] = "other-network"
+        self.write_client(client)
+
+        result = self.run_script("--apply")
+
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn(
+            "Helm client manifest would change a protected resource spec",
+            result.stderr,
+        )
+        self.assertFalse(
+            any("--dry-run=server" in line for line in self.kubectl_log.read_text().splitlines())
+        )
+        self.assertEqual(self.revision_path.read_text(encoding="utf-8"), "21")
+        self.assertEqual(self.applied_upgrade_lines(), [])
 
     def test_guardian_zero_null_and_empty_endpoints_are_equivalent(self) -> None:
         endpoint_hashes = []
@@ -639,7 +965,7 @@ raise SystemExit(64)
             for item in rendered
             if item["kind"] == "Deployment" and item["metadata"]["name"] == "gateway"
         )["spec"]["template"]["spec"]["containers"][0]["resources"]["limits"]["memory"] = "3000Mi"
-        self.write_rendered(rendered)
+        self.write_server(rendered)
         result = self.run_script("--apply")
         self.assertNotEqual(result.returncode, 0)
         self.assertIn("protected resource spec", result.stderr)
@@ -693,6 +1019,7 @@ raise SystemExit(64)
         )
         self.write_live(complete)
         self.write_rendered(complete)
+        self.write_stored(copy.deepcopy(complete))
         result = self.run_script()
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertIn("action=planned", result.stdout)
@@ -726,7 +1053,7 @@ raise SystemExit(64)
         self.environment["HELM_RENDER_SECRET"] = "1"
         result = self.run_script("--apply")
         self.assertNotEqual(result.returncode, 0)
-        self.assertIn("unexpectedly rendered a Secret", result.stderr)
+        self.assertIn("unexpectedly contained a Secret", result.stderr)
         self.assertNotIn("forbidden", result.stdout + result.stderr)
         self.assertEqual(self.revision_path.read_text(encoding="utf-8"), "21")
 
