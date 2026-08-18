@@ -1637,6 +1637,33 @@ def prove_helm_patch_deletion_freedom(
                     candidate_environment["SUI_MAINNET_RPC"]
                 )
 
+            stored_environment_secret = optional_environment_secret(stored_container)
+            candidate_environment_secret = optional_environment_secret(
+                candidate_container
+            )
+            if (
+                stored_environment_secret is not None
+                and candidate_environment_secret is not None
+                and stored_environment_secret[0] == candidate_environment_secret[0]
+                and stored_environment_secret[1] in (None, False)
+                and candidate_environment_secret[1] is True
+            ):
+                stored_sources = require_list(
+                    stored_container,
+                    "envFrom",
+                    "stored Oracle environment sources",
+                )
+                stored_secret_ref = require_mapping(
+                    stored_sources[0],
+                    "secretRef",
+                    "stored Oracle environment Secret reference",
+                )
+                stored_secret_ref["optional"] = True
+                allowed_paths.append(
+                    "Deployment/oracle/spec/template/spec/containers/oracle/"
+                    "envFrom/0/secretRef/optional"
+                )
+
     if normalized_stored != normalized_candidate:
         raise BaselineError(
             "stored Helm manifest contains an unsupported old-to-new change"
