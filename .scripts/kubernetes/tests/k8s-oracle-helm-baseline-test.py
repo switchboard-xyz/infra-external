@@ -29,6 +29,8 @@ PAYER_KEY = "payer-key-must-not-appear"
 SUI_NAME = "sui-name-must-not-appear"
 SUI_KEY = "sui-key-must-not-appear"
 POLICY_SENTINEL = "policy-must-not-appear"
+CANDLE_SENTINEL = "candle-value-must-not-appear"
+ENVIRONMENT_SECRET_SENTINEL = "environment-secret-must-not-appear"
 LOCK_FILE = Path("/run/lock/switchboard-oracle-devnet-helm-baseline.lock")
 PROTECTED_FILES = [
     REPO_DIR / ".scripts/helm/charts/on-demand/values.yaml",
@@ -83,6 +85,7 @@ def deployment(
     ]
     if component == "oracle":
         env.append(secret_env("SUI_MAINNET_RPC", SUI_NAME, SUI_KEY))
+        env.append({"name": "CANDLE_COLLECTION_ENABLED", "value": CANDLE_SENTINEL})
     return {
         "apiVersion": "apps/v1",
         "kind": "Deployment",
@@ -112,6 +115,19 @@ def deployment(
                             "image": image,
                             "imagePullPolicy": "Always",
                             "env": env,
+                            **(
+                                {
+                                    "envFrom": [
+                                        {
+                                            "secretRef": {
+                                                "name": ENVIRONMENT_SECRET_SENTINEL
+                                            }
+                                        }
+                                    ]
+                                }
+                                if component == "oracle"
+                                else {}
+                            ),
                             "resources": {
                                 "limits": {"cpu": "4", "memory": "2000Mi"},
                                 "requests": {"cpu": "100m", "memory": "100Mi"},
@@ -417,6 +433,25 @@ args = sys.argv[1:]
 with Path(os.environ["HELM_LOG"]).open("a", encoding="utf-8") as stream:
     stream.write(" ".join(args) + "\n")
 
+if args and args[0] == "upgrade" and "--values" in args:
+    values_path = Path(args[args.index("--values") + 1])
+    values = json.loads(values_path.read_text(encoding="utf-8"))
+    oracle = values["components"]["oracle"]
+    if oracle["candleCollection"] != {
+        "enabled": True,
+        "value": os.environ["CANDLE_SENTINEL"],
+    }:
+        raise SystemExit(66)
+    if oracle["environmentSecret"] != {
+        "enabled": True,
+        "name": os.environ["ENVIRONMENT_SECRET_SENTINEL"],
+        "optionalSet": False,
+        "optional": False,
+    }:
+        raise SystemExit(67)
+    if oracle["resources"]["limits"]["cpu"] != "4":
+        raise SystemExit(68)
+
 if args == ["upgrade", "--help"]:
     print("--dry-run client server --hide-secret --history-max --reuse-values --no-hooks")
     raise SystemExit(0)
@@ -470,6 +505,8 @@ raise SystemExit(64)
                 "DEPLOYMENT_GET_COUNT": str(self.deployment_get_count),
                 "POD_DIR": str(self.pod_dir),
                 "ENDPOINT_DIR": str(self.endpoint_dir),
+                "CANDLE_SENTINEL": CANDLE_SENTINEL,
+                "ENVIRONMENT_SECRET_SENTINEL": ENVIRONMENT_SECRET_SENTINEL,
             }
         )
 
@@ -588,7 +625,14 @@ raise SystemExit(64)
         self.assertIn("action=planned", result.stdout)
         self.assertEqual(self.applied_upgrade_lines(), [])
         combined = result.stdout + result.stderr
-        for forbidden in (PAYER_KEY, SUI_NAME, SUI_KEY, POLICY_SENTINEL):
+        for forbidden in (
+            PAYER_KEY,
+            SUI_NAME,
+            SUI_KEY,
+            POLICY_SENTINEL,
+            CANDLE_SENTINEL,
+            ENVIRONMENT_SECRET_SENTINEL,
+        ):
             self.assertNotIn(forbidden, combined)
 
     def test_stored_manifest_allows_safe_image_and_replica_scalar_drift(
@@ -599,6 +643,9 @@ raise SystemExit(64)
             self.component_container(stored, component)["image"] = (
                 f"docker.io/switchboardlabs/{component}:legacy"
             )
+            self.component_container(stored, component)["resources"]["limits"][
+                "cpu"
+            ] = "4000m"
         self.deployment_resource(stored, "guardian")["spec"]["replicas"] = 1
         self.write_stored(stored)
 
@@ -619,6 +666,34 @@ raise SystemExit(64)
         ]
         self.assertEqual(len(client_parse_lines), 2)
         self.assertTrue(all(" create " in line for line in client_parse_lines))
+        self.assertEqual(self.applied_upgrade_lines(), [])
+
+    def test_stored_manifest_rejects_non_equivalent_cpu_change(self) -> None:
+        stored = resources()
+        self.component_container(stored, "oracle")["resources"]["limits"][
+            "cpu"
+        ] = "3000m"
+        self.write_stored(stored)
+
+        result = self.run_script("--apply")
+
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("unsupported old-to-new change", result.stderr)
+        self.assertEqual(self.applied_upgrade_lines(), [])
+
+    def test_stored_manifest_allows_named_environment_order_only_drift(
+        self,
+    ) -> None:
+        stored = resources()
+        environment = self.component_environment(stored, "oracle")
+        environment[:] = environment[2:] + environment[:2]
+        self.write_stored(stored)
+
+        result = self.run_script()
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("helmPatchDeletionFree=true hash=", result.stdout)
+        self.assertIn("action=planned", result.stdout)
         self.assertEqual(self.applied_upgrade_lines(), [])
 
     def test_stored_manifest_old_only_map_field_blocks_before_server_dry_run(
@@ -657,6 +732,75 @@ raise SystemExit(64)
         self.assertIn("unsupported old-to-new change", result.stderr)
         self.assertEqual(self.applied_upgrade_lines(), [])
         self.assertEqual(self.revision_path.read_text(encoding="utf-8"), "21")
+
+    def test_stored_oracle_environment_contract_cannot_be_deleted(self) -> None:
+        for removed_field in ("CANDLE_COLLECTION_ENABLED", "envFrom"):
+            with self.subTest(removed_field=removed_field):
+                client = resources()
+                oracle_container = self.component_container(client, "oracle")
+                if removed_field == "envFrom":
+                    del oracle_container["envFrom"]
+                else:
+                    oracle_container["env"] = [
+                        item
+                        for item in oracle_container["env"]
+                        if item["name"] != removed_field
+                    ]
+                self.write_client(client)
+                self.write_server(resources())
+                self.write_stored(resources())
+
+                result = self.run_script("--apply")
+
+                self.assertNotEqual(result.returncode, 0)
+                self.assertIn("unsupported old-to-new change", result.stderr)
+                self.assertEqual(self.applied_upgrade_lines(), [])
+                self.assertEqual(
+                    self.revision_path.read_text(encoding="utf-8"), "21"
+                )
+
+    def test_client_subset_accepts_api_defaults_and_preserved_live_only_fields(
+        self,
+    ) -> None:
+        live = resources()
+        client = copy.deepcopy(live)
+        for component in COMPONENTS:
+            live_deployment = self.deployment_resource(live, component)
+            live_deployment["spec"]["progressDeadlineSeconds"] = 600
+            live_deployment["spec"]["template"]["metadata"]["annotations"][
+                "keel.sh/update-time"
+            ] = "preserved-live-only"
+            client_service = next(
+                item
+                for item in client
+                if item["kind"] == "Service"
+                and item["metadata"]["name"] == component
+            )
+            client_service["spec"].pop("clusterIP")
+            client_service["spec"].pop("type")
+        self.write_live(live)
+        self.write_client(client)
+        self.write_stored(copy.deepcopy(client))
+        self.write_server(copy.deepcopy(live))
+
+        result = self.run_script()
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("action=planned", result.stdout)
+        self.assertEqual(self.applied_upgrade_lines(), [])
+
+    def test_client_explicit_value_that_differs_from_live_is_rejected(self) -> None:
+        client = resources()
+        self.component_container(client, "oracle")["resources"]["limits"][
+            "memory"
+        ] = "3000Mi"
+        self.write_client(client)
+
+        result = self.run_script("--apply")
+
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("protected resource spec", result.stderr)
+        self.assertEqual(self.applied_upgrade_lines(), [])
 
     def test_stored_manifest_changed_resource_identity_blocks_before_apply(
         self,

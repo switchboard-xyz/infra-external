@@ -148,10 +148,22 @@ spec:
           value: {{ $.Values.debug | default "false" | quote }}
         - name: LIST_CONFIG_AND_EXIT
           value: {{ $.Values.list_config_and_exit | default "false" | quote }}
+        {{- if $.Values.components.oracle.candleCollection.enabled }}
+        - name: CANDLE_COLLECTION_ENABLED
+          value: {{ $.Values.components.oracle.candleCollection.value | quote }}
+        {{- end }}
         # TRACING
         - name: OTLP_ENDPOINT
           value: {{ $.Values.tracing.otlpEndpoint | default "http://localhost:4317" | quote }}
 
+        {{- if $.Values.components.oracle.environmentSecret.enabled }}
+        envFrom:
+        - secretRef:
+            name: {{ required "components.oracle.environmentSecret.name is required when enabled" $.Values.components.oracle.environmentSecret.name | quote }}
+            {{- if $.Values.components.oracle.environmentSecret.optionalSet }}
+            optional: {{ $.Values.components.oracle.environmentSecret.optional }}
+            {{- end }}
+        {{- end }}
 
         {{ if eq $.Values.components.oracle.command "shell" }}
         command: [
