@@ -451,8 +451,8 @@ if args and args[0] == "upgrade" and "--values" in args:
     if oracle["environmentSecret"] != {
         "enabled": True,
         "name": os.environ["ENVIRONMENT_SECRET_SENTINEL"],
-        "optionalSet": False,
-        "optional": False,
+        "optionalSet": os.environ["EXPECTED_ENVIRONMENT_SECRET_OPTIONAL"] == "true",
+        "optional": os.environ["EXPECTED_ENVIRONMENT_SECRET_OPTIONAL"] == "true",
     }:
         raise SystemExit(67)
     if oracle["resources"]["limits"]["cpu"] != "4":
@@ -513,6 +513,7 @@ raise SystemExit(64)
                 "ENDPOINT_DIR": str(self.endpoint_dir),
                 "CANDLE_SENTINEL": CANDLE_SENTINEL,
                 "ENVIRONMENT_SECRET_SENTINEL": ENVIRONMENT_SECRET_SENTINEL,
+                "EXPECTED_ENVIRONMENT_SECRET_OPTIONAL": "false",
             }
         )
 
@@ -740,6 +741,46 @@ raise SystemExit(64)
         self.write_live(live)
         self.write_rendered(copy.deepcopy(live))
         self.write_stored(resources())
+
+        result = self.run_script("--apply")
+
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("unsupported old-to-new change", result.stderr)
+        self.assertEqual(self.applied_upgrade_lines(), [])
+
+    def test_stored_manifest_allows_environment_secret_becoming_optional(
+        self,
+    ) -> None:
+        stored = resources()
+        client = resources()
+        live = resources()
+        for value in (client, live):
+            self.component_container(value, "oracle")["envFrom"][0]["secretRef"][
+                "optional"
+            ] = True
+        self.write_stored(stored)
+        self.write_live(live)
+        self.write_rendered(client)
+        self.environment["EXPECTED_ENVIRONMENT_SECRET_OPTIONAL"] = "true"
+
+        result = self.run_script()
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("helmPatchDeletionFree=true hash=", result.stdout)
+        self.assertIn("action=planned", result.stdout)
+
+    def test_stored_manifest_rejects_environment_secret_becoming_required(
+        self,
+    ) -> None:
+        stored = resources()
+        client = resources()
+        live = resources()
+        self.component_container(stored, "oracle")["envFrom"][0]["secretRef"][
+            "optional"
+        ] = True
+        self.write_stored(stored)
+        self.write_live(live)
+        self.write_rendered(client)
 
         result = self.run_script("--apply")
 
