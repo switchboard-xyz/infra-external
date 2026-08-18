@@ -5,10 +5,12 @@ The command renders the existing release with explicit immutable images and
 live replica counts, asks the API server to dry-run the rendered resources,
 and refuses to create a Helm revision unless every protected spec is already
 equivalent. Helm's Secret driver necessarily reads and decodes its own release
-metadata internally. This wrapper never requests Kubernetes workload Secret
-objects, exposes Secret payloads, or prints Helm release values, Secret
-references, confidential-container policy contents, manifests, or command
-output. The host-local lock serializes cooperating invocations of this tool;
+metadata internally. Stored manifests are streamed by document kind; Secret
+and unrelated document bodies are discarded rather than retained or parsed.
+This wrapper never requests Kubernetes workload Secret objects, exposes Secret
+payloads, or prints Helm release values, Secret references, confidential-
+container policy contents, manifests, or command output. The host-local lock
+serializes cooperating invocations of this tool;
 it cannot fence an unrelated actor that bypasses the lock, so a root-coordinator
 exclusive-window assertion remains mandatory.
 """
@@ -185,6 +187,64 @@ def run_helm(
     arguments: list[str], *, error_message: str = "Helm command failed"
 ) -> str:
     return run_command(["helm", *arguments], error_message=error_message).stdout
+
+
+def run_helm_protected_manifest(arguments: list[str]) -> str:
+    process = subprocess.Popen(
+        ["helm", *arguments],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.DEVNULL,
+        text=True,
+    )
+    if process.stdout is None:
+        process.kill()
+        process.wait()
+        raise BaselineError("stored Helm release manifest lookup failed")
+
+    retained_documents: list[str] = []
+    header: list[str] = []
+    retained: list[str] | None = None
+    document_kind: str | None = None
+
+    def finish_document() -> None:
+        nonlocal header, retained, document_kind
+        if retained is not None:
+            retained_documents.append("".join(retained))
+        header = []
+        retained = None
+        document_kind = None
+
+    try:
+        for line in process.stdout:
+            if line.strip() == "---":
+                finish_document()
+                continue
+            if document_kind is None:
+                if re.match(r"^(?:data|stringData|binaryData):(?:[ \t]|$)", line):
+                    raise BaselineError("stored Helm manifest kind header is unsafe")
+                header.append(line)
+                match = re.match(r"^kind:[ \t]*['\"]?([^'\" \t\r\n]+)", line)
+                if match is None:
+                    continue
+                document_kind = match.group(1)
+                if document_kind in ALLOWED_RENDERED_KINDS:
+                    retained = list(header)
+                else:
+                    header = []
+                continue
+            if retained is not None:
+                retained.append(line)
+    except BaseException:
+        process.kill()
+        process.wait()
+        raise
+    finish_document()
+    return_code = process.wait()
+    if return_code != 0:
+        raise BaselineError("stored Helm release manifest lookup failed")
+    if not retained_documents:
+        raise BaselineError("stored Helm release manifest returned no protected resources")
+    return "\n---\n".join(retained_documents)
 
 
 def parse_json_object(output: str, label: str) -> dict[str, Any]:
@@ -1079,7 +1139,7 @@ def render_client_manifest(
 def fetch_stored_release_resources(
     context: str, revision: int
 ) -> dict[tuple[str, str], dict[str, Any]]:
-    manifest = run_helm(
+    manifest = run_helm_protected_manifest(
         [
             "get",
             "manifest",
@@ -1090,8 +1150,7 @@ def fetch_stored_release_resources(
             DEVNET_NAMESPACE,
             "--revision",
             str(revision),
-        ],
-        error_message="stored Helm release manifest lookup failed",
+        ]
     )
     validate_manifest_content(manifest, "stored Helm release manifest")
     return parse_manifest_without_merge(
