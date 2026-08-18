@@ -31,6 +31,7 @@ SUI_KEY = "sui-key-must-not-appear"
 POLICY_SENTINEL = "policy-must-not-appear"
 CANDLE_SENTINEL = "candle-value-must-not-appear"
 ENVIRONMENT_SECRET_SENTINEL = "environment-secret-must-not-appear"
+KEEL_UPDATE_TIME_SENTINEL = "keel-update-time-must-not-appear"
 LOCK_FILE = Path("/run/lock/switchboard-oracle-devnet-helm-baseline.lock")
 PROTECTED_FILES = [
     REPO_DIR / ".scripts/helm/charts/on-demand/values.yaml",
@@ -455,6 +456,11 @@ if args and args[0] == "upgrade" and "--values" in args:
         "optional": os.environ["EXPECTED_ENVIRONMENT_SECRET_OPTIONAL"] == "true",
     }:
         raise SystemExit(67)
+    if oracle["keelUpdateTime"] != {
+        "enabled": os.environ["EXPECTED_KEEL_UPDATE_TIME_ENABLED"] == "true",
+        "value": os.environ["EXPECTED_KEEL_UPDATE_TIME_VALUE"],
+    }:
+        raise SystemExit(70)
     if oracle["resources"]["limits"]["cpu"] != "4":
         raise SystemExit(68)
 
@@ -514,6 +520,8 @@ raise SystemExit(64)
                 "CANDLE_SENTINEL": CANDLE_SENTINEL,
                 "ENVIRONMENT_SECRET_SENTINEL": ENVIRONMENT_SECRET_SENTINEL,
                 "EXPECTED_ENVIRONMENT_SECRET_OPTIONAL": "false",
+                "EXPECTED_KEEL_UPDATE_TIME_ENABLED": "false",
+                "EXPECTED_KEEL_UPDATE_TIME_VALUE": "",
             }
         )
 
@@ -565,6 +573,12 @@ raise SystemExit(64)
     ) -> dict[str, object]:
         deployment_value = self.deployment_resource(value, component)
         return deployment_value["spec"]["template"]["spec"]["containers"][0]
+
+    def component_template_annotations(
+        self, value: list[dict[str, object]], component: str
+    ) -> dict[str, object]:
+        deployment_value = self.deployment_resource(value, component)
+        return deployment_value["spec"]["template"]["metadata"]["annotations"]
 
     def legacy_guardian_resources(
         self,
@@ -923,7 +937,7 @@ raise SystemExit(64)
                     self.revision_path.read_text(encoding="utf-8"), "21"
                 )
 
-    def test_client_subset_accepts_api_defaults_and_preserved_live_only_fields(
+    def test_client_subset_accepts_api_defaults(
         self,
     ) -> None:
         live = resources()
@@ -931,9 +945,6 @@ raise SystemExit(64)
         for component in COMPONENTS:
             live_deployment = self.deployment_resource(live, component)
             live_deployment["spec"]["progressDeadlineSeconds"] = 600
-            live_deployment["spec"]["template"]["metadata"]["annotations"][
-                "keel.sh/update-time"
-            ] = "preserved-live-only"
             client_service = next(
                 item
                 for item in client
@@ -952,6 +963,233 @@ raise SystemExit(64)
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertIn("action=planned", result.stdout)
         self.assertEqual(self.applied_upgrade_lines(), [])
+
+    def test_exact_live_oracle_keel_update_time_is_preserved(self) -> None:
+        live = resources()
+        client = resources()
+        stored = resources()
+        server = resources()
+        for value in (live, client, server):
+            self.component_template_annotations(value, "oracle")[
+                "keel.sh/update-time"
+            ] = KEEL_UPDATE_TIME_SENTINEL
+        self.environment["EXPECTED_KEEL_UPDATE_TIME_ENABLED"] = "true"
+        self.environment["EXPECTED_KEEL_UPDATE_TIME_VALUE"] = (
+            KEEL_UPDATE_TIME_SENTINEL
+        )
+        self.write_live(live)
+        self.write_client(client)
+        self.write_stored(stored)
+        self.write_server(server)
+
+        result = self.run_script("--apply")
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("postApplyResourceVersionsUnchanged=true", result.stdout)
+        self.assertIn(
+            "postApplyPodUidsRestartsReadinessUnchanged=true", result.stdout
+        )
+        self.assertEqual(len(self.applied_upgrade_lines()), 1)
+        self.assertEqual(self.revision_path.read_text(encoding="utf-8"), "22")
+        outputs = (
+            result.stdout,
+            result.stderr,
+            self.helm_log.read_text(encoding="utf-8"),
+            self.kubectl_log.read_text(encoding="utf-8"),
+        )
+        self.assertTrue(
+            all(KEEL_UPDATE_TIME_SENTINEL not in output for output in outputs)
+        )
+
+    def test_stored_exact_oracle_keel_update_time_is_preserved(self) -> None:
+        live = resources()
+        self.component_template_annotations(live, "oracle")[
+            "keel.sh/update-time"
+        ] = KEEL_UPDATE_TIME_SENTINEL
+        self.environment["EXPECTED_KEEL_UPDATE_TIME_ENABLED"] = "true"
+        self.environment["EXPECTED_KEEL_UPDATE_TIME_VALUE"] = (
+            KEEL_UPDATE_TIME_SENTINEL
+        )
+        self.write_live(live)
+        self.write_client(copy.deepcopy(live))
+        self.write_stored(copy.deepcopy(live))
+        self.write_server(copy.deepcopy(live))
+
+        result = self.run_script()
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("action=planned", result.stdout)
+        self.assertEqual(self.applied_upgrade_lines(), [])
+
+    def test_invalid_live_keel_update_time_blocks_before_helm(self) -> None:
+        cases = (
+            ("oracle", 7),
+            ("guardian", "unexpected"),
+            ("gateway", "unexpected"),
+        )
+        for component, annotation_value in cases:
+            with self.subTest(component=component, value=annotation_value):
+                live = resources()
+                self.component_template_annotations(live, component)[
+                    "keel.sh/update-time"
+                ] = annotation_value
+                self.write_live(live)
+                self.revision_path.write_text("21", encoding="utf-8")
+
+                result = self.run_script("--apply")
+
+                self.assertNotEqual(result.returncode, 0)
+                self.assertIn(
+                    "keel update-time annotation state is invalid", result.stderr
+                )
+                self.assertEqual(self.applied_upgrade_lines(), [])
+                self.assertEqual(
+                    self.revision_path.read_text(encoding="utf-8"), "21"
+                )
+
+    def test_rendered_keel_update_time_mismatch_blocks_before_helm(self) -> None:
+        cases = ("remove", "add", "change")
+        for case in cases:
+            with self.subTest(case=case):
+                live = resources()
+                client = resources()
+                if case in {"remove", "change"}:
+                    self.component_template_annotations(live, "oracle")[
+                        "keel.sh/update-time"
+                    ] = "live value"
+                    self.environment["EXPECTED_KEEL_UPDATE_TIME_ENABLED"] = "true"
+                    self.environment["EXPECTED_KEEL_UPDATE_TIME_VALUE"] = "live value"
+                else:
+                    self.environment["EXPECTED_KEEL_UPDATE_TIME_ENABLED"] = "false"
+                    self.environment["EXPECTED_KEEL_UPDATE_TIME_VALUE"] = ""
+                if case in {"add", "change"}:
+                    self.component_template_annotations(client, "oracle")[
+                        "keel.sh/update-time"
+                    ] = "rendered value"
+                self.write_live(live)
+                self.write_client(client)
+                self.write_server(copy.deepcopy(client))
+                self.revision_path.write_text("21", encoding="utf-8")
+
+                result = self.run_script("--apply")
+
+                self.assertNotEqual(result.returncode, 0)
+                self.assertIn(
+                    "would change Deployment template annotations", result.stderr
+                )
+                self.assertEqual(self.applied_upgrade_lines(), [])
+                self.assertEqual(
+                    self.revision_path.read_text(encoding="utf-8"), "21"
+                )
+
+    def test_other_template_annotation_mismatch_blocks_before_helm(self) -> None:
+        cases = ("remove", "add", "change")
+        for case in cases:
+            with self.subTest(case=case):
+                live = resources()
+                client = resources()
+                if case in {"remove", "change"}:
+                    self.component_template_annotations(live, "oracle")[
+                        "example.com/protected"
+                    ] = "live value"
+                if case in {"add", "change"}:
+                    self.component_template_annotations(client, "oracle")[
+                        "example.com/protected"
+                    ] = "rendered value"
+                self.write_live(live)
+                self.write_client(client)
+                self.write_server(copy.deepcopy(client))
+                self.revision_path.write_text("21", encoding="utf-8")
+
+                result = self.run_script("--apply")
+
+                self.assertNotEqual(result.returncode, 0)
+                self.assertIn(
+                    "would change Deployment template annotations", result.stderr
+                )
+                self.assertEqual(self.applied_upgrade_lines(), [])
+                self.assertEqual(
+                    self.revision_path.read_text(encoding="utf-8"), "21"
+                )
+
+    def test_stored_template_annotation_drift_blocks_before_helm(self) -> None:
+        cases = ("changed-keel", "removed-keel", "other-addition")
+        for case in cases:
+            with self.subTest(case=case):
+                self.environment["EXPECTED_KEEL_UPDATE_TIME_ENABLED"] = "false"
+                self.environment["EXPECTED_KEEL_UPDATE_TIME_VALUE"] = ""
+                live = resources()
+                client = resources()
+                stored = resources()
+                server = resources()
+                if case in {"changed-keel", "removed-keel"}:
+                    self.component_template_annotations(stored, "oracle")[
+                        "keel.sh/update-time"
+                    ] = "stored value"
+                if case == "changed-keel":
+                    for value in (live, client, server):
+                        self.component_template_annotations(value, "oracle")[
+                            "keel.sh/update-time"
+                        ] = "live value"
+                    self.environment["EXPECTED_KEEL_UPDATE_TIME_ENABLED"] = "true"
+                    self.environment["EXPECTED_KEEL_UPDATE_TIME_VALUE"] = "live value"
+                elif case == "other-addition":
+                    for value in (live, client, server):
+                        self.component_template_annotations(value, "oracle")[
+                            "example.com/protected"
+                        ] = "new value"
+                self.write_live(live)
+                self.write_client(client)
+                self.write_stored(stored)
+                self.write_server(server)
+                self.revision_path.write_text("21", encoding="utf-8")
+
+                result = self.run_script("--apply")
+
+                self.assertNotEqual(result.returncode, 0)
+                self.assertIn("unsupported old-to-new change", result.stderr)
+                self.assertEqual(self.applied_upgrade_lines(), [])
+                self.assertEqual(
+                    self.revision_path.read_text(encoding="utf-8"), "21"
+                )
+
+    def test_server_keel_update_time_mismatch_blocks_before_helm(self) -> None:
+        cases = ("omit", "change", "add")
+        for case in cases:
+            with self.subTest(case=case):
+                live = resources()
+                client = resources()
+                server = resources()
+                if case in {"omit", "change"}:
+                    for value in (live, client):
+                        self.component_template_annotations(value, "oracle")[
+                            "keel.sh/update-time"
+                        ] = "live value"
+                    self.environment["EXPECTED_KEEL_UPDATE_TIME_ENABLED"] = "true"
+                    self.environment["EXPECTED_KEEL_UPDATE_TIME_VALUE"] = "live value"
+                else:
+                    self.environment["EXPECTED_KEEL_UPDATE_TIME_ENABLED"] = "false"
+                    self.environment["EXPECTED_KEEL_UPDATE_TIME_VALUE"] = ""
+                if case in {"change", "add"}:
+                    self.component_template_annotations(server, "oracle")[
+                        "keel.sh/update-time"
+                    ] = "server value"
+                self.write_live(live)
+                self.write_client(client)
+                self.write_server(server)
+                self.revision_path.write_text("21", encoding="utf-8")
+
+                result = self.run_script("--apply")
+
+                self.assertNotEqual(result.returncode, 0)
+                self.assertIn(
+                    "server dry-run would change a protected resource spec",
+                    result.stderr,
+                )
+                self.assertEqual(self.applied_upgrade_lines(), [])
+                self.assertEqual(
+                    self.revision_path.read_text(encoding="utf-8"), "21"
+                )
 
     def test_exact_live_only_helm_and_controller_metadata_is_preserved(
         self,

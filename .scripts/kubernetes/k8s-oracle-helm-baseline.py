@@ -49,6 +49,7 @@ AUTHORIZED_HOSTS = {
 DIGEST_PATTERN = re.compile(r"sha256:[a-f0-9]{64}")
 SECRET_KIND_PATTERN = re.compile(r"(?m)^kind:[ \t]*Secret[ \t]*$")
 CC_INIT_DATA_ANNOTATION = "io.katacontainers.config.runtime.cc_init_data"
+KEEL_UPDATE_TIME_ANNOTATION = "keel.sh/update-time"
 HELM_RELEASE_NAME_ANNOTATION = "meta.helm.sh/release-name"
 HELM_RELEASE_NAMESPACE_ANNOTATION = "meta.helm.sh/release-namespace"
 HELM_MANAGED_BY_LABEL = "app.kubernetes.io/managed-by"
@@ -570,6 +571,7 @@ def validate_live_resources(
     sui_ref: tuple[str, str, bool | None] | None = None
     candle_collection: str | None = None
     environment_secret: tuple[str, bool | None] | None = None
+    oracle_keel_update_time: str | None = None
 
     for component in COMPONENTS:
         deployment = resources[("Deployment", component)]
@@ -640,6 +642,13 @@ def validate_live_resources(
         annotations = require_mapping(
             template_metadata, "annotations", "Deployment template annotations"
         )
+        if KEEL_UPDATE_TIME_ANNOTATION in annotations:
+            update_time = annotations[KEEL_UPDATE_TIME_ANNOTATION]
+            if component != "oracle" or not isinstance(update_time, str):
+                raise BaselineError(
+                    "Oracle keel update-time annotation state is invalid"
+                )
+            oracle_keel_update_time = update_time
         policy = annotations.get(CC_INIT_DATA_ANNOTATION)
         if policy is None:
             policies[component] = ""
@@ -678,6 +687,7 @@ def validate_live_resources(
         "suiRef": sui_ref,
         "candleCollection": candle_collection,
         "environmentSecret": environment_secret,
+        "oracleKeelUpdateTime": oracle_keel_update_time,
     }
 
 
@@ -859,6 +869,27 @@ def pod_templates(
         )
         for component in COMPONENTS
     }
+
+
+def pod_template_annotations(
+    resources: dict[tuple[str, str], dict[str, Any]]
+) -> dict[str, dict[str, Any]]:
+    result: dict[str, dict[str, Any]] = {}
+    for component in COMPONENTS:
+        deployment = resources[("Deployment", component)]
+        deployment_spec = require_mapping(deployment, "spec", "Deployment spec")
+        template = require_mapping(
+            deployment_spec, "template", "Deployment template"
+        )
+        template_metadata = require_mapping(
+            template, "metadata", "Deployment template metadata"
+        )
+        result[component] = require_mapping(
+            template_metadata,
+            "annotations",
+            "Deployment template annotations",
+        )
+    return result
 
 
 def replicas_map(
@@ -1174,6 +1205,13 @@ def write_override_file(live: dict[str, Any]) -> str:
             environment_secret[1] is True if environment_secret is not None else False
         ),
     }
+    oracle_keel_update_time = live["oracleKeelUpdateTime"]
+    components["oracle"]["keelUpdateTime"] = {
+        "enabled": oracle_keel_update_time is not None,
+        "value": (
+            oracle_keel_update_time if oracle_keel_update_time is not None else ""
+        ),
+    }
     sui_ref = live["suiRef"]
     override = {
         "namespace": DEVNET_NAMESPACE,
@@ -1443,6 +1481,11 @@ def equivalence_proof(
 ) -> dict[str, str]:
     if set(live) != set(rendered):
         raise BaselineError(f"{candidate_label} resource set differs from live")
+
+    if pod_template_annotations(live) != pod_template_annotations(rendered):
+        raise BaselineError(
+            f"{candidate_label} would change Deployment template annotations"
+        )
 
     live_specs = resource_specs(live)
     rendered_specs = resource_specs(rendered)
@@ -1806,6 +1849,55 @@ def prove_helm_patch_deletion_freedom(
             stored_labels["cluster"] = candidate_cluster
 
         if component == "oracle":
+            stored_template = require_mapping(
+                stored_spec, "template", "stored Deployment template"
+            )
+            candidate_spec = require_mapping(
+                candidate_deployment, "spec", "candidate Deployment spec"
+            )
+            candidate_template = require_mapping(
+                candidate_spec, "template", "candidate Deployment template"
+            )
+            stored_template_metadata = require_mapping(
+                stored_template,
+                "metadata",
+                "stored Deployment template metadata",
+            )
+            candidate_template_metadata = require_mapping(
+                candidate_template,
+                "metadata",
+                "candidate Deployment template metadata",
+            )
+            stored_template_annotations = require_mapping(
+                stored_template_metadata,
+                "annotations",
+                "stored Deployment template annotations",
+            )
+            candidate_template_annotations = require_mapping(
+                candidate_template_metadata,
+                "annotations",
+                "candidate Deployment template annotations",
+            )
+            stored_update_time = stored_template_annotations.get(
+                KEEL_UPDATE_TIME_ANNOTATION,
+                _MISSING_METADATA_VALUE,
+            )
+            candidate_update_time = candidate_template_annotations.get(
+                KEEL_UPDATE_TIME_ANNOTATION,
+                _MISSING_METADATA_VALUE,
+            )
+            if (
+                stored_update_time is _MISSING_METADATA_VALUE
+                and isinstance(candidate_update_time, str)
+            ):
+                allowed_paths.append(
+                    "Deployment/oracle/spec/template/metadata/annotations/"
+                    "keel.sh~1update-time"
+                )
+                stored_template_annotations[KEEL_UPDATE_TIME_ANNOTATION] = (
+                    candidate_update_time
+                )
+
             stored_environment = require_mapping(
                 stored_container, "env", "stored Oracle environment"
             )
