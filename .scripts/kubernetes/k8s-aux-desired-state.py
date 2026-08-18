@@ -222,8 +222,9 @@ def validate_live_deployment(
     labels = require_mapping(metadata, "labels")
     selector = require_mapping(require_mapping(spec, "selector"), "matchLabels")
     template_labels = require_mapping(template_metadata, "labels")
+    metadata_app_label_present = "app" in labels
     if (
-        labels.get("app") != component
+        (metadata_app_label_present and labels["app"] != component)
         or selector.get("app") != component
         or template_labels.get("app") != component
     ):
@@ -286,6 +287,7 @@ def validate_live_deployment(
         "containerIndex": container_index,
         "currentImage": current_image,
         "currentImageIsImmutable": current_is_immutable,
+        "metadataAppLabelPresent": metadata_app_label_present,
         "networkIndex": network_index,
         "resourceVersion": resource_version,
     }
@@ -298,11 +300,10 @@ def build_patch(
     container_index = live["containerIndex"]
     network_index = live["networkIndex"]
     expected_image = f'{desired["image"]}@{desired["imageDigest"]}'
-    return [
+    patch = [
         {"op": "test", "path": "/metadata/resourceVersion", "value": live["resourceVersion"]},
         {"op": "test", "path": "/metadata/name", "value": component},
         {"op": "test", "path": "/metadata/namespace", "value": namespace},
-        {"op": "test", "path": "/metadata/labels/app", "value": component},
         {"op": "test", "path": "/spec/replicas", "value": desired["replicas"]},
         {"op": "test", "path": "/spec/selector/matchLabels/app", "value": component},
         {"op": "test", "path": "/spec/template/metadata/labels/app", "value": component},
@@ -332,6 +333,12 @@ def build_patch(
             "value": expected_image,
         },
     ]
+    if live["metadataAppLabelPresent"]:
+        patch.insert(
+            3,
+            {"op": "test", "path": "/metadata/labels/app", "value": component},
+        )
+    return patch
 
 
 def build_rollback_patch(
