@@ -37,13 +37,20 @@ oracle_environment_render="$(
     --set components.oracle.environmentSecret.enabled=true \
     --set-string components.oracle.environmentSecret.name=oracle-environment \
     --set components.oracle.environmentSecret.optionalSet=true \
-    --set components.oracle.environmentSecret.optional=true
+    --set components.oracle.environmentSecret.optional=true \
+    --set-string taskRunnerRpc.secretName=task-runner-rpc \
+    --set-string taskRunnerRpc.suiMainnetRpcKey=SUI_MAINNET_RPC
 )"
 grep -q 'name: CANDLE_COLLECTION_ENABLED' <<<"${oracle_environment_render}"
 grep -q 'value: "enabled"' <<<"${oracle_environment_render}"
 grep -q '^        envFrom:$' <<<"${oracle_environment_render}"
 grep -q 'name: "oracle-environment"' <<<"${oracle_environment_render}"
 grep -q 'optional: true' <<<"${oracle_environment_render}"
+otlp_line="$(grep -n 'name: OTLP_ENDPOINT' <<<"${oracle_environment_render}" | cut -d: -f1)"
+candle_line="$(grep -n 'name: CANDLE_COLLECTION_ENABLED' <<<"${oracle_environment_render}" | cut -d: -f1)"
+sui_line="$(grep -n 'name: SUI_MAINNET_RPC' <<<"${oracle_environment_render}" | cut -d: -f1)"
+[[ "${otlp_line}" -lt "${candle_line}" ]]
+[[ "${candle_line}" -lt "${sui_line}" ]]
 
 guardian_render="$(
   helm template task-runner-rpc "${chart_dir}" \

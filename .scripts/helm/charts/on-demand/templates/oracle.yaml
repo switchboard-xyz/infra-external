@@ -109,13 +109,6 @@ spec:
           value: {{ $.Values.wssRpcUrl | quote }}
         - name: TASK_RUNNER_SOLANA_RPC
           value: {{ $.Values.solanaMainnetRpc | quote }}
-        {{- if $.Values.taskRunnerRpc.secretName }}
-        - name: SUI_MAINNET_RPC
-          valueFrom:
-            secretKeyRef:
-              name: {{ $.Values.taskRunnerRpc.secretName | quote }}
-              key: {{ required "taskRunnerRpc.suiMainnetRpcKey is required when taskRunnerRpc.secretName is set" $.Values.taskRunnerRpc.suiMainnetRpcKey | quote }}
-        {{- end }}
         - name: KEYPAIR_PATH
           value: "/data/protected_files/keypair.bin"
         - name: PAYER_SECRET
@@ -148,13 +141,20 @@ spec:
           value: {{ $.Values.debug | default "false" | quote }}
         - name: LIST_CONFIG_AND_EXIT
           value: {{ $.Values.list_config_and_exit | default "false" | quote }}
+        # TRACING
+        - name: OTLP_ENDPOINT
+          value: {{ $.Values.tracing.otlpEndpoint | default "http://localhost:4317" | quote }}
         {{- if $.Values.components.oracle.candleCollection.enabled }}
         - name: CANDLE_COLLECTION_ENABLED
           value: {{ $.Values.components.oracle.candleCollection.value | quote }}
         {{- end }}
-        # TRACING
-        - name: OTLP_ENDPOINT
-          value: {{ $.Values.tracing.otlpEndpoint | default "http://localhost:4317" | quote }}
+        {{- if $.Values.taskRunnerRpc.secretName }}
+        - name: SUI_MAINNET_RPC
+          valueFrom:
+            secretKeyRef:
+              name: {{ $.Values.taskRunnerRpc.secretName | quote }}
+              key: {{ required "taskRunnerRpc.suiMainnetRpcKey is required when taskRunnerRpc.secretName is set" $.Values.taskRunnerRpc.suiMainnetRpcKey | quote }}
+        {{- end }}
 
         {{- if $.Values.components.oracle.environmentSecret.enabled }}
         envFrom:

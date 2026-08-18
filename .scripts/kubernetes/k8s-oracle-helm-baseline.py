@@ -1334,6 +1334,13 @@ def equivalence_proof(
         error_message=f"{candidate_label} would change an active pod template",
     )
 
+    live_environment_orders = environment_order_contract(live)
+    rendered_environment_orders = environment_order_contract(rendered)
+    if live_environment_orders != rendered_environment_orders:
+        raise BaselineError(
+            f"{candidate_label} would reorder a protected container environment"
+        )
+
     live_replicas = replicas_map(live)
     rendered_replicas = replicas_map(rendered)
     if live_replicas != rendered_replicas:
@@ -1360,7 +1367,29 @@ def equivalence_proof(
         "ingresses": canonical_hash(rendered_ingresses),
         "secretReferences": canonical_hash(rendered_secret_refs),
         "replicas": canonical_hash(rendered_replicas),
+        "environmentOrders": canonical_hash(rendered_environment_orders),
     }
+
+
+def environment_order_contract(
+    resources: dict[tuple[str, str], dict[str, Any]],
+) -> dict[str, list[str]]:
+    contract: dict[str, list[str]] = {}
+    for component in COMPONENTS:
+        container = component_container(resources[("Deployment", component)], component)
+        environment = require_list(
+            container, "env", "Deployment container environment"
+        )
+        names: list[str] = []
+        for item in environment:
+            if not isinstance(item, dict):
+                raise BaselineError("Deployment environment entry is invalid")
+            name = item.get("name")
+            if not isinstance(name, str) or not name or name in names:
+                raise BaselineError("Deployment environment name is invalid")
+            names.append(name)
+        contract[component] = names
+    return contract
 
 
 def normalize_environment_lists(
@@ -1654,6 +1683,7 @@ def print_proof(proof: dict[str, str]) -> None:
         "ingresses",
         "secretReferences",
         "replicas",
+        "environmentOrders",
     ):
         print(f"{label}Equivalent=true hash={proof[label]}")
 

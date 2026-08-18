@@ -627,6 +627,7 @@ raise SystemExit(64)
         self.assertIn("resourceSpecsEquivalent=true hash=", result.stdout)
         self.assertIn("podTemplatesEquivalent=true hash=", result.stdout)
         self.assertIn("secretReferencesEquivalent=true hash=", result.stdout)
+        self.assertIn("environmentOrdersEquivalent=true hash=", result.stdout)
         self.assertIn("activePodsStable=true hash=", result.stdout)
         self.assertIn("action=planned", result.stdout)
         self.assertEqual(self.applied_upgrade_lines(), [])
@@ -700,6 +701,18 @@ raise SystemExit(64)
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertIn("helmPatchDeletionFree=true hash=", result.stdout)
         self.assertIn("action=planned", result.stdout)
+        self.assertEqual(self.applied_upgrade_lines(), [])
+
+    def test_client_environment_order_change_is_rejected(self) -> None:
+        client = resources()
+        environment = self.component_environment(client, "oracle")
+        environment[:] = environment[2:] + environment[:2]
+        self.write_client(client)
+
+        result = self.run_script("--apply")
+
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("reorder a protected container environment", result.stderr)
         self.assertEqual(self.applied_upgrade_lines(), [])
 
     def test_stored_manifest_allows_missing_sui_secret_reference_addition(
@@ -818,7 +831,12 @@ raise SystemExit(64)
                 result = self.run_script("--apply")
 
                 self.assertNotEqual(result.returncode, 0)
-                self.assertIn("unsupported old-to-new change", result.stderr)
+                expected_error = (
+                    "reorder a protected container environment"
+                    if removed_field == "CANDLE_COLLECTION_ENABLED"
+                    else "unsupported old-to-new change"
+                )
+                self.assertIn(expected_error, result.stderr)
                 self.assertEqual(self.applied_upgrade_lines(), [])
                 self.assertEqual(
                     self.revision_path.read_text(encoding="utf-8"), "21"
