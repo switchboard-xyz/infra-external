@@ -1012,7 +1012,9 @@ def resource_version_guard(
 
 
 def nonvolatile_resource_metadata(
-    resources: dict[tuple[str, str], dict[str, Any]]
+    resources: dict[tuple[str, str], dict[str, Any]],
+    *,
+    ignore_oracle_deployment_generation: bool = False,
 ) -> dict[str, Any]:
     result: dict[str, Any] = {}
     for (kind, name), resource in sorted(resources.items()):
@@ -1020,6 +1022,12 @@ def nonvolatile_resource_metadata(
             require_mapping(resource, "metadata", "resource metadata")
         )
         metadata.pop("resourceVersion", None)
+        if (
+            ignore_oracle_deployment_generation
+            and kind == "Deployment"
+            and name == "oracle"
+        ):
+            metadata.pop("generation", None)
         metadata.pop("managedFields", None)
         annotations = metadata.get("annotations", {})
         if not isinstance(annotations, dict):
@@ -2124,6 +2132,7 @@ def race_guard(
     return canonical_hash(
         {
             "resourceVersions": resource_version_guard(resources),
+            "generations": deployment_generation_guard(resources),
             "specs": resource_specs(resources),
             "metadata": nonvolatile_resource_metadata(resources),
             "pods": pods,
@@ -2231,7 +2240,10 @@ def main() -> int:
         resources_guarded = fetch_resources(context)
         protected_versions_before_helm = resource_version_guard(resources_guarded)
         nonvolatile_metadata_before_helm = nonvolatile_resource_metadata(
-            resources_guarded
+            resources_guarded,
+            ignore_oracle_deployment_generation=(
+                args.disable_oracle_keel_deployment_annotations
+            ),
         )
         generations_before_helm = deployment_generation_guard(resources_guarded)
         guarded_live = validate_live_resources(
@@ -2276,12 +2288,26 @@ def main() -> int:
             raise BaselineError(
                 "protected resourceVersion changed during baseline creation"
             )
-        if deployment_generation_guard(resources_after) != generations_before_helm:
+        generations_after = deployment_generation_guard(resources_after)
+        if args.disable_oracle_keel_deployment_annotations:
+            if generations_after["oracle"] < generations_before_helm["oracle"]:
+                raise BaselineError(
+                    "Oracle Deployment generation decreased during Keel opt-out baseline creation"
+                )
+            for component in ("guardian", "gateway"):
+                if generations_after[component] != generations_before_helm[component]:
+                    raise BaselineError(
+                        "non-Oracle Deployment generation changed during Keel opt-out baseline creation"
+                    )
+        elif generations_after != generations_before_helm:
             raise BaselineError(
                 "Deployment generation changed during baseline creation"
             )
         if nonvolatile_resource_metadata(
-            resources_after
+            resources_after,
+            ignore_oracle_deployment_generation=(
+                args.disable_oracle_keel_deployment_annotations
+            ),
         ) != nonvolatile_metadata_before_helm:
             raise BaselineError(
                 "protected resource metadata changed during baseline creation"
@@ -2322,10 +2348,18 @@ def main() -> int:
                 f"{str(oracle_resource_version_changed).lower()}"
             )
             print("postApplyOtherResourceVersionsUnchanged=true")
+            oracle_generation_advanced = (
+                generations_after["oracle"] > generations_before_helm["oracle"]
+            )
+            print(
+                "postApplyOracleGenerationAdvanced="
+                f"{str(oracle_generation_advanced).lower()}"
+            )
+            print("postApplyOtherDeploymentGenerationsUnchanged=true")
             print("postApplyOracleMetadataOnlyRecord=true")
         else:
             print("postApplyResourceVersionsUnchanged=true")
-        print("postApplyDeploymentGenerationsUnchanged=true")
+            print("postApplyDeploymentGenerationsUnchanged=true")
         print("postApplyNonvolatileMetadataUnchanged=true")
         print("postApplyPodUidsRestartsReadinessUnchanged=true")
         print("postApplyEndpointsUnchanged=true")

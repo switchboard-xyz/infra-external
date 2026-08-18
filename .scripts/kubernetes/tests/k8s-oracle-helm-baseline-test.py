@@ -527,6 +527,22 @@ if args and args[0] == "upgrade":
         }
         if mutation == "oracle-generation":
             deployments["oracle"]["metadata"]["generation"] += 1
+        elif mutation == "oracle-generation-decrease":
+            deployments["oracle"]["metadata"]["generation"] -= 1
+        elif mutation == "oracle-generation-nonnumeric":
+            deployments["oracle"]["metadata"]["generation"] = "invalid"
+        elif mutation == "guardian-generation":
+            deployments["guardian"]["metadata"]["generation"] += 1
+        elif mutation == "oracle-service-generation":
+            for resource in live:
+                if (
+                    resource["kind"] == "Service"
+                    and resource["metadata"]["name"] == "oracle"
+                ):
+                    resource["metadata"]["generation"] = 1
+                    break
+            else:
+                raise SystemExit(75)
         elif mutation == "oracle-spec":
             deployments["oracle"]["spec"]["minReadySeconds"] = 1
         elif mutation == "oracle-template":
@@ -1407,6 +1423,7 @@ raise SystemExit(64)
             KEEL_UPDATE_TIME_SENTINEL
         )
         self.environment["POST_HELM_RESOURCE_VERSION_DRIFT"] = "1"
+        self.environment["POST_HELM_MUTATION"] = "oracle-generation"
         self.write_rbx_keel_opt_out_state(live, client, stored, server)
 
         result = self.run_script(
@@ -1427,7 +1444,10 @@ raise SystemExit(64)
         )
         self.assertIn("postApplyOracleMetadataOnlyRecord=true", result.stdout)
         self.assertIn(
-            "postApplyDeploymentGenerationsUnchanged=true", result.stdout
+            "postApplyOracleGenerationAdvanced=true", result.stdout
+        )
+        self.assertIn(
+            "postApplyOtherDeploymentGenerationsUnchanged=true", result.stdout
         )
         self.assertIn(
             "postApplyNonvolatileMetadataUnchanged=true", result.stdout
@@ -1454,8 +1474,14 @@ raise SystemExit(64)
         self,
         mutation: str,
         expected_error: str,
+        *,
+        initial_oracle_generation: int | None = None,
     ) -> None:
         live, client, stored, server = self.rbx_keel_opt_out_resources()
+        if initial_oracle_generation is not None:
+            self.deployment_resource(live, "oracle")["metadata"][
+                "generation"
+            ] = initial_oracle_generation
         self.write_rbx_keel_opt_out_state(live, client, stored, server)
         self.environment["POST_HELM_RESOURCE_VERSION_DRIFT"] = "1"
         self.environment["POST_HELM_MUTATION"] = mutation
@@ -1474,10 +1500,29 @@ raise SystemExit(64)
         self.assertEqual(self.revision_path.read_text(encoding="utf-8"), "22")
         self.assertEqual(len(self.applied_upgrade_lines()), 1)
 
-    def test_keel_opt_out_rejects_post_helm_generation_drift(self) -> None:
+    def test_keel_opt_out_rejects_oracle_generation_decrease(self) -> None:
         self.assert_rbx_post_helm_mutation_rejected(
-            "oracle-generation",
-            "Deployment generation changed",
+            "oracle-generation-decrease",
+            "Oracle Deployment generation decreased",
+            initial_oracle_generation=2,
+        )
+
+    def test_keel_opt_out_rejects_nonnumeric_oracle_generation(self) -> None:
+        self.assert_rbx_post_helm_mutation_rejected(
+            "oracle-generation-nonnumeric",
+            "Deployment generation is missing or invalid",
+        )
+
+    def test_keel_opt_out_rejects_other_deployment_generation_drift(self) -> None:
+        self.assert_rbx_post_helm_mutation_rejected(
+            "guardian-generation",
+            "non-Oracle Deployment generation changed",
+        )
+
+    def test_keel_opt_out_rejects_other_resource_generation_drift(self) -> None:
+        self.assert_rbx_post_helm_mutation_rejected(
+            "oracle-service-generation",
+            "protected resource metadata changed",
         )
 
     def test_keel_opt_out_rejects_post_helm_spec_drift(self) -> None:
@@ -2298,6 +2343,15 @@ raise SystemExit(64)
         result = self.run_script("--apply")
         self.assertNotEqual(result.returncode, 0)
         self.assertIn("resourceVersion changed", result.stderr)
+        self.assertIn("requires-secret-safe-Helm-revision-readback", result.stderr)
+        self.assertEqual(self.revision_path.read_text(encoding="utf-8"), "22")
+        self.assertEqual(len(self.applied_upgrade_lines()), 1)
+
+    def test_default_mode_rejects_post_helm_generation_advance(self) -> None:
+        self.environment["POST_HELM_MUTATION"] = "oracle-generation"
+        result = self.run_script("--apply")
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("Deployment generation changed", result.stderr)
         self.assertIn("requires-secret-safe-Helm-revision-readback", result.stderr)
         self.assertEqual(self.revision_path.read_text(encoding="utf-8"), "22")
         self.assertEqual(len(self.applied_upgrade_lines()), 1)
