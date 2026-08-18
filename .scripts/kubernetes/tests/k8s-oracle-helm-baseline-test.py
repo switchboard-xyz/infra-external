@@ -1178,11 +1178,52 @@ raise SystemExit(64)
         self.assertIn("action=planned", result.stdout)
         self.assertEqual(self.applied_upgrade_lines(), [])
 
+    def assert_live_only_companion_keel_update_time_is_preserved(
+        self, component: str
+    ) -> None:
+        live = resources()
+        client = resources()
+        stored = resources()
+        server = resources()
+        for value in (live, server):
+            self.component_template_annotations(value, component)[
+                "keel.sh/update-time"
+            ] = KEEL_UPDATE_TIME_SENTINEL
+        self.write_live(live)
+        self.write_client(client)
+        self.write_stored(stored)
+        self.write_server(server)
+
+        result = self.run_script("--apply")
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("postApplyResourceVersionsUnchanged=true", result.stdout)
+        self.assertIn(
+            "postApplyPodUidsRestartsReadinessUnchanged=true", result.stdout
+        )
+        self.assertEqual(len(self.applied_upgrade_lines()), 1)
+        self.assertEqual(self.revision_path.read_text(encoding="utf-8"), "22")
+        outputs = (
+            result.stdout,
+            result.stderr,
+            self.helm_log.read_text(encoding="utf-8"),
+            self.kubectl_log.read_text(encoding="utf-8"),
+        )
+        self.assertTrue(
+            all(KEEL_UPDATE_TIME_SENTINEL not in output for output in outputs)
+        )
+
+    def test_live_only_guardian_keel_update_time_is_preserved(self) -> None:
+        self.assert_live_only_companion_keel_update_time_is_preserved("guardian")
+
+    def test_live_only_gateway_keel_update_time_is_preserved(self) -> None:
+        self.assert_live_only_companion_keel_update_time_is_preserved("gateway")
+
     def test_invalid_live_keel_update_time_blocks_before_helm(self) -> None:
         cases = (
             ("oracle", 7),
-            ("guardian", "unexpected"),
-            ("gateway", "unexpected"),
+            ("guardian", 7),
+            ("gateway", {"invalid": True}),
         )
         for component, annotation_value in cases:
             with self.subTest(component=component, value=annotation_value):
@@ -1198,6 +1239,146 @@ raise SystemExit(64)
                 self.assertNotEqual(result.returncode, 0)
                 self.assertIn(
                     "keel update-time annotation state is invalid", result.stderr
+                )
+                self.assertEqual(self.applied_upgrade_lines(), [])
+                self.assertEqual(
+                    self.revision_path.read_text(encoding="utf-8"), "21"
+                )
+
+    def test_companion_keel_update_time_in_old_or_new_blocks_before_helm(
+        self,
+    ) -> None:
+        for component in ("guardian", "gateway"):
+            for location in ("stored", "rendered"):
+                with self.subTest(component=component, location=location):
+                    live = resources()
+                    client = resources()
+                    stored = resources()
+                    server = resources()
+                    for value in (live, server):
+                        self.component_template_annotations(value, component)[
+                            "keel.sh/update-time"
+                        ] = KEEL_UPDATE_TIME_SENTINEL
+                    target = stored if location == "stored" else client
+                    self.component_template_annotations(target, component)[
+                        "keel.sh/update-time"
+                    ] = KEEL_UPDATE_TIME_SENTINEL
+                    self.write_live(live)
+                    self.write_client(client)
+                    self.write_stored(stored)
+                    self.write_server(server)
+                    self.revision_path.write_text("21", encoding="utf-8")
+
+                    result = self.run_script("--apply")
+
+                    self.assertNotEqual(result.returncode, 0)
+                    self.assertIn(
+                        "unsupported companion keel update-time state",
+                        result.stderr,
+                    )
+                    self.assertEqual(self.applied_upgrade_lines(), [])
+                    self.assertEqual(
+                        self.revision_path.read_text(encoding="utf-8"), "21"
+                    )
+
+    def test_companion_server_keel_update_time_mismatch_blocks_before_helm(
+        self,
+    ) -> None:
+        for component in ("guardian", "gateway"):
+            for case in ("omit", "change", "add"):
+                with self.subTest(component=component, case=case):
+                    live = resources()
+                    client = resources()
+                    stored = resources()
+                    server = resources()
+                    if case in {"omit", "change"}:
+                        self.component_template_annotations(live, component)[
+                            "keel.sh/update-time"
+                        ] = "live value"
+                    if case == "change":
+                        self.component_template_annotations(server, component)[
+                            "keel.sh/update-time"
+                        ] = "server value"
+                    elif case == "add":
+                        self.component_template_annotations(server, component)[
+                            "keel.sh/update-time"
+                        ] = "server value"
+                    self.write_live(live)
+                    self.write_client(client)
+                    self.write_stored(stored)
+                    self.write_server(server)
+                    self.revision_path.write_text("21", encoding="utf-8")
+
+                    result = self.run_script("--apply")
+
+                    self.assertNotEqual(result.returncode, 0)
+                    self.assertIn(
+                        "server dry-run would change a protected resource spec",
+                        result.stderr,
+                    )
+                    self.assertEqual(self.applied_upgrade_lines(), [])
+                    self.assertEqual(
+                        self.revision_path.read_text(encoding="utf-8"), "21"
+                    )
+
+    def test_companion_top_level_keel_update_time_blocks_before_helm(self) -> None:
+        live = resources()
+        client = resources()
+        stored = resources()
+        server = resources()
+        for value in (live, server):
+            self.component_deployment_annotations(value, "guardian")[
+                "keel.sh/update-time"
+            ] = KEEL_UPDATE_TIME_SENTINEL
+        self.write_live(live)
+        self.write_client(client)
+        self.write_stored(stored)
+        self.write_server(server)
+
+        result = self.run_script("--apply")
+
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn(
+            "keel update-time outside an allowed pod-template annotation",
+            result.stderr,
+        )
+        self.assertEqual(self.applied_upgrade_lines(), [])
+        self.assertEqual(self.revision_path.read_text(encoding="utf-8"), "21")
+
+    def test_companion_keel_update_time_on_other_nested_path_blocks_before_helm(
+        self,
+    ) -> None:
+        for case in ("live-pod-label", "server-node-selector"):
+            with self.subTest(case=case):
+                live = resources()
+                client = resources()
+                stored = resources()
+                server = resources()
+                if case == "live-pod-label":
+                    for value in (live, server):
+                        deployment_value = self.deployment_resource(
+                            value, "guardian"
+                        )
+                        deployment_value["spec"]["template"]["metadata"][
+                            "labels"
+                        ]["keel.sh/update-time"] = KEEL_UPDATE_TIME_SENTINEL
+                else:
+                    server_gateway = self.deployment_resource(server, "gateway")
+                    server_gateway["spec"]["template"]["spec"]["nodeSelector"] = {
+                        "keel.sh/update-time": KEEL_UPDATE_TIME_SENTINEL
+                    }
+                self.write_live(live)
+                self.write_client(client)
+                self.write_stored(stored)
+                self.write_server(server)
+                self.revision_path.write_text("21", encoding="utf-8")
+
+                result = self.run_script("--apply")
+
+                self.assertNotEqual(result.returncode, 0)
+                self.assertIn(
+                    "keel update-time outside an allowed pod-template annotation",
+                    result.stderr,
                 )
                 self.assertEqual(self.applied_upgrade_lines(), [])
                 self.assertEqual(
@@ -1240,34 +1421,35 @@ raise SystemExit(64)
                 )
 
     def test_other_template_annotation_mismatch_blocks_before_helm(self) -> None:
-        cases = ("remove", "add", "change")
-        for case in cases:
-            with self.subTest(case=case):
-                live = resources()
-                client = resources()
-                if case in {"remove", "change"}:
-                    self.component_template_annotations(live, "oracle")[
-                        "example.com/protected"
-                    ] = "live value"
-                if case in {"add", "change"}:
-                    self.component_template_annotations(client, "oracle")[
-                        "example.com/protected"
-                    ] = "rendered value"
-                self.write_live(live)
-                self.write_client(client)
-                self.write_server(copy.deepcopy(client))
-                self.revision_path.write_text("21", encoding="utf-8")
+        for component in COMPONENTS:
+            for case in ("remove", "add", "change"):
+                with self.subTest(component=component, case=case):
+                    live = resources()
+                    client = resources()
+                    if case in {"remove", "change"}:
+                        self.component_template_annotations(live, component)[
+                            "example.com/protected"
+                        ] = "live value"
+                    if case in {"add", "change"}:
+                        self.component_template_annotations(client, component)[
+                            "example.com/protected"
+                        ] = "rendered value"
+                    self.write_live(live)
+                    self.write_client(client)
+                    self.write_server(copy.deepcopy(client))
+                    self.revision_path.write_text("21", encoding="utf-8")
 
-                result = self.run_script("--apply")
+                    result = self.run_script("--apply")
 
-                self.assertNotEqual(result.returncode, 0)
-                self.assertIn(
-                    "would change Deployment template annotations", result.stderr
-                )
-                self.assertEqual(self.applied_upgrade_lines(), [])
-                self.assertEqual(
-                    self.revision_path.read_text(encoding="utf-8"), "21"
-                )
+                    self.assertNotEqual(result.returncode, 0)
+                    self.assertIn(
+                        "would change Deployment template annotations",
+                        result.stderr,
+                    )
+                    self.assertEqual(self.applied_upgrade_lines(), [])
+                    self.assertEqual(
+                        self.revision_path.read_text(encoding="utf-8"), "21"
+                    )
 
     def test_stored_template_annotation_drift_blocks_before_helm(self) -> None:
         cases = ("changed-keel", "removed-keel", "other-addition")
