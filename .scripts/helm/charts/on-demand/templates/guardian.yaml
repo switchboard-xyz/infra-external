@@ -167,11 +167,11 @@ spec:
 
         resources:
           limits:
-            cpu: {{ $.Values.components.guardian.resources.limits.cpu }}
-            memory: {{ $.Values.components.guardian.resources.limits.memory }}
+            cpu: {{ $.Values.components.guardian.resources.limits.cpu | quote }}
+            memory: {{ $.Values.components.guardian.resources.limits.memory | quote }}
           requests:
-            cpu: {{ $.Values.components.guardian.resources.requests.cpu }}
-            memory: {{ $.Values.components.guardian.resources.requests.memory }}
+            cpu: {{ $.Values.components.guardian.resources.requests.cpu | quote }}
+            memory: {{ $.Values.components.guardian.resources.requests.memory | quote }}
 
 ---
 apiVersion: v1

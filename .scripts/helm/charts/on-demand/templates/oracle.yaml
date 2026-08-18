@@ -188,11 +188,11 @@ spec:
 
         resources:
           limits:
-            cpu: {{ $.Values.components.oracle.resources.limits.cpu }}
-            memory: {{ $.Values.components.oracle.resources.limits.memory }}
+            cpu: {{ $.Values.components.oracle.resources.limits.cpu | quote }}
+            memory: {{ $.Values.components.oracle.resources.limits.memory | quote }}
           requests:
-            cpu: {{ $.Values.components.oracle.resources.requests.cpu }}
-            memory: {{ $.Values.components.oracle.resources.requests.memory }}
+            cpu: {{ $.Values.components.oracle.resources.requests.cpu | quote }}
+            memory: {{ $.Values.components.oracle.resources.requests.memory | quote }}
 
 ---
 apiVersion: v1

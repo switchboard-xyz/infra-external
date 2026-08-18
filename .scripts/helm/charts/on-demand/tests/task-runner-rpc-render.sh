@@ -58,6 +58,14 @@ gateway_render="$(
 ! grep -q 'SUI_MAINNET_RPC' <<<"${guardian_render}"
 ! grep -q 'SUI_MAINNET_RPC' <<<"${gateway_render}"
 
+numeric_resource_render="$(
+  helm template task-runner-rpc "${chart_dir}" \
+    --set-string components.oracle.resources.limits.cpu=4 \
+    --set-string components.guardian.resources.limits.cpu=4 \
+    --set-string components.gateway.resources.limits.cpu=4
+)"
+[[ "$(grep -c 'cpu: "4"' <<<"${numeric_resource_render}")" -eq 3 ]]
+
 oracle_tag_render="$(
   helm template task-runner-rpc "${chart_dir}" \
     --show-only templates/oracle.yaml \
