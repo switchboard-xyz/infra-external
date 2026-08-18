@@ -643,7 +643,70 @@ fail()
         self.assertEqual(len(self.kubectl_lines()), 3)
         self.assertEqual(self.patches(), [])
 
-    def test_stra01_patches_only_the_selected_zero_replica_image(self) -> None:
+    def test_conflicting_metadata_app_label_is_rejected_before_mutation(self) -> None:
+        current = "docker.io/switchboardlabs/guardian:devnet"
+        live = deployment("guardian", DEVNET_NAMESPACE, 0, current)
+        live["metadata"]["labels"]["app"] = "oracle"
+        self.write_live_state(live)
+
+        result = self.run_script(
+            "--network",
+            "devnet",
+            "--host-id",
+            "stra01",
+            "--expected-current-image",
+            current,
+            "--apply",
+        )
+
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("labels do not match", result.stderr)
+        self.assertEqual(len(self.kubectl_lines()), 3)
+        self.assertEqual(self.patches(), [])
+        self.assertEqual(json.loads(self.state.read_text(encoding="utf-8")), live)
+
+    def test_stra01_absent_metadata_app_label_patches_only_image(self) -> None:
+        current = "docker.io/switchboardlabs/guardian:devnet"
+        live = deployment("guardian", DEVNET_NAMESPACE, 0, current)
+        del live["metadata"]["labels"]["app"]
+        self.write_live_state(live)
+
+        result = self.run_script(
+            "--network",
+            "devnet",
+            "--host-id",
+            "stra01",
+            "--expected-current-image",
+            current,
+            "--apply",
+        )
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("action=applied", result.stdout)
+        patch = self.patches()[0]
+        self.assertNotIn(
+            "/metadata/labels/app", [operation["path"] for operation in patch]
+        )
+        self.assertEqual(
+            [operation for operation in patch if operation["op"] == "replace"],
+            [
+                {
+                    "op": "replace",
+                    "path": "/spec/template/spec/containers/0/image",
+                    "value": DESIRED_IMAGES["guardian"],
+                }
+            ],
+        )
+
+        actual = json.loads(self.state.read_text(encoding="utf-8"))
+        expected = json.loads(json.dumps(live))
+        expected["metadata"]["resourceVersion"] = "18"
+        expected["spec"]["template"]["spec"]["containers"][0]["image"] = (
+            DESIRED_IMAGES["guardian"]
+        )
+        self.assertEqual(actual, expected)
+
+    def test_stra01_matching_metadata_app_label_patches_only_selected_image(self) -> None:
         current = "docker.io/switchboardlabs/guardian:devnet"
         self.write_live_state(deployment("guardian", DEVNET_NAMESPACE, 0, current))
         result = self.run_script(
@@ -672,6 +735,10 @@ fail()
 
         patches = self.patches()
         self.assertEqual(len(patches), 1)
+        self.assertIn(
+            {"op": "test", "path": "/metadata/labels/app", "value": "guardian"},
+            patches[0],
+        )
         replacements = [operation for operation in patches[0] if operation["op"] == "replace"]
         self.assertEqual(
             replacements,
