@@ -28,6 +28,18 @@ oracle_default_render="$(
 ! grep -q 'SUI_MAINNET_RPC' <<<"${oracle_default_render}"
 ! grep -q 'CANDLE_COLLECTION_ENABLED' <<<"${oracle_default_render}"
 ! grep -q '^        envFrom:$' <<<"${oracle_default_render}"
+! grep -q 'keel.sh/update-time' <<<"${oracle_default_render}"
+
+keel_update_time='2026-08-18T00:00:00Z'
+oracle_keel_update_time_render="$(
+  helm template task-runner-rpc "${chart_dir}" \
+    --show-only templates/oracle.yaml \
+    --set components.oracle.keelUpdateTime.enabled=true \
+    --set-string components.oracle.keelUpdateTime.value="${keel_update_time}"
+)"
+grep -q "^        keel.sh/update-time: \"${keel_update_time}\"$" \
+  <<<"${oracle_keel_update_time_render}"
+[[ "$(grep -c 'keel.sh/update-time' <<<"${oracle_keel_update_time_render}")" -eq 1 ]]
 
 oracle_environment_render="$(
   helm template task-runner-rpc "${chart_dir}" \
