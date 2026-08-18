@@ -52,6 +52,7 @@ CC_INIT_DATA_ANNOTATION = "io.katacontainers.config.runtime.cc_init_data"
 HELM_RELEASE_NAME_ANNOTATION = "meta.helm.sh/release-name"
 HELM_RELEASE_NAMESPACE_ANNOTATION = "meta.helm.sh/release-namespace"
 HELM_MANAGED_BY_LABEL = "app.kubernetes.io/managed-by"
+DEPLOYMENT_REVISION_ANNOTATION = "deployment.kubernetes.io/revision"
 ALLOWED_RENDERED_KINDS = {"Deployment", "Service", "Ingress"}
 KUBECTL_LAST_APPLIED_ANNOTATION = "kubectl.kubernetes.io/last-applied-configuration"
 OPERATION_LOCK_PATH = Path("/run/lock/switchboard-oracle-devnet-helm-baseline.lock")
@@ -713,6 +714,90 @@ def resource_metadata_contract(
     return result
 
 
+_MISSING_METADATA_VALUE = object()
+
+
+def metadata_value_equal(left: Any, right: Any) -> bool:
+    if left is _MISSING_METADATA_VALUE or right is _MISSING_METADATA_VALUE:
+        return left is right
+    return type(left) is type(right) and left == right
+
+
+def allowed_live_only_metadata(
+    kind: str,
+    section: str,
+    key: str,
+    value: Any,
+) -> bool:
+    if section == "labels":
+        return key == HELM_MANAGED_BY_LABEL and value == "Helm"
+    if section != "annotations":
+        return False
+    if key == HELM_RELEASE_NAME_ANNOTATION:
+        return value == DEVNET_RELEASE
+    if key == HELM_RELEASE_NAMESPACE_ANNOTATION:
+        return value == DEVNET_NAMESPACE
+    return (
+        kind == "Deployment"
+        and key == DEPLOYMENT_REVISION_ANNOTATION
+        and isinstance(value, str)
+        and re.fullmatch(r"[1-9][0-9]*", value) is not None
+    )
+
+
+def metadata_three_way_preservation_proof(
+    live: dict[tuple[str, str], dict[str, Any]],
+    stored: dict[tuple[str, str], dict[str, Any]],
+    candidate: dict[tuple[str, str], dict[str, Any]],
+    candidate_label: str,
+) -> str:
+    if set(live) != set(stored) or set(live) != set(candidate):
+        raise BaselineError(f"{candidate_label} resource set differs from live")
+
+    live_contract = resource_metadata_contract(live)
+    stored_contract = resource_metadata_contract(stored)
+    candidate_contract = resource_metadata_contract(candidate)
+    preserved_live_only_paths: list[str] = []
+
+    for kind, name in sorted(live):
+        identity = f"{kind}/{name}"
+        for section in ("labels", "annotations"):
+            live_values = live_contract[identity][section]
+            stored_values = stored_contract[identity][section]
+            candidate_values = candidate_contract[identity][section]
+            for key in sorted(
+                set(live_values) | set(stored_values) | set(candidate_values)
+            ):
+                live_value = live_values.get(key, _MISSING_METADATA_VALUE)
+                stored_value = stored_values.get(key, _MISSING_METADATA_VALUE)
+                candidate_value = candidate_values.get(
+                    key, _MISSING_METADATA_VALUE
+                )
+                if metadata_value_equal(live_value, candidate_value):
+                    continue
+                path = f"{identity}/metadata/{section}/{key}"
+                if (
+                    candidate_value is _MISSING_METADATA_VALUE
+                    and stored_value is _MISSING_METADATA_VALUE
+                    and live_value is not _MISSING_METADATA_VALUE
+                    and allowed_live_only_metadata(
+                        kind, section, key, live_value
+                    )
+                ):
+                    preserved_live_only_paths.append(path)
+                    continue
+                raise BaselineError(
+                    f"{candidate_label} would change protected resource metadata"
+                )
+
+    return canonical_hash(
+        {
+            "live": live_contract,
+            "preservedLiveOnlyPaths": preserved_live_only_paths,
+        }
+    )
+
+
 def pod_templates(
     resources: dict[tuple[str, str], dict[str, Any]]
 ) -> dict[str, Any]:
@@ -1304,6 +1389,7 @@ def require_candidate_subset(
 
 def equivalence_proof(
     live: dict[tuple[str, str], dict[str, Any]],
+    stored: dict[tuple[str, str], dict[str, Any]],
     rendered: dict[tuple[str, str], dict[str, Any]],
     candidate_label: str,
 ) -> dict[str, str]:
@@ -1318,12 +1404,11 @@ def equivalence_proof(
         error_message=f"{candidate_label} would change a protected resource spec",
     )
 
-    live_metadata = resource_metadata_contract(live)
-    rendered_metadata = resource_metadata_contract(rendered)
-    require_candidate_subset(
-        live_metadata,
-        rendered_metadata,
-        error_message=f"{candidate_label} would change protected resource metadata",
+    metadata_proof = metadata_three_way_preservation_proof(
+        live,
+        stored,
+        rendered,
+        candidate_label,
     )
 
     live_templates = pod_templates(live)
@@ -1361,7 +1446,7 @@ def equivalence_proof(
 
     return {
         "resourceSpecs": canonical_hash(rendered_specs),
-        "resourceMetadata": canonical_hash(rendered_metadata),
+        "resourceMetadata": metadata_proof,
         "podTemplates": canonical_hash(rendered_templates),
         "services": canonical_hash(rendered_services),
         "ingresses": canonical_hash(rendered_ingresses),
@@ -1490,27 +1575,78 @@ def remove_allowed_server_labels(
     return normalized
 
 
+def require_server_metadata_equivalence(
+    live: dict[tuple[str, str], dict[str, Any]],
+    stored: dict[tuple[str, str], dict[str, Any]],
+    client: dict[tuple[str, str], dict[str, Any]],
+    server: dict[tuple[str, str], dict[str, Any]],
+) -> None:
+    live_contract = resource_metadata_contract(live)
+    stored_contract = resource_metadata_contract(stored)
+    client_contract = resource_metadata_contract(client)
+    server_contract = resource_metadata_contract(server)
+    error_message = (
+        "Kubernetes server dry-run would change protected resource metadata"
+    )
+    require_candidate_subset(
+        server_contract,
+        client_contract,
+        error_message=error_message,
+    )
+
+    for kind, name in sorted(server):
+        identity = f"{kind}/{name}"
+        for section in ("labels", "annotations"):
+            live_values = live_contract[identity][section]
+            stored_values = stored_contract[identity][section]
+            client_values = client_contract[identity][section]
+            server_values = server_contract[identity][section]
+            for key in sorted(set(live_values) | set(server_values)):
+                if key in client_values:
+                    continue
+                server_value = server_values.get(key, _MISSING_METADATA_VALUE)
+                live_value = live_values.get(key, _MISSING_METADATA_VALUE)
+                if (
+                    key in stored_values
+                    or server_value is _MISSING_METADATA_VALUE
+                    or not metadata_value_equal(live_value, server_value)
+                    or not allowed_live_only_metadata(
+                        kind, section, key, server_value
+                    )
+                ):
+                    raise BaselineError(error_message)
+
+    metadata_three_way_preservation_proof(
+        live,
+        stored,
+        server,
+        "Kubernetes server dry-run",
+    )
+
+
 def require_server_semantic_equivalence(
     live: dict[tuple[str, str], dict[str, Any]],
+    stored: dict[tuple[str, str], dict[str, Any]],
     client: dict[tuple[str, str], dict[str, Any]],
     server: dict[tuple[str, str], dict[str, Any]],
 ) -> None:
     if set(live) != set(client) or set(live) != set(server):
         raise BaselineError("Kubernetes server dry-run resource set differs from live")
     normalized_live = normalize_environment_lists(live)
-    normalized_server = normalize_environment_lists(
-        remove_allowed_server_labels(live, client, server)
+    server_without_admission_labels = remove_allowed_server_labels(
+        live, client, server
     )
+    normalized_server = normalize_environment_lists(server_without_admission_labels)
     if resource_specs(normalized_live) != resource_specs(normalized_server):
         raise BaselineError(
             "Kubernetes server dry-run would change a protected resource spec"
         )
-    if resource_metadata_contract(normalized_live) != resource_metadata_contract(
-        normalized_server
-    ):
-        raise BaselineError(
-            "Kubernetes server dry-run would change protected resource metadata"
-        )
+    require_server_metadata_equivalence(
+        live,
+        stored,
+        client,
+        server_without_admission_labels,
+    )
 
 
 def manifest_replica_scalar(deployment: dict[str, Any]) -> int:
@@ -1745,12 +1881,13 @@ def main() -> int:
 
         override_path = write_override_file(live)
         manifest, client_resources = render_client_manifest(context, override_path)
+        stored_resources = fetch_stored_release_resources(context, revision_before)
         proof = equivalence_proof(
             resources_before,
+            stored_resources,
             client_resources,
             "Helm client manifest",
         )
-        stored_resources = fetch_stored_release_resources(context, revision_before)
         helm_patch_hash = prove_helm_patch_deletion_freedom(
             stored_resources,
             client_resources,
@@ -1758,6 +1895,7 @@ def main() -> int:
         server_resources = render_server_dry_run(context, manifest)
         require_server_semantic_equivalence(
             resources_before,
+            stored_resources,
             client_resources,
             server_resources,
         )
