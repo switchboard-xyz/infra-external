@@ -580,6 +580,46 @@ raise SystemExit(64)
         server = copy.deepcopy(live)
         return live, client, server
 
+    def remove_helm_ownership_metadata(
+        self, value: list[dict[str, object]]
+    ) -> None:
+        for resource_value in value:
+            metadata = resource_value["metadata"]
+            metadata["labels"].pop("app.kubernetes.io/managed-by", None)
+            metadata["annotations"].pop("meta.helm.sh/release-name", None)
+            metadata["annotations"].pop(
+                "meta.helm.sh/release-namespace", None
+            )
+
+    def remove_deployment_identity_labels(
+        self, value: list[dict[str, object]]
+    ) -> None:
+        for component in COMPONENTS:
+            labels = self.deployment_resource(value, component)["metadata"][
+                "labels"
+            ]
+            for key in ("app", "chain", "cluster"):
+                labels.pop(key, None)
+
+    def live_only_ownership_resources(
+        self,
+    ) -> tuple[
+        list[dict[str, object]],
+        list[dict[str, object]],
+        list[dict[str, object]],
+        list[dict[str, object]],
+    ]:
+        live = resources()
+        client = resources()
+        stored = resources()
+        self.remove_helm_ownership_metadata(client)
+        self.remove_helm_ownership_metadata(stored)
+        for component in COMPONENTS:
+            self.deployment_resource(live, component)["metadata"]["annotations"][
+                "deployment.kubernetes.io/revision"
+            ] = "7"
+        return live, client, stored, copy.deepcopy(live)
+
     def run_script(self, *extra: str) -> subprocess.CompletedProcess[str]:
         return subprocess.run(
             [
@@ -912,6 +952,131 @@ raise SystemExit(64)
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertIn("action=planned", result.stdout)
         self.assertEqual(self.applied_upgrade_lines(), [])
+
+    def test_exact_live_only_helm_and_controller_metadata_is_preserved(
+        self,
+    ) -> None:
+        live, client, stored, server = self.live_only_ownership_resources()
+        self.write_live(live)
+        self.write_client(client)
+        self.write_stored(stored)
+        self.write_server(server)
+
+        result = self.run_script("--apply")
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("resourceMetadataEquivalent=true hash=", result.stdout)
+        self.assertIn("postApplyResourceVersionsUnchanged=true", result.stdout)
+        self.assertIn("action=baseline-recorded", result.stdout)
+        self.assertEqual(len(self.applied_upgrade_lines()), 1)
+        self.assertEqual(self.revision_path.read_text(encoding="utf-8"), "22")
+
+    def test_requested_deployment_labels_missing_live_block_before_helm(
+        self,
+    ) -> None:
+        live = resources()
+        self.remove_deployment_identity_labels(live)
+        self.write_live(live)
+
+        result = self.run_script("--apply")
+
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("would change protected resource metadata", result.stderr)
+        self.assertEqual(self.applied_upgrade_lines(), [])
+        self.assertEqual(self.revision_path.read_text(encoding="utf-8"), "21")
+
+    def test_unrequested_live_only_deployment_labels_block_before_helm(
+        self,
+    ) -> None:
+        client = resources()
+        stored = resources()
+        self.remove_deployment_identity_labels(client)
+        self.remove_deployment_identity_labels(stored)
+        self.write_client(client)
+        self.write_stored(stored)
+
+        result = self.run_script("--apply")
+
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("would change protected resource metadata", result.stderr)
+        self.assertEqual(self.applied_upgrade_lines(), [])
+        self.assertEqual(self.revision_path.read_text(encoding="utf-8"), "21")
+
+    def test_unexpected_live_only_metadata_blocks_before_helm(self) -> None:
+        live = resources()
+        gateway = self.deployment_resource(live, "gateway")
+        gateway["metadata"]["annotations"][
+            "controller.example/unexpected"
+        ] = "preserved-live-only"
+        self.write_live(live)
+
+        result = self.run_script("--apply")
+
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("would change protected resource metadata", result.stderr)
+        self.assertEqual(self.applied_upgrade_lines(), [])
+        self.assertEqual(self.revision_path.read_text(encoding="utf-8"), "21")
+
+    def test_server_cannot_change_live_only_helm_metadata(self) -> None:
+        live, client, stored, server = self.live_only_ownership_resources()
+        self.deployment_resource(server, "oracle")["metadata"]["annotations"][
+            "meta.helm.sh/release-name"
+        ] = "wrong-release"
+        self.write_live(live)
+        self.write_client(client)
+        self.write_stored(stored)
+        self.write_server(server)
+
+        result = self.run_script("--apply")
+
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("server dry-run would change protected", result.stderr)
+        self.assertEqual(self.applied_upgrade_lines(), [])
+        self.assertEqual(self.revision_path.read_text(encoding="utf-8"), "21")
+
+    def test_server_cannot_omit_live_only_helm_or_controller_metadata(
+        self,
+    ) -> None:
+        cases = (
+            ("labels", "app.kubernetes.io/managed-by"),
+            ("annotations", "meta.helm.sh/release-name"),
+            ("annotations", "meta.helm.sh/release-namespace"),
+            ("annotations", "deployment.kubernetes.io/revision"),
+        )
+        for section, key in cases:
+            with self.subTest(section=section, key=key):
+                live, client, stored, server = (
+                    self.live_only_ownership_resources()
+                )
+                self.deployment_resource(server, "oracle")["metadata"][section].pop(
+                    key
+                )
+                self.write_live(live)
+                self.write_client(client)
+                self.write_stored(stored)
+                self.write_server(server)
+                self.revision_path.write_text("21", encoding="utf-8")
+
+                result = self.run_script("--apply")
+
+                self.assertNotEqual(result.returncode, 0)
+                self.assertIn("server dry-run would change protected", result.stderr)
+                self.assertEqual(self.applied_upgrade_lines(), [])
+                self.assertEqual(
+                    self.revision_path.read_text(encoding="utf-8"), "21"
+                )
+
+    def test_changed_old_to_new_metadata_blocks_before_helm(self) -> None:
+        stored = resources()
+        self.remove_helm_ownership_metadata(stored)
+        self.write_stored(stored)
+
+        result = self.run_script("--apply")
+
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("unsupported old-to-new change", result.stderr)
+        self.assertEqual(self.applied_upgrade_lines(), [])
+        self.assertEqual(self.revision_path.read_text(encoding="utf-8"), "21")
 
     def test_client_explicit_value_that_differs_from_live_is_rejected(self) -> None:
         client = resources()
