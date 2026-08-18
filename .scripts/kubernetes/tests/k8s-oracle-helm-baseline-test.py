@@ -299,7 +299,9 @@ class OracleHelmBaselineTest(unittest.TestCase):
             json.dumps(baseline_resources), encoding="utf-8"
         )
         self.stored_manifest_path.write_text(
-            "stored-release-manifest\n", encoding="utf-8"
+            "---\napiVersion: apps/v1\nkind: Deployment\nmetadata:\n"
+            "  name: stored-release-manifest\n",
+            encoding="utf-8",
         )
         self.nodes_path.write_text(
             json.dumps(
@@ -408,6 +410,8 @@ if len(args) >= 7 and args[:3] == ["--namespace", os.environ["NAMESPACE"], "get"
 
 if "create" in args and "--dry-run=client" in args:
     manifest = sys.stdin.read()
+    if "payload-must-not-appear" in manifest:
+        fail(69)
     path = "STORED_PATH" if "stored-release-manifest" in manifest else "CLIENT_PATH"
     items = json.loads(Path(os.environ[path]).read_text(encoding="utf-8"))
     print(json.dumps({"apiVersion": "v1", "kind": "List", "items": items}))
@@ -846,24 +850,57 @@ raise SystemExit(64)
         self.assertEqual(self.applied_upgrade_lines(), [])
         self.assertEqual(self.revision_path.read_text(encoding="utf-8"), "21")
 
-    def test_stored_secret_manifest_is_rejected_without_raw_output(self) -> None:
+    def test_stored_secret_manifest_is_discarded_without_raw_output(self) -> None:
         secret_sentinel = "stored-secret-payload-must-not-appear"
         self.stored_manifest_path.write_text(
             "---\napiVersion: v1\nkind: Secret\nmetadata:\n"
             "  name: forbidden-stored-secret\nstringData:\n"
-            f"  payload: {secret_sentinel}\n",
+            f"  payload: {secret_sentinel}\n"
+            "---\napiVersion: apps/v1\nkind: Deployment\nmetadata:\n"
+            "  name: stored-release-manifest\n",
+            encoding="utf-8",
+        )
+
+        result = self.run_script()
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("action=planned", result.stdout)
+        self.assertNotIn(secret_sentinel, result.stdout + result.stderr)
+        self.assertNotIn("forbidden-stored-secret", result.stdout + result.stderr)
+        self.assertEqual(self.applied_upgrade_lines(), [])
+        self.assertEqual(self.revision_path.read_text(encoding="utf-8"), "21")
+
+    def test_unrelated_stored_document_is_discarded_without_raw_output(self) -> None:
+        unrelated_sentinel = "stored-unrelated-payload-must-not-appear"
+        self.stored_manifest_path.write_text(
+            "---\napiVersion: v1\nkind: ConfigMap\nmetadata:\n"
+            "  name: ignored-stored-config\ndata:\n"
+            f"  payload: {unrelated_sentinel}\n"
+            "---\napiVersion: apps/v1\nkind: Deployment\nmetadata:\n"
+            "  name: stored-release-manifest\n",
+            encoding="utf-8",
+        )
+
+        result = self.run_script()
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("action=planned", result.stdout)
+        self.assertNotIn(unrelated_sentinel, result.stdout + result.stderr)
+        self.assertNotIn("ignored-stored-config", result.stdout + result.stderr)
+        self.assertEqual(self.applied_upgrade_lines(), [])
+
+    def test_sensitive_field_before_stored_kind_fails_without_raw_output(self) -> None:
+        secret_sentinel = "pre-kind-secret-payload-must-not-appear"
+        self.stored_manifest_path.write_text(
+            f"stringData:\n  payload: {secret_sentinel}\nkind: Secret\n",
             encoding="utf-8",
         )
 
         result = self.run_script("--apply")
 
         self.assertNotEqual(result.returncode, 0)
-        self.assertIn(
-            "stored Helm release manifest unexpectedly contained a Secret",
-            result.stderr,
-        )
+        self.assertIn("stored Helm manifest kind header is unsafe", result.stderr)
         self.assertNotIn(secret_sentinel, result.stdout + result.stderr)
-        self.assertNotIn("forbidden-stored-secret", result.stdout + result.stderr)
         self.assertEqual(self.applied_upgrade_lines(), [])
         self.assertEqual(self.revision_path.read_text(encoding="utf-8"), "21")
 
