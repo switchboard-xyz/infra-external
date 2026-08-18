@@ -23,10 +23,10 @@ render_component_hash() {
     awk '{ print $1 }'
 }
 
-gateway_default_hash="09a4499a0cbe0cd863f2631bcec1fb96101a397f6e68566e12b757b364575862"
-mainnet_default_hash="2d0cace98f173d46f6848cfa5026b549aef14aeea353028454904f317f9ef8ef"
-oracle_default_hash="90c7210703cab5c261b71231dc6b2d50877f7ca395c39ccab25d4a238b997cfa"
-guardian_default_hash="38a0df206e18ddbdea8cb4ec867967d7a2f3004506b3cbccd0559ecfdb9a1f6f"
+gateway_default_hash="0ef9255df165c2340ea5c6ec7e40a47504a225680ff8fbb8dae874329a0caaaf"
+mainnet_default_hash="32b3d739feb71c2c537682dfdcbba98bef441d28810827dcd7aa571ff5def47f"
+oracle_default_hash="8013155a382e1af58da2a4bd0d7c7057d081c30ec17bda6c9828edaad9e1b7a9"
+guardian_default_hash="e95244187cad2bc596539652f33fcd16c384d9d923b3da5aaba107ebbe60b9b8"
 
 [[ "$(render_component_hash gateway)" == "${gateway_default_hash}" ]]
 [[ "$(render_component_hash oracle)" == "${oracle_default_hash}" ]]

@@ -8,7 +8,7 @@ metadata:
 
   labels:
     chain: {{ $.Values.chain | quote }}
-    cluster: {{ $.Values.cluter | quote }}
+    cluster: {{ $.Values.cluster | quote }}
     app: oracle
 
   annotations:

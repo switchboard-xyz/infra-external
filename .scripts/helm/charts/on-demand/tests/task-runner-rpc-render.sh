@@ -73,6 +73,13 @@ oracle_tag_render="$(
 )"
 grep -q 'image: "docker.io/switchboardlabs/oracle:stable"' <<<"${oracle_tag_render}"
 
+oracle_cluster_render="$(
+  helm template task-runner-rpc "${chart_dir}" \
+    --show-only templates/oracle.yaml \
+    --set-string cluster=devnet
+)"
+[[ "$(grep -c 'cluster: "devnet"' <<<"${oracle_cluster_render}")" -eq 2 ]]
+
 if helm template task-runner-rpc "${chart_dir}" \
   --show-only templates/oracle.yaml \
   --set-string taskRunnerRpc.secretName=task-runner-rpc \
