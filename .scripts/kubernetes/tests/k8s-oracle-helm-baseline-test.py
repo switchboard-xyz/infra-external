@@ -702,6 +702,38 @@ raise SystemExit(64)
         self.assertIn("action=planned", result.stdout)
         self.assertEqual(self.applied_upgrade_lines(), [])
 
+    def test_stored_manifest_allows_missing_sui_secret_reference_addition(
+        self,
+    ) -> None:
+        stored = resources()
+        environment = self.component_environment(stored, "oracle")
+        environment[:] = [
+            item for item in environment if item["name"] != "SUI_MAINNET_RPC"
+        ]
+        self.write_stored(stored)
+
+        result = self.run_script()
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("helmPatchDeletionFree=true hash=", result.stdout)
+        self.assertIn("action=planned", result.stdout)
+        self.assertEqual(self.applied_upgrade_lines(), [])
+
+    def test_stored_manifest_rejects_arbitrary_new_environment_addition(self) -> None:
+        live = resources()
+        self.component_environment(live, "oracle").append(
+            {"name": "UNAUTHORIZED_ADDITION", "value": "unchanged-live-value"}
+        )
+        self.write_live(live)
+        self.write_rendered(copy.deepcopy(live))
+        self.write_stored(resources())
+
+        result = self.run_script("--apply")
+
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("unsupported old-to-new change", result.stderr)
+        self.assertEqual(self.applied_upgrade_lines(), [])
+
     def test_stored_manifest_allows_only_empty_to_devnet_cluster_label(self) -> None:
         stored = resources()
         for component in COMPONENTS:
