@@ -686,11 +686,12 @@ def validate_live_resources(
         )
         if KEEL_UPDATE_TIME_ANNOTATION in annotations:
             update_time = annotations[KEEL_UPDATE_TIME_ANNOTATION]
-            if component != "oracle" or not isinstance(update_time, str):
+            if not isinstance(update_time, str):
                 raise BaselineError(
-                    "Oracle keel update-time annotation state is invalid"
+                    "keel update-time annotation state is invalid"
                 )
-            oracle_keel_update_time = update_time
+            if component == "oracle":
+                oracle_keel_update_time = update_time
         policy = annotations.get(CC_INIT_DATA_ANNOTATION)
         if policy is None:
             policies[component] = ""
@@ -932,6 +933,144 @@ def pod_template_annotations(
             "Deployment template annotations",
         )
     return result
+
+
+def mapping_key_paths(
+    value: Any,
+    key: str,
+    path: tuple[str, ...] = (),
+) -> list[tuple[str, ...]]:
+    result: list[tuple[str, ...]] = []
+    if isinstance(value, dict):
+        for child_key, child_value in value.items():
+            child_path = (*path, str(child_key))
+            if child_key == key:
+                result.append(child_path)
+            result.extend(mapping_key_paths(child_value, key, child_path))
+    elif isinstance(value, list):
+        for index, child_value in enumerate(value):
+            result.extend(
+                mapping_key_paths(child_value, key, (*path, str(index)))
+            )
+    return result
+
+
+def require_keel_update_time_path_scope(
+    resources: dict[tuple[str, str], dict[str, Any]],
+    allowed_components: set[str],
+    candidate_label: str,
+) -> None:
+    allowed_paths = {
+        (
+            "Deployment",
+            component,
+            "spec",
+            "template",
+            "metadata",
+            "annotations",
+            KEEL_UPDATE_TIME_ANNOTATION,
+        )
+        for component in allowed_components
+    }
+    observed_paths: set[tuple[str, ...]] = set()
+    for (kind, name), resource in resources.items():
+        observed_paths.update(
+            mapping_key_paths(
+                resource,
+                KEEL_UPDATE_TIME_ANNOTATION,
+                (kind, name),
+            )
+        )
+    if not observed_paths.issubset(allowed_paths):
+        raise BaselineError(
+            f"{candidate_label} contains keel update-time outside an allowed pod-template annotation"
+        )
+
+
+def pod_template_annotation_preservation_proof(
+    live: dict[tuple[str, str], dict[str, Any]],
+    stored: dict[tuple[str, str], dict[str, Any]],
+    rendered: dict[tuple[str, str], dict[str, Any]],
+    candidate_label: str,
+) -> str:
+    if set(live) != set(stored) or set(live) != set(rendered):
+        raise BaselineError(f"{candidate_label} resource set differs from live")
+
+    require_keel_update_time_path_scope(
+        live,
+        set(COMPONENTS),
+        "live resources",
+    )
+    require_keel_update_time_path_scope(
+        stored,
+        set(COMPONENTS),
+        "stored Helm manifest",
+    )
+    require_keel_update_time_path_scope(
+        rendered,
+        set(COMPONENTS),
+        candidate_label,
+    )
+
+    live_annotations = pod_template_annotations(live)
+    stored_annotations = pod_template_annotations(stored)
+    rendered_annotations = pod_template_annotations(rendered)
+    preserved_live_only_paths: list[str] = []
+
+    for component in COMPONENTS:
+        live_values = live_annotations[component]
+        stored_values = stored_annotations[component]
+        rendered_values = rendered_annotations[component]
+        for key in sorted(
+            set(live_values) | set(stored_values) | set(rendered_values)
+        ):
+            live_value = live_values.get(key, _MISSING_METADATA_VALUE)
+            stored_value = stored_values.get(key, _MISSING_METADATA_VALUE)
+            rendered_value = rendered_values.get(key, _MISSING_METADATA_VALUE)
+
+            if key != KEEL_UPDATE_TIME_ANNOTATION:
+                if not metadata_value_equal(live_value, rendered_value):
+                    raise BaselineError(
+                        f"{candidate_label} would change Deployment template annotations"
+                    )
+                continue
+
+            if component == "oracle":
+                if not isinstance(live_value, str) and (
+                    live_value is not _MISSING_METADATA_VALUE
+                ):
+                    raise BaselineError(
+                        "keel update-time annotation state is invalid"
+                    )
+                if not metadata_value_equal(live_value, rendered_value):
+                    raise BaselineError(
+                        f"{candidate_label} would change Deployment template annotations"
+                    )
+                continue
+
+            if (
+                stored_value is not _MISSING_METADATA_VALUE
+                or rendered_value is not _MISSING_METADATA_VALUE
+                or (
+                    live_value is not _MISSING_METADATA_VALUE
+                    and not isinstance(live_value, str)
+                )
+            ):
+                raise BaselineError(
+                    f"{candidate_label} contains unsupported companion keel update-time state"
+                )
+            if live_value is not _MISSING_METADATA_VALUE:
+                preserved_live_only_paths.append(
+                    f"Deployment/{component}/spec/template/metadata/annotations/"
+                    "keel.sh~1update-time"
+                )
+
+    return canonical_hash(
+        {
+            "live": live_annotations,
+            "preservedLiveOnlyPaths": preserved_live_only_paths,
+        }
+    )
 
 
 def replicas_map(
@@ -1607,10 +1746,12 @@ def equivalence_proof(
     if set(live) != set(rendered):
         raise BaselineError(f"{candidate_label} resource set differs from live")
 
-    if pod_template_annotations(live) != pod_template_annotations(rendered):
-        raise BaselineError(
-            f"{candidate_label} would change Deployment template annotations"
-        )
+    template_annotation_proof = pod_template_annotation_preservation_proof(
+        live,
+        stored,
+        rendered,
+        candidate_label,
+    )
 
     live_specs = resource_specs(live)
     rendered_specs = resource_specs(rendered)
@@ -1669,7 +1810,12 @@ def equivalence_proof(
     return {
         "resourceSpecs": canonical_hash(rendered_specs),
         "resourceMetadata": metadata_proof,
-        "podTemplates": canonical_hash(rendered_templates),
+        "podTemplates": canonical_hash(
+            {
+                "rendered": rendered_templates,
+                "templateAnnotations": template_annotation_proof,
+            }
+        ),
         "services": canonical_hash(rendered_services),
         "ingresses": canonical_hash(rendered_ingresses),
         "secretReferences": canonical_hash(rendered_secret_refs),
@@ -1852,6 +1998,11 @@ def require_server_semantic_equivalence(
     client: dict[tuple[str, str], dict[str, Any]],
     server: dict[tuple[str, str], dict[str, Any]],
 ) -> None:
+    require_keel_update_time_path_scope(
+        server,
+        set(COMPONENTS),
+        "Kubernetes server dry-run",
+    )
     if set(live) != set(client) or set(live) != set(server):
         raise BaselineError("Kubernetes server dry-run resource set differs from live")
     normalized_live = normalize_environment_lists(live)
