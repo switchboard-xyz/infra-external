@@ -757,6 +757,16 @@ raise SystemExit(64)
                 "meta.helm.sh/release-namespace", None
             )
 
+    def remove_oracle_helm_ownership_metadata(
+        self, value: list[dict[str, object]]
+    ) -> None:
+        metadata = self.deployment_resource(value, "oracle")["metadata"]
+        metadata["labels"].pop("app.kubernetes.io/managed-by", None)
+        metadata["annotations"].pop("meta.helm.sh/release-name", None)
+        metadata["annotations"].pop(
+            "meta.helm.sh/release-namespace", None
+        )
+
     def remove_deployment_identity_labels(
         self, value: list[dict[str, object]]
     ) -> None:
@@ -2067,6 +2077,166 @@ raise SystemExit(64)
         self.assertEqual(self.applied_upgrade_lines(), [])
         self.assertEqual(self.revision_path.read_text(encoding="utf-8"), "21")
 
+    def test_server_oracle_helm_ownership_omission_is_normalized(self) -> None:
+        live, client, stored, server = self.live_only_ownership_resources()
+        self.remove_oracle_helm_ownership_metadata(server)
+        self.write_live(live)
+        self.write_client(client)
+        self.write_stored(stored)
+        self.write_server(server)
+
+        result = self.run_script("--apply")
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("resourceMetadataEquivalent=true hash=", result.stdout)
+        self.assertIn("postApplyResourceVersionsUnchanged=true", result.stdout)
+        self.assertIn(
+            "postApplyDeploymentGenerationsUnchanged=true", result.stdout
+        )
+        self.assertIn(
+            "postApplyPodUidsRestartsReadinessUnchanged=true", result.stdout
+        )
+        self.assertIn("postApplyEndpointsUnchanged=true", result.stdout)
+        self.assertEqual(len(self.applied_upgrade_lines()), 1)
+        self.assertEqual(self.revision_path.read_text(encoding="utf-8"), "22")
+
+    def test_oracle_helm_ownership_omission_requires_old_and_new_absence(
+        self,
+    ) -> None:
+        paths = (
+            ("labels", "app.kubernetes.io/managed-by", "Helm"),
+            ("annotations", "meta.helm.sh/release-name", RELEASE),
+            ("annotations", "meta.helm.sh/release-namespace", NAMESPACE),
+        )
+        for source in ("stored", "rendered"):
+            for section, key, value in paths:
+                with self.subTest(source=source, section=section, key=key):
+                    live, client, stored, server = (
+                        self.live_only_ownership_resources()
+                    )
+                    self.remove_oracle_helm_ownership_metadata(server)
+                    target = stored if source == "stored" else client
+                    self.deployment_resource(target, "oracle")["metadata"][
+                        section
+                    ][key] = value
+                    self.write_live(live)
+                    self.write_client(client)
+                    self.write_stored(stored)
+                    self.write_server(server)
+                    self.revision_path.write_text("21", encoding="utf-8")
+
+                    result = self.run_script("--apply")
+
+                    self.assertNotEqual(result.returncode, 0)
+                    expected_error = (
+                        "would change protected resource metadata"
+                        if source == "stored"
+                        else "unsupported old-to-new change"
+                    )
+                    self.assertIn(
+                        expected_error,
+                        result.stderr,
+                    )
+                    self.assertEqual(self.applied_upgrade_lines(), [])
+                    self.assertEqual(
+                        self.revision_path.read_text(encoding="utf-8"), "21"
+                    )
+
+    def test_oracle_helm_ownership_partial_server_omission_blocks_before_helm(
+        self,
+    ) -> None:
+        live, client, stored, server = self.live_only_ownership_resources()
+        oracle_metadata = self.deployment_resource(server, "oracle")["metadata"]
+        oracle_metadata["labels"].pop("app.kubernetes.io/managed-by")
+        oracle_metadata["annotations"].pop("meta.helm.sh/release-name")
+        self.write_live(live)
+        self.write_client(client)
+        self.write_stored(stored)
+        self.write_server(server)
+
+        result = self.run_script("--apply")
+
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("partial Oracle Helm ownership omission", result.stderr)
+        self.assertEqual(self.applied_upgrade_lines(), [])
+        self.assertEqual(self.revision_path.read_text(encoding="utf-8"), "21")
+
+    def test_oracle_helm_ownership_omission_on_other_resource_blocks_before_helm(
+        self,
+    ) -> None:
+        for kind, name in (("Deployment", "guardian"), ("Service", "oracle")):
+            with self.subTest(kind=kind, name=name):
+                live, client, stored, server = (
+                    self.live_only_ownership_resources()
+                )
+                resource = next(
+                    item
+                    for item in server
+                    if item["kind"] == kind and item["metadata"]["name"] == name
+                )
+                resource["metadata"]["labels"].pop(
+                    "app.kubernetes.io/managed-by"
+                )
+                resource["metadata"]["annotations"].pop(
+                    "meta.helm.sh/release-name"
+                )
+                resource["metadata"]["annotations"].pop(
+                    "meta.helm.sh/release-namespace"
+                )
+                self.write_live(live)
+                self.write_client(client)
+                self.write_stored(stored)
+                self.write_server(server)
+                self.revision_path.write_text("21", encoding="utf-8")
+
+                result = self.run_script("--apply")
+
+                self.assertNotEqual(result.returncode, 0)
+                self.assertIn("server dry-run would change protected", result.stderr)
+                self.assertEqual(self.applied_upgrade_lines(), [])
+                self.assertEqual(
+                    self.revision_path.read_text(encoding="utf-8"), "21"
+                )
+
+    def test_server_cannot_add_helm_ownership_at_other_path(self) -> None:
+        server = resources()
+        self.component_template_annotations(server, "oracle")[
+            "meta.helm.sh/release-name"
+        ] = RELEASE
+        self.write_server(server)
+
+        result = self.run_script("--apply")
+
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("server dry-run would change a protected resource spec", result.stderr)
+        self.assertEqual(self.applied_upgrade_lines(), [])
+        self.assertEqual(self.revision_path.read_text(encoding="utf-8"), "21")
+
+    def test_live_oracle_helm_ownership_must_be_canonical(self) -> None:
+        cases = (
+            ("labels", "app.kubernetes.io/managed-by", 7),
+            ("annotations", "meta.helm.sh/release-name", "wrong"),
+            ("annotations", "meta.helm.sh/release-namespace", 7),
+        )
+        for section, key, value in cases:
+            with self.subTest(section=section, key=key):
+                live = resources()
+                self.deployment_resource(live, "oracle")["metadata"][section][
+                    key
+                ] = value
+                self.write_live(live)
+
+                result = self.run_script("--apply")
+
+                self.assertNotEqual(result.returncode, 0)
+                self.assertIn(
+                    "not owned by the exact devnet release", result.stderr
+                )
+                self.assertEqual(self.applied_upgrade_lines(), [])
+                self.assertEqual(
+                    self.revision_path.read_text(encoding="utf-8"), "21"
+                )
+
     def test_server_cannot_omit_live_only_helm_or_controller_metadata(
         self,
     ) -> None:
@@ -2075,6 +2245,7 @@ raise SystemExit(64)
             ("annotations", "meta.helm.sh/release-name"),
             ("annotations", "meta.helm.sh/release-namespace"),
             ("annotations", "deployment.kubernetes.io/revision"),
+            ("labels", "app"),
         )
         for section, key in cases:
             with self.subTest(section=section, key=key):
@@ -2093,7 +2264,7 @@ raise SystemExit(64)
                 result = self.run_script("--apply")
 
                 self.assertNotEqual(result.returncode, 0)
-                self.assertIn("server dry-run would change protected", result.stderr)
+                self.assertIn("server dry-run", result.stderr)
                 self.assertEqual(self.applied_upgrade_lines(), [])
                 self.assertEqual(
                     self.revision_path.read_text(encoding="utf-8"), "21"

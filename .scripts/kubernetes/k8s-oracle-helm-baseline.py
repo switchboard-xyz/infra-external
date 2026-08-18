@@ -59,6 +59,11 @@ ORACLE_KEEL_DEPLOYMENT_ANNOTATIONS = {
 HELM_RELEASE_NAME_ANNOTATION = "meta.helm.sh/release-name"
 HELM_RELEASE_NAMESPACE_ANNOTATION = "meta.helm.sh/release-namespace"
 HELM_MANAGED_BY_LABEL = "app.kubernetes.io/managed-by"
+ORACLE_SERVER_HELM_OWNERSHIP_METADATA = (
+    ("labels", HELM_MANAGED_BY_LABEL, "Helm"),
+    ("annotations", HELM_RELEASE_NAME_ANNOTATION, DEVNET_RELEASE),
+    ("annotations", HELM_RELEASE_NAMESPACE_ANNOTATION, DEVNET_NAMESPACE),
+)
 DEPLOYMENT_REVISION_ANNOTATION = "deployment.kubernetes.io/revision"
 KUBERNETES_CHANGE_CAUSE_ANNOTATION = "kubernetes.io/change-cause"
 ALLOWED_RENDERED_KINDS = {"Deployment", "Service", "Ingress"}
@@ -1943,6 +1948,78 @@ def remove_allowed_server_labels(
     return normalized
 
 
+def restore_oracle_server_helm_ownership_omission(
+    live: dict[tuple[str, str], dict[str, Any]],
+    stored: dict[tuple[str, str], dict[str, Any]],
+    client: dict[tuple[str, str], dict[str, Any]],
+    server: dict[tuple[str, str], dict[str, Any]],
+) -> dict[tuple[str, str], dict[str, Any]]:
+    normalized = copy.deepcopy(server)
+    identity = ("Deployment", "oracle")
+    metadata_by_source = {
+        source: require_mapping(
+            resources[identity],
+            "metadata",
+            f"{source} Oracle Deployment metadata",
+        )
+        for source, resources in (
+            ("live", live),
+            ("stored", stored),
+            ("rendered", client),
+            ("server", normalized),
+        )
+    }
+    sections_by_source: dict[str, dict[str, dict[str, Any]]] = {}
+    for source, metadata in metadata_by_source.items():
+        sections_by_source[source] = {}
+        for section in ("labels", "annotations"):
+            value = metadata.get(section, _MISSING_METADATA_VALUE)
+            if value is _MISSING_METADATA_VALUE:
+                value = {}
+                if source == "server":
+                    metadata[section] = value
+            elif not isinstance(value, dict):
+                raise BaselineError(
+                    f"{source} Oracle Deployment metadata {section} is invalid"
+                )
+            sections_by_source[source][section] = value
+    server_sections = sections_by_source["server"]
+    missing_server_paths = {
+        (section, key)
+        for section, key, _expected in ORACLE_SERVER_HELM_OWNERSHIP_METADATA
+        if key not in server_sections[section]
+    }
+    if not missing_server_paths:
+        return normalized
+
+    expected_paths = {
+        (section, key)
+        for section, key, _expected in ORACLE_SERVER_HELM_OWNERSHIP_METADATA
+    }
+    if missing_server_paths != expected_paths:
+        raise BaselineError(
+            "Kubernetes server dry-run contains a partial Oracle Helm ownership omission"
+        )
+
+    for section, key, expected in ORACLE_SERVER_HELM_OWNERSHIP_METADATA:
+        live_value = sections_by_source["live"][section].get(
+            key, _MISSING_METADATA_VALUE
+        )
+        if type(live_value) is not str or live_value != expected:
+            raise BaselineError(
+                "live Oracle Helm ownership metadata is not canonical"
+            )
+        if any(
+            key in sections_by_source[source][section]
+            for source in ("stored", "rendered", "server")
+        ):
+            raise BaselineError(
+                "Oracle Helm ownership omission precondition is not exact"
+            )
+        server_sections[section][key] = live_value
+    return normalized
+
+
 def require_server_metadata_equivalence(
     live: dict[tuple[str, str], dict[str, Any]],
     stored: dict[tuple[str, str], dict[str, Any]],
@@ -2006,8 +2083,18 @@ def require_server_semantic_equivalence(
     if set(live) != set(client) or set(live) != set(server):
         raise BaselineError("Kubernetes server dry-run resource set differs from live")
     normalized_live = normalize_environment_lists(live)
+    server_with_oracle_helm_ownership = (
+        restore_oracle_server_helm_ownership_omission(
+            live,
+            stored,
+            client,
+            server,
+        )
+    )
     server_without_admission_labels = remove_allowed_server_labels(
-        live, client, server
+        live,
+        client,
+        server_with_oracle_helm_ownership,
     )
     normalized_server = normalize_environment_lists(server_without_admission_labels)
     if resource_specs(normalized_live) != resource_specs(normalized_server):
