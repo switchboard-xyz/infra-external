@@ -731,7 +731,14 @@ def fetch_endpoint_snapshot(
         for item in items:
             if item.get("kind") != "EndpointSlice":
                 raise BaselineError("endpoint health lookup returned an invalid resource")
-            for endpoint in require_list(item, "endpoints", "EndpointSlice endpoints"):
+            if "endpoints" not in item:
+                raise BaselineError("EndpointSlice endpoints is missing or invalid")
+            slice_endpoints = item["endpoints"]
+            if slice_endpoints is None:
+                slice_endpoints = []
+            elif not isinstance(slice_endpoints, list):
+                raise BaselineError("EndpointSlice endpoints is missing or invalid")
+            for endpoint in slice_endpoints:
                 if not isinstance(endpoint, dict):
                     raise BaselineError("EndpointSlice endpoint is invalid")
                 addresses = endpoint.get("addresses")

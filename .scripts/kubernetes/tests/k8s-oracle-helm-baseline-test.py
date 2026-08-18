@@ -451,6 +451,13 @@ raise SystemExit(64)
     def write_rendered(self, value: list[dict[str, object]]) -> None:
         self.rendered_path.write_text(json.dumps(value), encoding="utf-8")
 
+    def write_endpoint_slices(
+        self, component: str, value: list[dict[str, object]]
+    ) -> None:
+        (self.endpoint_dir / f"{component}.json").write_text(
+            json.dumps(value), encoding="utf-8"
+        )
+
     def run_script(self, *extra: str) -> subprocess.CompletedProcess[str]:
         return subprocess.run(
             [
@@ -505,6 +512,42 @@ raise SystemExit(64)
         combined = result.stdout + result.stderr
         for forbidden in (PAYER_KEY, SUI_NAME, SUI_KEY, POLICY_SENTINEL):
             self.assertNotIn(forbidden, combined)
+
+    def test_guardian_zero_null_and_empty_endpoints_are_equivalent(self) -> None:
+        endpoint_hashes = []
+        for endpoint_value in (None, []):
+            guardian_slice = endpoint_slice("guardian")
+            guardian_slice["endpoints"] = endpoint_value
+            self.write_endpoint_slices("guardian", [guardian_slice])
+            result = self.run_script()
+            self.assertEqual(result.returncode, 0, result.stderr)
+            endpoint_hashes.append(
+                next(
+                    line
+                    for line in result.stdout.splitlines()
+                    if line.startswith("endpointsStable=true hash=")
+                )
+            )
+        self.assertEqual(endpoint_hashes[0], endpoint_hashes[1])
+        self.assertEqual(self.applied_upgrade_lines(), [])
+
+    def test_malformed_endpoints_fail_before_helm_and_never_apply(self) -> None:
+        for malformed_endpoints in ("invalid", {"unexpected": "object"}):
+            with self.subTest(malformed_endpoints=malformed_endpoints):
+                guardian_slice = endpoint_slice("guardian")
+                guardian_slice["endpoints"] = malformed_endpoints
+                self.write_endpoint_slices("guardian", [guardian_slice])
+                result = self.run_script("--apply")
+                self.assertNotEqual(result.returncode, 0)
+                self.assertIn(
+                    "EndpointSlice endpoints is missing or invalid", result.stderr
+                )
+                self.assertEqual(self.helm_lines(), ["upgrade --help"])
+                self.assertEqual(self.applied_upgrade_lines(), [])
+                self.assertEqual(
+                    self.revision_path.read_text(encoding="utf-8"), "21"
+                )
+                self.helm_log.unlink()
 
     def test_apply_records_one_revision_without_workload_changes(self) -> None:
         result = self.run_script("--apply")
