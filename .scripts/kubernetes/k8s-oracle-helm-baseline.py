@@ -53,6 +53,7 @@ HELM_RELEASE_NAME_ANNOTATION = "meta.helm.sh/release-name"
 HELM_RELEASE_NAMESPACE_ANNOTATION = "meta.helm.sh/release-namespace"
 HELM_MANAGED_BY_LABEL = "app.kubernetes.io/managed-by"
 DEPLOYMENT_REVISION_ANNOTATION = "deployment.kubernetes.io/revision"
+KUBERNETES_CHANGE_CAUSE_ANNOTATION = "kubernetes.io/change-cause"
 ALLOWED_RENDERED_KINDS = {"Deployment", "Service", "Ingress"}
 KUBECTL_LAST_APPLIED_ANNOTATION = "kubectl.kubernetes.io/last-applied-configuration"
 OPERATION_LOCK_PATH = Path("/run/lock/switchboard-oracle-devnet-helm-baseline.lock")
@@ -737,12 +738,59 @@ def allowed_live_only_metadata(
         return value == DEVNET_RELEASE
     if key == HELM_RELEASE_NAMESPACE_ANNOTATION:
         return value == DEVNET_NAMESPACE
-    return (
-        kind == "Deployment"
-        and key == DEPLOYMENT_REVISION_ANNOTATION
-        and isinstance(value, str)
+    if kind != "Deployment":
+        return False
+    if key == KUBERNETES_CHANGE_CAUSE_ANNOTATION:
+        return isinstance(value, str)
+    return key == DEPLOYMENT_REVISION_ANNOTATION and (
+        isinstance(value, str)
         and re.fullmatch(r"[1-9][0-9]*", value) is not None
     )
+
+
+def require_change_cause_live_only_contract(
+    live: dict[tuple[str, str], dict[str, Any]],
+    stored: dict[tuple[str, str], dict[str, Any]],
+    rendered: dict[tuple[str, str], dict[str, Any]],
+    candidate_label: str,
+) -> None:
+    if set(live) != set(stored) or set(live) != set(rendered):
+        raise BaselineError(f"{candidate_label} resource set differs from live")
+    live_contract = resource_metadata_contract(live)
+    stored_contract = resource_metadata_contract(stored)
+    rendered_contract = resource_metadata_contract(rendered)
+    for kind, name in sorted(live):
+        identity = f"{kind}/{name}"
+        live_annotations = live_contract[identity]["annotations"]
+        stored_annotations = stored_contract[identity]["annotations"]
+        rendered_annotations = rendered_contract[identity]["annotations"]
+        live_value = live_annotations.get(
+            KUBERNETES_CHANGE_CAUSE_ANNOTATION,
+            _MISSING_METADATA_VALUE,
+        )
+        stored_value = stored_annotations.get(
+            KUBERNETES_CHANGE_CAUSE_ANNOTATION,
+            _MISSING_METADATA_VALUE,
+        )
+        rendered_value = rendered_annotations.get(
+            KUBERNETES_CHANGE_CAUSE_ANNOTATION,
+            _MISSING_METADATA_VALUE,
+        )
+        if (
+            live_value is _MISSING_METADATA_VALUE
+            and stored_value is _MISSING_METADATA_VALUE
+            and rendered_value is _MISSING_METADATA_VALUE
+        ):
+            continue
+        if (
+            kind != "Deployment"
+            or stored_value is not _MISSING_METADATA_VALUE
+            or rendered_value is not _MISSING_METADATA_VALUE
+            or not isinstance(live_value, str)
+        ):
+            raise BaselineError(
+                f"{candidate_label} contains unsupported kubernetes.io/change-cause metadata"
+            )
 
 
 def metadata_three_way_preservation_proof(
@@ -1404,6 +1452,12 @@ def equivalence_proof(
         error_message=f"{candidate_label} would change a protected resource spec",
     )
 
+    require_change_cause_live_only_contract(
+        live,
+        stored,
+        rendered,
+        candidate_label,
+    )
     metadata_proof = metadata_three_way_preservation_proof(
         live,
         stored,

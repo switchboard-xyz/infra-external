@@ -971,6 +971,142 @@ raise SystemExit(64)
         self.assertEqual(len(self.applied_upgrade_lines()), 1)
         self.assertEqual(self.revision_path.read_text(encoding="utf-8"), "22")
 
+    def test_exact_live_only_deployment_change_cause_is_preserved(self) -> None:
+        live = resources()
+        client = resources()
+        stored = resources()
+        self.deployment_resource(live, "oracle")["metadata"]["annotations"][
+            "kubernetes.io/change-cause"
+        ] = "preserve this exact live value"
+        self.write_live(live)
+        self.write_client(client)
+        self.write_stored(stored)
+        self.write_server(copy.deepcopy(live))
+
+        result = self.run_script("--apply")
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("resourceMetadataEquivalent=true hash=", result.stdout)
+        self.assertIn("postApplyResourceVersionsUnchanged=true", result.stdout)
+        self.assertEqual(len(self.applied_upgrade_lines()), 1)
+        self.assertEqual(self.revision_path.read_text(encoding="utf-8"), "22")
+
+    def test_change_cause_on_service_or_ingress_blocks_before_helm(self) -> None:
+        for kind in ("Service", "Ingress"):
+            with self.subTest(kind=kind):
+                live = resources()
+                resource = next(item for item in live if item["kind"] == kind)
+                resource["metadata"]["annotations"][
+                    "kubernetes.io/change-cause"
+                ] = "unsupported resource"
+                self.write_live(live)
+                self.write_server(copy.deepcopy(live))
+                self.revision_path.write_text("21", encoding="utf-8")
+
+                result = self.run_script("--apply")
+
+                self.assertNotEqual(result.returncode, 0)
+                self.assertIn("unsupported kubernetes.io/change-cause", result.stderr)
+                self.assertEqual(self.applied_upgrade_lines(), [])
+                self.assertEqual(
+                    self.revision_path.read_text(encoding="utf-8"), "21"
+                )
+
+    def test_change_cause_in_stored_or_rendered_metadata_blocks_before_helm(
+        self,
+    ) -> None:
+        cases = (
+            ("stored", "live value", None),
+            ("rendered", None, "live value"),
+            ("both", "live value", "live value"),
+            ("changed", "stored value", "rendered value"),
+        )
+        for case, stored_value, rendered_value in cases:
+            with self.subTest(case=case):
+                live = resources()
+                client = resources()
+                stored = resources()
+                self.deployment_resource(live, "oracle")["metadata"][
+                    "annotations"
+                ]["kubernetes.io/change-cause"] = "live value"
+                if stored_value is not None:
+                    self.deployment_resource(stored, "oracle")["metadata"][
+                        "annotations"
+                    ]["kubernetes.io/change-cause"] = stored_value
+                if rendered_value is not None:
+                    self.deployment_resource(client, "oracle")["metadata"][
+                        "annotations"
+                    ]["kubernetes.io/change-cause"] = rendered_value
+                self.write_live(live)
+                self.write_client(client)
+                self.write_stored(stored)
+                self.write_server(copy.deepcopy(live))
+                self.revision_path.write_text("21", encoding="utf-8")
+
+                result = self.run_script("--apply")
+
+                self.assertNotEqual(result.returncode, 0)
+                self.assertIn("unsupported kubernetes.io/change-cause", result.stderr)
+                self.assertEqual(self.applied_upgrade_lines(), [])
+                self.assertEqual(
+                    self.revision_path.read_text(encoding="utf-8"), "21"
+                )
+
+    def test_server_cannot_omit_change_or_add_change_cause(self) -> None:
+        cases = ("omit", "change", "add")
+        for case in cases:
+            with self.subTest(case=case):
+                live = resources()
+                client = resources()
+                stored = resources()
+                server = copy.deepcopy(live)
+                if case in {"omit", "change"}:
+                    self.deployment_resource(live, "oracle")["metadata"][
+                        "annotations"
+                    ]["kubernetes.io/change-cause"] = "live value"
+                if case == "change":
+                    self.deployment_resource(server, "oracle")["metadata"][
+                        "annotations"
+                    ]["kubernetes.io/change-cause"] = "changed value"
+                elif case == "add":
+                    self.deployment_resource(server, "oracle")["metadata"][
+                        "annotations"
+                    ]["kubernetes.io/change-cause"] = "server-only value"
+                self.write_live(live)
+                self.write_client(client)
+                self.write_stored(stored)
+                self.write_server(server)
+                self.revision_path.write_text("21", encoding="utf-8")
+
+                result = self.run_script("--apply")
+
+                self.assertNotEqual(result.returncode, 0)
+                self.assertIn("server dry-run would change protected", result.stderr)
+                self.assertEqual(self.applied_upgrade_lines(), [])
+                self.assertEqual(
+                    self.revision_path.read_text(encoding="utf-8"), "21"
+                )
+
+    def test_server_cannot_add_change_cause_to_service_or_ingress(self) -> None:
+        for kind in ("Service", "Ingress"):
+            with self.subTest(kind=kind):
+                server = resources()
+                resource = next(item for item in server if item["kind"] == kind)
+                resource["metadata"]["annotations"][
+                    "kubernetes.io/change-cause"
+                ] = "server-only value"
+                self.write_server(server)
+                self.revision_path.write_text("21", encoding="utf-8")
+
+                result = self.run_script("--apply")
+
+                self.assertNotEqual(result.returncode, 0)
+                self.assertIn("server dry-run would change protected", result.stderr)
+                self.assertEqual(self.applied_upgrade_lines(), [])
+                self.assertEqual(
+                    self.revision_path.read_text(encoding="utf-8"), "21"
+                )
+
     def test_requested_deployment_labels_missing_live_block_before_helm(
         self,
     ) -> None:
