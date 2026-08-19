@@ -9,14 +9,15 @@ computeUnitPrice: 1
 
 heartbeatInterval: 180
 
-payerSecret: ""
-payerSecretKey: ""
+payerSecretKey: "SOLANA_KEY"
 
 rpcUrl: ""
 wssRpcUrl: ""
 solanaMainnetRpc: ""
 
-jupiterSwapApiKey: ""
+jupiterSwapApiKeySecret:
+  name: "jupiter-swap-api"
+  key: "api-key"
 
 taskRunnerRpc:
   secretName: ""
